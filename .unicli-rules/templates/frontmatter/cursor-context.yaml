@@ -1,0 +1,6 @@
+---
+description: Project context (stack, structure, constraints). Generated from .unicli-rules/project-context.md — do not edit directly.
+globs:
+  - "**/*"
+alwaysApply: true
+---

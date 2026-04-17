@@ -1,0 +1,22 @@
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Per-user CLI session state
+.claude/todos/
+.claude/logs/
+.codex/sessions/

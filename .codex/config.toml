@@ -1,0 +1,13 @@
+# Codex CLI — project-level config
+# See: https://github.com/openai/codex/blob/main/docs/config.md
+
+model = "gpt-5-codex"
+approval_policy = "on-request"
+
+# Read AGENTS.md (plus CLAUDE.md / GEMINI.md as fallbacks) for project context.
+project_doc_max_bytes = 32768
+project_doc_fallback_filenames = ["CLAUDE.md", "GEMINI.md"]
+
+# Prompts live in ~/.codex/prompts/ (user scope).
+# Run `./.unicli-rules/sync.sh --install-codex-prompts` to install them with the
+# prefix `unicli-` so slash commands like /unicli-researcher become available.

@@ -1,0 +1,37 @@
+# AGENTS.md
+
+> Shared root agent-guide document — read by Codex, Cursor, and Claude via common conventions.
+> **This file is generated. Edit the canonical sources under `.unicli-rules/`.**
+
+---
+
+## Memory (placed at top to stay inside Codex `project_doc_max_bytes`)
+
+{{MEMORY}}
+
+---
+
+## Project Context
+
+{{PROJECT_CONTEXT}}
+
+---
+
+## Core Workflow
+
+{{CORE_WORKFLOW}}
+
+---
+
+## Agents & Skills
+
+- Agent definitions: `.unicli-rules/agents/`
+- Skill definitions: `.unicli-rules/skills/`
+- Per-CLI derived paths: see `.unicli-rules/common/tool-matrix.md`.
+
+## Sync
+
+```bash
+./.unicli-rules/sync.sh --fix     # regenerate all derived files
+./.unicli-rules/sync.sh --check   # CI drift detection
+```

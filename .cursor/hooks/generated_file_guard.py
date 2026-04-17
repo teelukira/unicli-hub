@@ -1,0 +1,1 @@
+../../.unicli-rules/hooks/generated_file_guard.py

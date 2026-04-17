@@ -1,0 +1,6 @@
+{
+  "name": "codegen",
+  "description": "Implement approved plans with minimal, focused edits; reuse existing utilities; run tests.",
+  "promptFile": "prompts/codegen.md",
+  "tools": ["read", "write", "edit", "bash"]
+}

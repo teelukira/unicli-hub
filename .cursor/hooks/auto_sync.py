@@ -1,0 +1,1 @@
+../../.unicli-rules/hooks/auto_sync.py

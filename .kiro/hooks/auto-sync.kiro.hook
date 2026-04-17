@@ -1,0 +1,7 @@
+{
+  "name": "unicli-auto-sync",
+  "description": "When a canonical file under .unicli-rules/ is edited, regenerate all derived files.",
+  "trigger": "afterFileWrite",
+  "glob": ".unicli-rules/**",
+  "command": "python3 ./.unicli-rules/hooks/auto_sync.py"
+}

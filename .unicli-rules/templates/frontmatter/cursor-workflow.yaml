@@ -1,0 +1,6 @@
+---
+description: Core workflow rules shared across all AI CLIs. Generated from .unicli-rules/core-workflow.md — do not edit directly.
+globs:
+  - "**/*"
+alwaysApply: true
+---
