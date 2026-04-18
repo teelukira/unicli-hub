@@ -1,4 +1,19 @@
 {
   "_comment": "MCP server canonical definitions. Edit mcpServers here, then run ./.unicli-rules/sync.sh --fix to render per-CLI configs. Never put secrets in this file — use ${VAR} in env and set values in .env.local (see mcp-secrets.example).",
-  "mcpServers": {}
+  "mcpServers": {
+    "tavily": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.tavily.com/mcp/",
+        "--header",
+        "Authorization:Bearer ${TAVILY_API_KEY}"
+      ],
+      "env": {
+        "TAVILY_API_KEY": "${TAVILY_API_KEY}"
+      }
+    }
+  }
 }

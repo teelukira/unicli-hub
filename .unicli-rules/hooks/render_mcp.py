@@ -79,7 +79,23 @@ def render_gemini(servers: dict) -> str:
     """Merge mcpServers into .gemini/settings.json, preserving other keys."""
     settings_path = ROOT / ".gemini" / "settings.json"
     existing = read_json(settings_path)
-    existing["mcpServers"] = servers
+    
+    gemini_servers = {}
+    for name, cfg in servers.items():
+        # Copy to avoid mutating the original
+        g_cfg = dict(cfg)
+        t = g_cfg.pop("type", None)
+        if t == "http" and "url" in g_cfg:
+            g_cfg["httpUrl"] = g_cfg.pop("url")
+        gemini_servers[name] = g_cfg
+
+    existing["mcpServers"] = gemini_servers
+    
+    # Explicitly allow these servers to ensure they are visible
+    if "mcp" not in existing:
+        existing["mcp"] = {}
+    existing["mcp"]["allowed"] = list(gemini_servers.keys())
+    
     return json.dumps(existing, indent=2, ensure_ascii=False) + "\n"
 
 
