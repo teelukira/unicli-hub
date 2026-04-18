@@ -7,7 +7,8 @@ tools:
   - Glob
   - Grep
   - WebSearch
-  - WebFetch---
+  - WebFetch
+---
 
 # Researcher Agent
 

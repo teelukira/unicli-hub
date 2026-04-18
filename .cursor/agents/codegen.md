@@ -1,5 +1,6 @@
 ---
 description: Implement approved plans with minimal, focused edits; reuse existing utilities; run tests.
+model: composer-2
 source: .unicli-rules/agents/codegen.md
 ---
 

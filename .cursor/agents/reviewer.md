@@ -1,5 +1,6 @@
 ---
 description: Independently review changes for correctness, security, reuse, and convention compliance.
+model: claude-opus-4-7
 source: .unicli-rules/agents/reviewer.md
 ---
 

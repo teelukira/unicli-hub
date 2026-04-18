@@ -1,3 +1,16 @@
+---
+name: reviewer
+description: Independently review changes for correctness, security, reuse, and convention compliance.
+model: claude-opus-4-7
+aliases:
+  gemini: gemini-3-pro-preview
+tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash
+---
+
 # Reviewer Agent
 
 ## Role

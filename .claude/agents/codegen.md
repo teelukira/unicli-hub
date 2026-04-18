@@ -8,7 +8,8 @@ tools:
   - Write
   - Glob
   - Grep
-  - Bash---
+  - Bash
+---
 
 # Codegen Agent
 

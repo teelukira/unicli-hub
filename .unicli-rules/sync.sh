@@ -201,109 +201,69 @@ compare_or_write "${KIRO_DIR}/steering/02-core-workflow.md" "$(cat "${CANONICAL}
 compare_or_write "${KIRO_DIR}/steering/03-memory.md" "${memory_content}"
 
 # ---------------------------------------------------------------------------
-# Agent fan-out helpers
+# ---------------------------------------------------------------------------
+# Agent fan-out (SSOT: .unicli-rules/agents/*.md)
 # ---------------------------------------------------------------------------
 SHARED_AGENTS=(researcher codegen reviewer)
 
-# Claude model assignment
-declare -A CLAUDE_MODEL=(
-  [researcher]="claude-opus-4-7"
-  [codegen]="claude-sonnet-4-6"
-  [reviewer]="claude-opus-4-7"
-)
-
-# Gemini model assignment
-declare -A GEMINI_MODEL=(
-  [researcher]="gemini-3-pro-preview"
-  [codegen]="gemini-3-pro-preview"
-  [reviewer]="gemini-3-pro-preview"
-)
-
-# Tool allowlists per agent (bullet list lines)
-claude_tools() {
-  case "$1" in
-    researcher) printf '  - Read\n  - Glob\n  - Grep\n  - WebSearch\n  - WebFetch\n' ;;
-    codegen)    printf '  - Read\n  - Edit\n  - Write\n  - Glob\n  - Grep\n  - Bash\n' ;;
-    reviewer)   printf '  - Read\n  - Glob\n  - Grep\n  - Bash\n' ;;
-  esac
-}
-
-agent_description() {
-  case "$1" in
-    researcher) echo "Investigate code and external sources; produce evidence-based summaries without speculation." ;;
-    codegen)    echo "Implement approved plans with minimal, focused edits; reuse existing utilities; run tests." ;;
-    reviewer)   echo "Independently review changes for correctness, security, reuse, and convention compliance." ;;
-  esac
-}
-
-# ---------------------------------------------------------------------------
-# [7] .claude/agents/
-# ---------------------------------------------------------------------------
-echo "[7] .claude/agents/"
 for a in "${SHARED_AGENTS[@]}"; do
   src="${CANONICAL}/agents/${a}.md"
   check_source "$src"
-  tools="$(claude_tools "$a")"
-  desc="$(agent_description "$a")"
-  model="${CLAUDE_MODEL[$a]}"
-  fm="---
-name: ${a}
+
+  # Parse agent data using Python hook
+  agent_data="$(python3 "${CANONICAL}/hooks/parse_agent.py" "$src")"
+  name="$(echo "$agent_data" | jq -r '.name')"
+  desc="$(echo "$agent_data" | jq -r '.description')"
+  base_model="$(echo "$agent_data" | jq -r '.model')"
+  body="$(echo "$agent_data" | jq -r '.body')"
+  tools_json="$(echo "$agent_data" | jq -c '.tools')"
+  aliases_json="$(echo "$agent_data" | jq -c '.aliases')"
+
+  # [7] .claude/agents/
+  echo "[7] .claude/agents/${a}.md"
+  claude_tools_fm="$(echo "$tools_json" | jq -r '.[] | "  - " + .')"
+  claude_fm="---
+name: ${name}
 description: ${desc}
-model: ${model}
+model: ${base_model}
 tools:
-${tools}---
+${claude_tools_fm}
+---
 "
-  body="$(cat "$src")"
-  compare_or_write "${CLAUDE_DIR}/agents/${a}.md" "${fm}
+  compare_or_write "${CLAUDE_DIR}/agents/${a}.md" "${claude_fm}
 ${body}
 "
-done
 
-# ---------------------------------------------------------------------------
-# [8] .cursor/agents/
-# ---------------------------------------------------------------------------
-echo "[8] .cursor/agents/"
-for a in "${SHARED_AGENTS[@]}"; do
-  src="${CANONICAL}/agents/${a}.md"
-  desc="$(agent_description "$a")"
-  fm="---
+  # [8] .cursor/agents/
+  echo "[8] .cursor/agents/${a}.md"
+  cursor_model="$(echo "$aliases_json" | jq -r '.cursor // empty')"
+  [[ -z "$cursor_model" ]] && cursor_model="$base_model"
+  cursor_fm="---
 description: ${desc}
+model: ${cursor_model}
 source: .unicli-rules/agents/${a}.md
 ---
 "
-  body="$(cat "$src")"
-  compare_or_write "${CURSOR_DIR}/agents/${a}.md" "${fm}
+  compare_or_write "${CURSOR_DIR}/agents/${a}.md" "${cursor_fm}
 ${body}
 "
-done
 
-# ---------------------------------------------------------------------------
-# [9] .gemini/agents/
-# ---------------------------------------------------------------------------
-echo "[9] .gemini/agents/"
-for a in "${SHARED_AGENTS[@]}"; do
-  src="${CANONICAL}/agents/${a}.md"
-  desc="$(agent_description "$a")"
-  model="${GEMINI_MODEL[$a]}"
-  fm="---
-name: ${a}
+  # [9] .gemini/agents/
+  echo "[9] .gemini/agents/${a}.md"
+  gemini_model="$(echo "$aliases_json" | jq -r '.gemini // empty')"
+  [[ -z "$gemini_model" ]] && gemini_model="$base_model"
+  gemini_fm="---
+name: ${name}
 description: ${desc}
-model: ${model}
+model: ${gemini_model}
 ---
 "
-  body="$(cat "$src")"
-  compare_or_write "${GEMINI_DIR}/agents/${a}.md" "${fm}
+  compare_or_write "${GEMINI_DIR}/agents/${a}.md" "${gemini_fm}
 ${body}
 "
-done
 
-# ---------------------------------------------------------------------------
-# [10] .codex/prompts/ (plain markdown — Codex slash commands)
-# ---------------------------------------------------------------------------
-echo "[10] .codex/prompts/"
-for a in "${SHARED_AGENTS[@]}"; do
-  src="${CANONICAL}/agents/${a}.md"
-  body="$(cat "$src")"
+  # [10] .codex/prompts/
+  echo "[10] .codex/prompts/${a}.md"
   compare_or_write "${CODEX_DIR}/prompts/${a}.md" "${body}
 "
 done
