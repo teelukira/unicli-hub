@@ -34,6 +34,7 @@ The following actions require **explicit user approval** before running:
 - `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*/SKILL.md`
 - `.kiro/steering/*.md`, `.kiro/agents/prompts/*`
 - `.codex/prompts/*.md`
+- MCP: `.mcp.json`, `.cursor/mcp.json`, `.kiro/mcp.json`, `.gemini/settings.json` (`mcpServers`), `.codex/config.toml` (MCP block)
 
 **Edit here instead**: `.unicli-rules/` (the canonical source).
 After editing, run `./.unicli-rules/sync.sh --fix` to regenerate every derived file.

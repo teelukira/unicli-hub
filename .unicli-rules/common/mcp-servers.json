@@ -1,0 +1,4 @@
+{
+  "_comment": "MCP server canonical definitions. Edit mcpServers here, then run ./.unicli-rules/sync.sh --fix to render per-CLI configs. Never put secrets in this file — use ${VAR} in env and set values in .env.local (see mcp-secrets.example).",
+  "mcpServers": {}
+}

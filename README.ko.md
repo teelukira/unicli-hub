@@ -68,7 +68,7 @@ codex                 # Codex (AGENTS.md 자동 로드)
 ├── agents/{researcher,codegen,reviewer}.md
 ├── skills/{scaffold-module,run-tests}.md
 ├── memory/{project-facts,conventions,glossary}.md
-├── common/{tool-matrix,approval-gates}.md
+├── common/{tool-matrix,approval-gates}.md, mcp-servers.json
 ├── templates/
 │   ├── CLAUDE.md.tmpl
 │   ├── GEMINI.md.tmpl
@@ -76,7 +76,8 @@ codex                 # Codex (AGENTS.md 자동 로드)
 │   └── frontmatter/*.yaml
 ├── hooks/
 │   ├── generated_file_guard.py   # PreToolUse  — 파생 파일 직접 편집 차단
-│   └── auto_sync.py              # PostToolUse — canonical 편집 시 sync.sh 자동 실행
+│   ├── auto_sync.py              # PostToolUse — canonical 편집 시 sync.sh 자동 실행
+│   └── render_mcp.py             # 5개 CLI용 MCP 설정 렌더
 └── sync.sh
 ```
 
@@ -88,6 +89,7 @@ codex                 # Codex (AGENTS.md 자동 로드)
 - `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*`
 - `.kiro/steering/*.md`, `.kiro/agents/prompts/*` (symlink)
 - `.codex/prompts/*.md`
+- MCP (`common/mcp-servers.json`에서 생성): `.mcp.json`, `.cursor/mcp.json`, `.kiro/mcp.json`, `.gemini/settings.json`의 `mcpServers`, `.codex/config.toml`의 생성된 `[[mcpServers]]` 블록
 
 에이전트가 이런 파일을 직접 수정하려 하면 `generated_file_guard.py` PreToolUse 훅이 차단하고, 대신 편집해야 할 canonical 경로를 알려줍니다.
 
@@ -95,7 +97,7 @@ codex                 # Codex (AGENTS.md 자동 로드)
 
 - **`./.unicli-rules/sync.sh`**를 통한 수정만이 `.cursor/`, `.claude/`, `.gemini/`, `.kiro/`, `.codex/` 에 쓰기를 허용합니다.
 - 그 외 경로로 (에이전트든 수동이든) 쓰는 모든 시도는 Python guard 훅이 차단합니다.
-- 에이전트 프롬프트·스킬·메모리를 바꾸고 싶다면 `.unicli-rules/`에서 편집하고 `sync.sh --fix`를 실행하세요. 이 한 가지 워크플로우만 있으면 됩니다.
+- 에이전트 프롬프트·스킬·메모리·MCP 서버 목록을 바꾸고 싶다면 `.unicli-rules/`에서 편집하고 `sync.sh --fix`를 실행하세요. 이 한 가지 워크플로우만 있으면 됩니다.
 
 ## 새 에이전트 추가
 

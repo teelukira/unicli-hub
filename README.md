@@ -68,7 +68,7 @@ codex                 # Codex (loads AGENTS.md automatically)
 ├── agents/{researcher,codegen,reviewer}.md
 ├── skills/{scaffold-module,run-tests}.md
 ├── memory/{project-facts,conventions,glossary}.md
-├── common/{tool-matrix,approval-gates}.md
+├── common/{tool-matrix,approval-gates}.md, mcp-servers.json
 ├── templates/
 │   ├── CLAUDE.md.tmpl
 │   ├── GEMINI.md.tmpl
@@ -76,7 +76,8 @@ codex                 # Codex (loads AGENTS.md automatically)
 │   └── frontmatter/*.yaml
 ├── hooks/
 │   ├── generated_file_guard.py   # PreToolUse  — blocks edits to derived files
-│   └── auto_sync.py              # PostToolUse — runs sync.sh on canonical edits
+│   ├── auto_sync.py              # PostToolUse — runs sync.sh on canonical edits
+│   └── render_mcp.py             # renders MCP configs for all five CLIs
 └── sync.sh
 ```
 
@@ -88,6 +89,7 @@ codex                 # Codex (loads AGENTS.md automatically)
 - `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*`
 - `.kiro/steering/*.md`, `.kiro/agents/prompts/*` (symlink)
 - `.codex/prompts/*.md`
+- MCP (from `common/mcp-servers.json`): `.mcp.json`, `.cursor/mcp.json`, `.kiro/mcp.json`, `.gemini/settings.json` (`mcpServers` key), `.codex/config.toml` (generated `[[mcpServers]]` block)
 
 If an agent tries to edit any of these directly, the `generated_file_guard.py` PreToolUse hook blocks the write and tells it to edit the canonical source instead.
 
@@ -95,7 +97,7 @@ If an agent tries to edit any of these directly, the `generated_file_guard.py` P
 
 - Editing via **`./.unicli-rules/sync.sh`** is the one sanctioned path into `.cursor/`, `.claude/`, `.gemini/`, `.kiro/`, `.codex/`.
 - Any other write (by an AI agent or by hand) to those directories is blocked by the Python guard hook.
-- Want to change an agent's prompt, a skill, a piece of memory? Edit under `.unicli-rules/`, run `sync.sh --fix`. That's the only workflow.
+- Want to change an agent's prompt, a skill, memory, or MCP servers? Edit under `.unicli-rules/`, run `sync.sh --fix`. That's the only workflow.
 
 ## Adding a New Agent
 

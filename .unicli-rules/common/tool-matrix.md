@@ -2,6 +2,8 @@
 
 How each AI CLI's features map to this template.
 
+> **MCP config**: Define servers in `.unicli-rules/common/mcp-servers.json`. `./.unicli-rules/sync.sh --fix` renders each CLI path below — do not edit derived MCP files by hand. Renderer: `.unicli-rules/hooks/render_mcp.py`.
+
 | Feature | Claude Code | Cursor | Gemini CLI | Kiro | Codex |
 |---------|-------------|--------|------------|------|-------|
 | Agent definitions | `.claude/agents/*.md` | `.cursor/agents/*.md` | `.gemini/agents/*.md` | `.kiro/agents/*.json` + prompt symlink | `.codex/prompts/*.md` (slash command) |

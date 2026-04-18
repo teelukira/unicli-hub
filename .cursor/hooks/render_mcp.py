@@ -1,0 +1,1 @@
+../../.unicli-rules/hooks/render_mcp.py
