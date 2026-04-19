@@ -1,0 +1,16 @@
+{
+  "_comment": "Optional fragment for Claude Code settings.local.json — merge into your real hooks config. Paths are repo-relative. Confirm the hook schema in current Claude Code docs.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/pre_skill_sync.py"
+          }
+        ]
+      }
+    ]
+  }
+}

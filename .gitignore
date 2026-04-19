@@ -16,6 +16,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Hook debounce stamp (pre_skill_sync.py)
+.unicli-rules/.pre_skill_sync_stamp
+
 # Per-user CLI session state
 .claude/todos/
 .claude/logs/

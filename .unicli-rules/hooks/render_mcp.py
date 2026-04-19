@@ -75,11 +75,47 @@ def render_json_mcp(servers: dict) -> str:
     return json.dumps(out, indent=2, ensure_ascii=False) + "\n"
 
 
+PRE_SKILL_READ_BLOCK = {
+    "matcher": "read_file",
+    "hooks": [
+        {
+            "name": "unicli-pre-skill-sync",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/pre_skill_sync.py",
+        }
+    ],
+}
+
+
+def _gemini_has_pre_skill_read(before_tool: object) -> bool:
+    if not isinstance(before_tool, list):
+        return False
+    for block in before_tool:
+        if not isinstance(block, dict):
+            continue
+        if block.get("matcher") != "read_file":
+            continue
+        for h in block.get("hooks") or []:
+            if isinstance(h, dict) and h.get("name") == "unicli-pre-skill-sync":
+                return True
+    return False
+
+
+def ensure_gemini_unicli_hooks(existing: dict) -> None:
+    """Ensure read_file runs pre_skill_sync when missing (e.g. fresh settings.json)."""
+    hooks = existing.setdefault("hooks", {})
+    before = hooks.get("BeforeTool")
+    if not isinstance(before, list):
+        before = []
+    if not _gemini_has_pre_skill_read(before):
+        hooks["BeforeTool"] = [PRE_SKILL_READ_BLOCK] + before
+
+
 def render_gemini(servers: dict) -> str:
     """Merge mcpServers into .gemini/settings.json, preserving other keys."""
     settings_path = ROOT / ".gemini" / "settings.json"
     existing = read_json(settings_path)
-    
+
     gemini_servers = {}
     for name, cfg in servers.items():
         # Copy to avoid mutating the original
@@ -90,12 +126,14 @@ def render_gemini(servers: dict) -> str:
         gemini_servers[name] = g_cfg
 
     existing["mcpServers"] = gemini_servers
-    
+
     # Explicitly allow these servers to ensure they are visible
     if "mcp" not in existing:
         existing["mcp"] = {}
     existing["mcp"]["allowed"] = list(gemini_servers.keys())
-    
+
+    ensure_gemini_unicli_hooks(existing)
+
     return json.dumps(existing, indent=2, ensure_ascii=False) + "\n"
 
 

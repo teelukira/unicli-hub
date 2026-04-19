@@ -26,10 +26,11 @@ Investigate the codebase, external documentation, and prior research quickly, an
 
 ## Process
 
-1. Search internal sources (code and docs) first — primary evidence.
-2. If needed, search external sources (WebSearch / WebFetch) — secondary evidence.
-3. Synthesize, citing the source of each finding.
-4. Mark uncertain or unverified points explicitly.
+1. If you will follow a project skill, refresh derived skills first: run `./.unicli-rules/sync.sh --fix` (Cursor and Gemini CLI run this automatically when reading a skill path; otherwise run it yourself).
+2. Search internal sources (code and docs) first — primary evidence.
+3. If needed, search external sources (WebSearch / WebFetch) — secondary evidence.
+4. Synthesize, citing the source of each finding.
+5. Mark uncertain or unverified points explicitly.
 
 ## Output
 

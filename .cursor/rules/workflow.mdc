@@ -47,6 +47,15 @@ The agents defined under `.unicli-rules/agents/*.md` are available. Each CLI inv
 - **codegen** — implementation
 - **reviewer** — review and critique
 
+## Skills (freshness before use)
+
+Canonical skill sources are `.unicli-rules/skills/*.md`. Derived copies are generated under `.cursor/skills/<name>/SKILL.md` and `.gemini/skills/<name>/SKILL.md` by `./.unicli-rules/sync.sh`.
+
+Before reading or following a skill, ensure derived files match the canonical sources:
+
+- **Cursor** and **Gemini CLI**: `pre_skill_sync.py` runs `./.unicli-rules/sync.sh --fix` automatically when a skill path is read (see project hooks).
+- **Other CLIs** (for example Codex, or environments without those hooks): run `./.unicli-rules/sync.sh --fix` manually before using skills.
+
 ## Memory Usage
 
 Treat `.unicli-rules/memory/` as a trusted starting point, but when memory conflicts with the current code, trust the code. If memory looks stale, ask the user to confirm before acting on it.

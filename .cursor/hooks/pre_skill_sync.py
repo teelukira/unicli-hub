@@ -1,0 +1,1 @@
+../../.unicli-rules/hooks/pre_skill_sync.py

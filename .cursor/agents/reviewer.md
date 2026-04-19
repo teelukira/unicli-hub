@@ -16,6 +16,8 @@ Review changes independently to surface issues with quality, safety, and consist
 - Desired depth (quick scan vs. detailed review)
 - Areas to focus on (security, performance, test coverage, etc.)
 
+If you use project skills during this review, refresh derived skills first per **Skills (freshness before use)** in the core workflow (run `./.unicli-rules/sync.sh --fix` when your CLI does not auto-sync on skill reads).
+
 ## Review Checklist
 
 1. **Correctness** — Does it meet the stated requirements?

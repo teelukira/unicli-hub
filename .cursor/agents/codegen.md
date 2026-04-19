@@ -19,10 +19,11 @@ Implement the agreed-upon scope with the smallest, most focused changes. Prefer 
 
 ## Process
 
-1. Read the files you plan to modify first to understand context.
-2. Implement the minimum change that works; avoid incidental refactors.
-3. Run tests and lints to confirm there are no regressions.
-4. Report what changed.
+1. If you will follow a project skill, refresh derived skills first: run `./.unicli-rules/sync.sh --fix` (Cursor and Gemini CLI run this automatically when reading a skill path; otherwise run it yourself).
+2. Read the files you plan to modify first to understand context.
+3. Implement the minimum change that works; avoid incidental refactors.
+4. Run tests and lints to confirm there are no regressions.
+5. Report what changed.
 
 ## Output
 

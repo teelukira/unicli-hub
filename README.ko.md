@@ -138,6 +138,13 @@ EOF
 |------|--------|------|
 | `generated_file_guard.py` | PreToolUse (Edit / Write) | 파생 파일 직접 편집을 차단하고, 편집해야 할 canonical 경로를 출력 |
 | `auto_sync.py` | PostToolUse (Edit / Write) | `.unicli-rules/**` 수정 감지 시 `sync.sh --fix` 자동 실행 |
+| `pre_skill_sync.py` | Cursor `beforeReadFile` (Read / TabRead); Gemini `BeforeTool` (`read_file`) | 스킬 경로를 읽기 전에 `sync.sh --fix`를 실행해 파생 `SKILL.md`가 `.unicli-rules/skills/`와 일치하게 함 |
+
+### 다른 CLI에서 스킬 sync
+
+- **Codex** — 이 템플릿에는 프로젝트 훅이 없습니다. 스킬을 쓰기 전에 `./.unicli-rules/sync.sh --fix`를 수동 실행하세요.
+- **Kiro** — 이 저장소는 `beforeFileWrite` / `afterFileWrite` 훅만 연결합니다. 읽기 직전 훅은 없으므로 스킬 사용 전 수동 sync 하세요.
+- **Claude Code** — 선택: 읽기 시점에 `python3 ./.unicli-rules/hooks/pre_skill_sync.py`를 호출하는 훅을 추가하세요(병합용 예시: `.unicli-rules/templates/claude-pre-skill-sync.snippet.json`; 필드명은 최신 Claude Code 문서와 대조). 또는 `./.unicli-rules/sync.sh --fix`를 수동 실행하세요.
 
 훅은 **순수 Python(표준 라이브러리만)**, Python 3.8+ 호환입니다. 5개 CLI의 훅 설정(`.claude/settings.local.json`, `.cursor/hooks.json`, `.gemini/settings.json`, `.kiro/hooks/*.kiro.hook`)이 모두 `python3`로 호출합니다.
 

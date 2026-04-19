@@ -15,6 +15,14 @@
         "matcher": "Write|Edit",
         "timeout": 30
       }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "python3 .cursor/hooks/pre_skill_sync.py",
+        "matcher": "Read|TabRead",
+        "timeout": 120,
+        "failClosed": false
+      }
     ]
   }
 }
