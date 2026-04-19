@@ -119,6 +119,13 @@ EOF
 
 Just create `.unicli-rules/skills/<name>.md`. `sync.sh` fans it out to Gemini and Cursor automatically.
 
+### Skill Secrets Management
+
+Do not store raw API keys or secrets in your skill directories (e.g. `utils/*.json`). Instead:
+1. Store secrets in the project root `.env.local` (which is git-ignored).
+2. Use `python-dotenv` to dynamically load secrets by searching upwards for the `.env.local` file.
+3. See the provided example in `.unicli-rules/skills/example-skill/utils/secrets_manager.py`.
+
 ## Editing Memory
 
 1. Edit any file under `.unicli-rules/memory/`.
@@ -211,6 +218,12 @@ Run `./.unicli-rules/sync.sh --install-codex-prompts` first — Codex scans `~/.
 
 **Q. I only use one CLI.**
 Use that CLI's derived directory. The others can be ignored or deleted. You can also trim the steps in `sync.sh` that you don't need.
+
+## Recent Updates
+
+- **Unified Secret Management**: Introduced `python-dotenv` integration for skills to safely load secrets from the root `.env.local` file.
+- **Agent Model Management**: Centralized model configuration for agents in SSOT.
+- **MCP Configuration**: Unified MCP server definitions across all 5 supported CLIs.
 
 **Q. How do I change agent models?**
 Edit the `CLAUDE_MODEL` / `GEMINI_MODEL` associative arrays in `.unicli-rules/sync.sh`.
