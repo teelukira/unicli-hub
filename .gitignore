@@ -20,3 +20,15 @@ Thumbs.db
 .claude/todos/
 .claude/logs/
 .codex/sessions/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env
+.env.local
+.env.vcs
