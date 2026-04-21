@@ -372,17 +372,27 @@ print('yes' if not s else 'no')
     # Kiro: .kiro/settings/mcp.json (identical JSON)
     compare_or_write "${KIRO_DIR}/settings/mcp.json" "$mcp_json"
 
-    # Gemini: merge mcpServers into existing settings.json (preserve hooks etc.)
+    # Gemini: build settings.json canonically (hooks + mcpServers)
     gemini_settings="${GEMINI_DIR}/settings.json"
-    gemini_merged=$(python3 - "$MCP_SRC" "$gemini_settings" <<'PY'
+    gemini_full=$(python3 - "$MCP_SRC" <<'PY'
 import json, sys
 mcp = json.load(open(sys.argv[1]))
-existing = json.load(open(sys.argv[2])) if len(sys.argv) > 2 else {}
-existing["mcpServers"] = mcp["mcpServers"]
-sys.stdout.write(json.dumps(existing, indent=2) + "\n")
+settings = {
+  "hooks": {
+    "BeforeTool": [
+      {"matcher": "read_file", "hooks": [{"name": "unicli-pre-skill-sync", "type": "command", "command": "python3 ./.unicli-rules/hooks/pre_skill_sync.py"}]},
+      {"matcher": "write_file|replace", "hooks": [{"name": "unicli-generated-file-guard", "type": "command", "command": "python3 ./.unicli-rules/hooks/generated_file_guard.py"}]}
+    ],
+    "AfterTool": [
+      {"matcher": "write_file|replace", "hooks": [{"name": "unicli-auto-sync", "type": "command", "command": "python3 ./.unicli-rules/hooks/auto_sync.py"}]}
+    ]
+  },
+  "mcpServers": mcp["mcpServers"]
+}
+sys.stdout.write(json.dumps(settings, indent=2) + "\n")
 PY
 )
-    compare_or_write "$gemini_settings" "$gemini_merged"
+    compare_or_write "$gemini_settings" "$gemini_full"
 
     # Codex: append [mcp_servers.*] TOML sections to config.toml
     codex_toml="${CODEX_DIR}/config.toml"

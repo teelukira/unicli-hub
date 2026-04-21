@@ -2,6 +2,16 @@
   "hooks": {
     "BeforeTool": [
       {
+        "matcher": "read_file",
+        "hooks": [
+          {
+            "name": "unicli-pre-skill-sync",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/pre_skill_sync.py"
+          }
+        ]
+      },
+      {
         "matcher": "write_file|replace",
         "hooks": [
           {
