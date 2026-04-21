@@ -1,17 +1,16 @@
 {
   "mcpServers": {
     "tavily": {
-      "type": "stdio",
       "command": "npx",
       "args": [
         "-y",
         "mcp-remote",
         "https://mcp.tavily.com/mcp/",
         "--header",
-        "Authorization:Bearer ${TAVILY_API_KEY}"
+        "Authorization:Bearer ${MCP_TAVILY_API_KEY}"
       ],
       "env": {
-        "TAVILY_API_KEY": "${TAVILY_API_KEY}"
+        "TAVILY_API_KEY": "${MCP_TAVILY_API_KEY}"
       }
     }
   }
