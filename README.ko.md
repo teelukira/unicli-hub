@@ -89,7 +89,7 @@ codex                 # Codex (AGENTS.md 자동 로드)
 - `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*`
 - `.kiro/steering/*.md`, `.kiro/agents/prompts/*` (symlink)
 - `.codex/prompts/*.md`
-- MCP (`common/mcp-servers.json`에서 생성): `.mcp.json`, `.cursor/mcp.json`, `.kiro/mcp.json`, `.gemini/settings.json`의 `mcpServers`, `.codex/config.toml`의 생성된 `[[mcpServers]]` 블록
+- MCP (`common/mcp-servers.json`에서 생성): `.mcp.json`, `.cursor/mcp.json`, `.kiro/settings/mcp.json`, `.gemini/settings.json`의 `mcpServers`, `.codex/config.toml`의 생성된 `[[mcpServers]]` 블록
 
 에이전트가 이런 파일을 직접 수정하려 하면 `generated_file_guard.py` PreToolUse 훅이 차단하고, 대신 편집해야 할 canonical 경로를 알려줍니다.
 

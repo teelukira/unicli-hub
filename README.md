@@ -89,7 +89,7 @@ codex                 # Codex (loads AGENTS.md automatically)
 - `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*`
 - `.kiro/steering/*.md`, `.kiro/agents/prompts/*` (symlink)
 - `.codex/prompts/*.md`
-- MCP (from `common/mcp-servers.json`): `.mcp.json`, `.cursor/mcp.json`, `.kiro/mcp.json`, `.gemini/settings.json` (`mcpServers` key), `.codex/config.toml` (generated `[[mcpServers]]` block)
+- MCP (from `common/mcp-servers.json`): `.mcp.json`, `.cursor/mcp.json`, `.kiro/settings/mcp.json`, `.gemini/settings.json` (`mcpServers` key), `.codex/config.toml` (generated `[[mcpServers]]` block)
 
 If an agent tries to edit any of these directly, the `generated_file_guard.py` PreToolUse hook blocks the write and tells it to edit the canonical source instead.
 

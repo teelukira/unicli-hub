@@ -7,7 +7,7 @@ per-CLI MCP config files. Called by sync.sh render_mcp().
 Outputs:
   Claude  → .mcp.json                  (JSON: {mcpServers: {...}})
   Cursor  → .cursor/mcp.json           (JSON: {mcpServers: {...}})
-  Kiro    → .kiro/mcp.json             (JSON: {mcpServers: {...}})
+  Kiro    → .kiro/settings/mcp.json    (JSON: {mcpServers: {...}})
   Gemini  → .gemini/settings.json      (JSON merge: preserve existing hooks)
   Codex   → .codex/config.toml         (TOML append: [[mcpServers]] array)
 
@@ -204,7 +204,7 @@ def main() -> int:
     drift |= write_or_check(ROOT / ".cursor" / "mcp.json", render_json_mcp(servers), mode)
 
     # Kiro
-    drift |= write_or_check(ROOT / ".kiro" / "mcp.json", render_json_mcp(servers), mode)
+    drift |= write_or_check(ROOT / ".kiro" / "settings" / "mcp.json", render_json_mcp(servers), mode)
 
     # Gemini (merge)
     drift |= write_or_check(ROOT / ".gemini" / "settings.json", render_gemini(servers), mode)
