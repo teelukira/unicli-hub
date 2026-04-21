@@ -8,6 +8,21 @@ tools:
   - Write
   - Glob
   - Grep
+  - Bash---
+
+---
+name: codegen
+description: Implement approved plans with minimal, focused edits; reuse existing utilities; run tests.
+model: claude-sonnet-4-6
+aliases:
+  gemini: gemini-3-pro-preview
+  cursor: composer-2
+tools:
+  - Read
+  - Edit
+  - Write
+  - Glob
+  - Grep
   - Bash
 ---
 

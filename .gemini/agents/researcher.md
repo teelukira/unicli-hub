@@ -4,6 +4,20 @@ description: Investigate code and external sources; produce evidence-based summa
 model: gemini-3-pro-preview
 ---
 
+---
+name: researcher
+description: Investigate code and external sources; produce evidence-based summaries without speculation.
+model: claude-opus-4-7
+aliases:
+  gemini: gemini-3-pro-preview
+tools:
+  - Read
+  - Glob
+  - Grep
+  - WebSearch
+  - WebFetch
+---
+
 # Researcher Agent
 
 ## Role

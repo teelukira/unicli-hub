@@ -2,16 +2,6 @@
   "hooks": {
     "BeforeTool": [
       {
-        "matcher": "read_file",
-        "hooks": [
-          {
-            "name": "unicli-pre-skill-sync",
-            "type": "command",
-            "command": "python3 ./.unicli-rules/hooks/pre_skill_sync.py"
-          }
-        ]
-      },
-      {
         "matcher": "write_file|replace",
         "hooks": [
           {
@@ -36,23 +26,46 @@
     ]
   },
   "mcpServers": {
-    "tavily": {
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    },
+    "context7": {
       "command": "npx",
       "args": [
         "-y",
-        "mcp-remote",
-        "https://mcp.tavily.com/mcp/",
-        "--header",
-        "Authorization:Bearer ${TAVILY_API_KEY}"
+        "@upstash/context7-mcp"
+      ]
+    },
+    "aws-docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@aws/aws-documentation-mcp-server"
+      ]
+    },
+    "tavily-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "tavily-mcp@latest"
       ],
       "env": {
         "TAVILY_API_KEY": "${TAVILY_API_KEY}"
       }
+    },
+    "mcp-atlassian": {
+      "command": "uvx",
+      "args": [
+        "mcp-atlassian"
+      ],
+      "env": {
+        "ATLASSIAN_URL": "${ATLASSIAN_URL}",
+        "ATLASSIAN_USER_EMAIL": "${ATLASSIAN_USER_EMAIL}",
+        "ATLASSIAN_API_TOKEN": "${ATLASSIAN_API_TOKEN}"
+      }
     }
-  },
-  "mcp": {
-    "allowed": [
-      "tavily"
-    ]
   }
 }

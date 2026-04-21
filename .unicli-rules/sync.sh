@@ -201,69 +201,109 @@ compare_or_write "${KIRO_DIR}/steering/02-core-workflow.md" "$(cat "${CANONICAL}
 compare_or_write "${KIRO_DIR}/steering/03-memory.md" "${memory_content}"
 
 # ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# Agent fan-out (SSOT: .unicli-rules/agents/*.md)
+# Agent fan-out helpers
 # ---------------------------------------------------------------------------
 SHARED_AGENTS=(researcher codegen reviewer)
 
+# Claude model assignment
+declare -A CLAUDE_MODEL=(
+  [researcher]="claude-opus-4-7"
+  [codegen]="claude-sonnet-4-6"
+  [reviewer]="claude-opus-4-7"
+)
+
+# Gemini model assignment
+declare -A GEMINI_MODEL=(
+  [researcher]="gemini-3-pro-preview"
+  [codegen]="gemini-3-pro-preview"
+  [reviewer]="gemini-3-pro-preview"
+)
+
+# Tool allowlists per agent (bullet list lines)
+claude_tools() {
+  case "$1" in
+    researcher) printf '  - Read\n  - Glob\n  - Grep\n  - WebSearch\n  - WebFetch\n' ;;
+    codegen)    printf '  - Read\n  - Edit\n  - Write\n  - Glob\n  - Grep\n  - Bash\n' ;;
+    reviewer)   printf '  - Read\n  - Glob\n  - Grep\n  - Bash\n' ;;
+  esac
+}
+
+agent_description() {
+  case "$1" in
+    researcher) echo "Investigate code and external sources; produce evidence-based summaries without speculation." ;;
+    codegen)    echo "Implement approved plans with minimal, focused edits; reuse existing utilities; run tests." ;;
+    reviewer)   echo "Independently review changes for correctness, security, reuse, and convention compliance." ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# [7] .claude/agents/
+# ---------------------------------------------------------------------------
+echo "[7] .claude/agents/"
 for a in "${SHARED_AGENTS[@]}"; do
   src="${CANONICAL}/agents/${a}.md"
   check_source "$src"
-
-  # Parse agent data using Python hook
-  agent_data="$(python3 "${CANONICAL}/hooks/parse_agent.py" "$src")"
-  name="$(echo "$agent_data" | jq -r '.name')"
-  desc="$(echo "$agent_data" | jq -r '.description')"
-  base_model="$(echo "$agent_data" | jq -r '.model')"
-  body="$(echo "$agent_data" | jq -r '.body')"
-  tools_json="$(echo "$agent_data" | jq -c '.tools')"
-  aliases_json="$(echo "$agent_data" | jq -c '.aliases')"
-
-  # [7] .claude/agents/
-  echo "[7] .claude/agents/${a}.md"
-  claude_tools_fm="$(echo "$tools_json" | jq -r '.[] | "  - " + .')"
-  claude_fm="---
-name: ${name}
+  tools="$(claude_tools "$a")"
+  desc="$(agent_description "$a")"
+  model="${CLAUDE_MODEL[$a]}"
+  fm="---
+name: ${a}
 description: ${desc}
-model: ${base_model}
+model: ${model}
 tools:
-${claude_tools_fm}
----
+${tools}---
 "
-  compare_or_write "${CLAUDE_DIR}/agents/${a}.md" "${claude_fm}
+  body="$(cat "$src")"
+  compare_or_write "${CLAUDE_DIR}/agents/${a}.md" "${fm}
 ${body}
 "
+done
 
-  # [8] .cursor/agents/
-  echo "[8] .cursor/agents/${a}.md"
-  cursor_model="$(echo "$aliases_json" | jq -r '.cursor // empty')"
-  [[ -z "$cursor_model" ]] && cursor_model="$base_model"
-  cursor_fm="---
+# ---------------------------------------------------------------------------
+# [8] .cursor/agents/
+# ---------------------------------------------------------------------------
+echo "[8] .cursor/agents/"
+for a in "${SHARED_AGENTS[@]}"; do
+  src="${CANONICAL}/agents/${a}.md"
+  desc="$(agent_description "$a")"
+  fm="---
 description: ${desc}
-model: ${cursor_model}
 source: .unicli-rules/agents/${a}.md
 ---
 "
-  compare_or_write "${CURSOR_DIR}/agents/${a}.md" "${cursor_fm}
+  body="$(cat "$src")"
+  compare_or_write "${CURSOR_DIR}/agents/${a}.md" "${fm}
 ${body}
 "
+done
 
-  # [9] .gemini/agents/
-  echo "[9] .gemini/agents/${a}.md"
-  gemini_model="$(echo "$aliases_json" | jq -r '.gemini // empty')"
-  [[ -z "$gemini_model" ]] && gemini_model="$base_model"
-  gemini_fm="---
-name: ${name}
+# ---------------------------------------------------------------------------
+# [9] .gemini/agents/
+# ---------------------------------------------------------------------------
+echo "[9] .gemini/agents/"
+for a in "${SHARED_AGENTS[@]}"; do
+  src="${CANONICAL}/agents/${a}.md"
+  desc="$(agent_description "$a")"
+  model="${GEMINI_MODEL[$a]}"
+  fm="---
+name: ${a}
 description: ${desc}
-model: ${gemini_model}
+model: ${model}
 ---
 "
-  compare_or_write "${GEMINI_DIR}/agents/${a}.md" "${gemini_fm}
+  body="$(cat "$src")"
+  compare_or_write "${GEMINI_DIR}/agents/${a}.md" "${fm}
 ${body}
 "
+done
 
-  # [10] .codex/prompts/
-  echo "[10] .codex/prompts/${a}.md"
+# ---------------------------------------------------------------------------
+# [10] .codex/prompts/ (plain markdown — Codex slash commands)
+# ---------------------------------------------------------------------------
+echo "[10] .codex/prompts/"
+for a in "${SHARED_AGENTS[@]}"; do
+  src="${CANONICAL}/agents/${a}.md"
+  body="$(cat "$src")"
   compare_or_write "${CODEX_DIR}/prompts/${a}.md" "${body}
 "
 done
@@ -307,12 +347,101 @@ for h in "${CANONICAL}/hooks/"*.py; do
 done
 
 # ---------------------------------------------------------------------------
-# [13] MCP config fan-out (all 5 CLIs)
+# [13] MCP fan-out
 # ---------------------------------------------------------------------------
-echo "[13] MCP config fan-out"
-python3 "${CANONICAL}/hooks/render_mcp.py" "--${MODE}" || {
-  if [[ "$MODE" == "check" ]]; then DRIFT=1; else exit 1; fi
-}
+MCP_SRC="${CANONICAL}/common/mcp-servers.json"
+if [[ -f "$MCP_SRC" ]]; then
+  # Skip if canonical is effectively empty
+  mcp_empty=$(python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+s = d.get('mcpServers', {})
+print('yes' if not s else 'no')
+" "$MCP_SRC")
+
+  if [[ "$mcp_empty" == "no" ]]; then
+    echo "[13] MCP fan-out"
+    mcp_json="$(cat "$MCP_SRC")"
+
+    # Claude Code: .mcp.json (identical JSON)
+    compare_or_write "${ROOT}/.mcp.json" "$mcp_json"
+
+    # Cursor: .cursor/mcp.json (identical JSON)
+    compare_or_write "${CURSOR_DIR}/mcp.json" "$mcp_json"
+
+    # Kiro: .kiro/settings/mcp.json (identical JSON)
+    compare_or_write "${KIRO_DIR}/settings/mcp.json" "$mcp_json"
+
+    # Gemini: merge mcpServers into existing settings.json (preserve hooks etc.)
+    gemini_settings="${GEMINI_DIR}/settings.json"
+    gemini_merged=$(python3 - "$MCP_SRC" "$gemini_settings" <<'PY'
+import json, sys
+mcp = json.load(open(sys.argv[1]))
+existing = json.load(open(sys.argv[2])) if len(sys.argv) > 2 else {}
+existing["mcpServers"] = mcp["mcpServers"]
+sys.stdout.write(json.dumps(existing, indent=2) + "\n")
+PY
+)
+    compare_or_write "$gemini_settings" "$gemini_merged"
+
+    # Codex: append [mcp_servers.*] TOML sections to config.toml
+    codex_toml="${CODEX_DIR}/config.toml"
+    codex_merged=$(python3 - "$MCP_SRC" "$codex_toml" <<'PYEOF'
+import json, re, sys
+
+mcp = json.load(open(sys.argv[1]))
+toml_path = sys.argv[2]
+
+# Read existing config.toml, strip old [mcp_servers.*] sections
+lines = open(toml_path).read().rstrip("\n").split("\n") if __import__("os").path.isfile(toml_path) else []
+out, skip = [], False
+for line in lines:
+    if re.match(r'^\[mcp_servers\.', line):
+        skip = True; continue
+    if skip and re.match(r'^\[', line):
+        skip = False
+    if skip:
+        continue
+    out.append(line)
+
+# Remove trailing blank lines
+while out and out[-1].strip() == "":
+    out.pop()
+
+base = "\n".join(out)
+
+# Convert each MCP server to TOML
+toml_blocks = []
+for name, cfg in mcp.get("mcpServers", {}).items():
+    block = [f"\n[mcp_servers.{name}]"]
+    if "command" in cfg:
+        block.append(f'command = "{cfg["command"]}"')
+    if "args" in cfg:
+        args_str = ", ".join(f'"{a}"' for a in cfg["args"])
+        block.append(f"args = [{args_str}]")
+    if "url" in cfg:
+        block.append(f'url = "{cfg["url"]}"')
+    env = cfg.get("env", {})
+    if env:
+        # Extract env var names for env_vars array
+        var_names = set()
+        for v in env.values():
+            for m in re.finditer(r'\$\{(\w+)\}', v):
+                var_names.add(m.group(1))
+        if var_names:
+            vl = ", ".join(f'"{v}"' for v in sorted(var_names))
+            block.append(f"env_vars = [{vl}]")
+        block.append(f"\n[mcp_servers.{name}.env]")
+        for ek, ev in env.items():
+            block.append(f'{ek} = "{ev}"')
+    toml_blocks.append("\n".join(block))
+
+sys.stdout.write(base + "\n" + "\n".join(toml_blocks) + "\n")
+PYEOF
+)
+    compare_or_write "$codex_toml" "$codex_merged"
+  fi
+fi
 
 # ---------------------------------------------------------------------------
 # Summary

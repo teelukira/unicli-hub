@@ -11,7 +11,7 @@ How each AI CLI's features map to this template.
 | Skill / prompt | MCP skills | `.cursor/skills/` | `.gemini/skills/<name>/SKILL.md` | `.kiro/prompts/*.md` | `~/.codex/prompts/` |
 | Hook | `settings.local.json` (PreToolUse / PostToolUse) | `.cursor/hooks.json` | `.gemini/settings.json` | `.kiro/hooks/*.kiro.hook` | (none) |
 | Memory | `CLAUDE.md` + `@import` | `.cursor/rules/memory.mdc` | `GEMINI.md` block | `.kiro/steering/03-memory.md` | `AGENTS.md` prepend |
-| MCP | `.mcp.json` | `.cursor/mcp.json` | `.gemini/settings.json` | `.kiro/mcp.json` | `.codex/config.toml` (`mcp_servers`) |
+| MCP | `.mcp.json` | `.cursor/mcp.json` | `.gemini/settings.json` | `.kiro/settings/mcp.json` | `.codex/config.toml` (`mcp_servers`) |
 
 ## Regeneration owner
 

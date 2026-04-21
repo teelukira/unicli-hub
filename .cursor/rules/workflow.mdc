@@ -29,12 +29,12 @@ The following actions require **explicit user approval** before running:
 **Never edit derived files directly**:
 
 - `CLAUDE.md`, `AGENTS.md` at the repository root
+- `.mcp.json` at the repository root
 - `.claude/agents/*.md`
-- `.cursor/rules/*.mdc`, `.cursor/agents/*.md`
-- `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*/SKILL.md`
-- `.kiro/steering/*.md`, `.kiro/agents/prompts/*`
-- `.codex/prompts/*.md`
-- MCP: `.mcp.json`, `.cursor/mcp.json`, `.kiro/mcp.json`, `.gemini/settings.json` (`mcpServers`), `.codex/config.toml` (MCP block)
+- `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/mcp.json`
+- `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*/SKILL.md` (MCP section in `.gemini/settings.json`)
+- `.kiro/steering/*.md`, `.kiro/agents/prompts/*`, `.kiro/settings/mcp.json`
+- `.codex/prompts/*.md` (MCP sections in `.codex/config.toml`)
 
 **Edit here instead**: `.unicli-rules/` (the canonical source).
 After editing, run `./.unicli-rules/sync.sh --fix` to regenerate every derived file.
@@ -46,15 +46,6 @@ The agents defined under `.unicli-rules/agents/*.md` are available. Each CLI inv
 - **researcher** — investigation and exploration
 - **codegen** — implementation
 - **reviewer** — review and critique
-
-## Skills (freshness before use)
-
-Canonical skill sources are `.unicli-rules/skills/*.md`. Derived copies are generated under `.cursor/skills/<name>/SKILL.md` and `.gemini/skills/<name>/SKILL.md` by `./.unicli-rules/sync.sh`.
-
-Before reading or following a skill, ensure derived files match the canonical sources:
-
-- **Cursor** and **Gemini CLI**: `pre_skill_sync.py` runs `./.unicli-rules/sync.sh --fix` automatically when a skill path is read (see project hooks).
-- **Other CLIs** (for example Codex, or environments without those hooks): run `./.unicli-rules/sync.sh --fix` manually before using skills.
 
 ## Memory Usage
 
