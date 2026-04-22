@@ -77,5 +77,14 @@
         "ATLASSIAN_API_TOKEN": "${ATLASSIAN_API_TOKEN}"
       }
     }
+  },
+  "mcp": {
+    "allowed": [
+      "fetch",
+      "context7",
+      "aws-docs",
+      "tavily-search",
+      "mcp-atlassian"
+    ]
   }
 }

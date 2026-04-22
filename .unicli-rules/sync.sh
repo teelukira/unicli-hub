@@ -369,14 +369,22 @@ print('yes' if not s else 'no')
     # Cursor: .cursor/mcp.json (identical JSON)
     compare_or_write "${CURSOR_DIR}/mcp.json" "$mcp_json"
 
-    # Kiro: .kiro/settings/mcp.json (identical JSON)
-    compare_or_write "${KIRO_DIR}/settings/mcp.json" "$mcp_json"
+    # Kiro: .kiro/settings/mcp.json (type field removed — kiro-cli uses command/url)
+    kiro_mcp_json=$(python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+for v in d['mcpServers'].values():
+    v.pop('type', None)
+sys.stdout.write(json.dumps(d, indent=2, ensure_ascii=False))
+" "$MCP_SRC")
+    compare_or_write "${KIRO_DIR}/settings/mcp.json" "$kiro_mcp_json"
 
     # Gemini: build settings.json canonically (hooks + mcpServers)
     gemini_settings="${GEMINI_DIR}/settings.json"
     gemini_full=$(python3 - "$MCP_SRC" <<'PY'
 import json, sys
 mcp = json.load(open(sys.argv[1]))
+server_names = list(mcp["mcpServers"].keys())
 settings = {
   "hooks": {
     "BeforeTool": [
@@ -387,7 +395,8 @@ settings = {
       {"matcher": "write_file|replace", "hooks": [{"name": "unicli-auto-sync", "type": "command", "command": "python3 ./.unicli-rules/hooks/auto_sync.py"}]}
     ]
   },
-  "mcpServers": mcp["mcpServers"]
+  "mcpServers": mcp["mcpServers"],
+  "mcp": {"allowed": server_names}
 }
 sys.stdout.write(json.dumps(settings, indent=2) + "\n")
 PY
