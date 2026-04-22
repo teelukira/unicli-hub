@@ -49,13 +49,7 @@ def read_json(path: Path) -> dict:
 
 
 def write_or_check(path: Path, content: str, mode: str) -> bool:
-    """Return True if drift detected (check mode) or write was performed (fix mode).
-
-    Note: sync.sh uses ``printf '%s' "$content"`` which strips trailing
-    newlines (bash command-substitution artefact).  We replicate that
-    behaviour so both scripts produce byte-identical output.
-    """
-    content = content.rstrip("\n")
+    """Return True if drift detected (check mode) or write was performed (fix mode)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     if mode == "check":
         if not path.exists():
@@ -76,22 +70,9 @@ def write_or_check(path: Path, content: str, mode: str) -> bool:
 # Renderers
 # ---------------------------------------------------------------------------
 def render_json_mcp(servers: dict) -> str:
-    """Claude / Cursor format: {mcpServers: {...}}
-
-    Read the canonical file verbatim when no servers were filtered out,
-    so the output matches sync.sh's plain `cat` copy exactly.
-    Note: sync.sh uses printf '%s' which strips trailing newline via
-    bash command substitution, so we match that behaviour.
-    """
-    with CANONICAL.open(encoding="utf-8") as f:
-        raw = json.load(f)
-    orig_keys = {k for k in raw.get("mcpServers", {}) if not k.startswith("_")}
-    if set(servers.keys()) == orig_keys:
-        text = CANONICAL.read_text(encoding="utf-8")
-        # bash $(cat file) strips trailing newlines; match sync.sh behaviour
-        return text.rstrip("\n")
+    """Claude / Cursor format: {mcpServers: {...}}"""
     out = {"mcpServers": servers}
-    return json.dumps(out, indent=2, ensure_ascii=False)
+    return json.dumps(out, indent=2, ensure_ascii=False) + "\n"
 
 
 def render_kiro(servers: dict) -> str:
@@ -106,7 +87,7 @@ def render_kiro(servers: dict) -> str:
         k_cfg.pop("type", None)
         kiro_servers[name] = k_cfg
     out = {"mcpServers": kiro_servers}
-    return json.dumps(out, indent=2, ensure_ascii=False)
+    return json.dumps(out, indent=2, ensure_ascii=False) + "\n"
 
 
 PRE_SKILL_READ_BLOCK = {

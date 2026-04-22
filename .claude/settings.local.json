@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .unicli-rules/hooks/generated_file_guard.py",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .unicli-rules/hooks/pre_skill_sync.py",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .unicli-rules/hooks/auto_sync.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -198,26 +198,29 @@ compare_or_write "${KIRO_DIR}/steering/01-project-context.md" "$(cat "${CANONICA
 "
 compare_or_write "${KIRO_DIR}/steering/02-core-workflow.md" "$(cat "${CANONICAL}/core-workflow.md")
 "
-compare_or_write "${KIRO_DIR}/steering/03-memory.md" "${memory_content}"
+compare_or_write "${KIRO_DIR}/steering/03-memory.md" "${memory_content}
+"
 
 # ---------------------------------------------------------------------------
 # Agent fan-out helpers
 # ---------------------------------------------------------------------------
 SHARED_AGENTS=(researcher codegen reviewer)
 
-# Claude model assignment
-declare -A CLAUDE_MODEL=(
-  [researcher]="claude-opus-4-7"
-  [codegen]="claude-sonnet-4-6"
-  [reviewer]="claude-opus-4-7"
-)
+claude_model() {
+  case "$1" in
+    researcher) echo "claude-opus-4-7" ;;
+    codegen)    echo "claude-sonnet-4-6" ;;
+    reviewer)   echo "claude-opus-4-7" ;;
+  esac
+}
 
-# Gemini model assignment
-declare -A GEMINI_MODEL=(
-  [researcher]="gemini-3-pro-preview"
-  [codegen]="gemini-3-pro-preview"
-  [reviewer]="gemini-3-pro-preview"
-)
+gemini_model() {
+  case "$1" in
+    researcher) echo "gemini-3-pro-preview" ;;
+    codegen)    echo "gemini-3-pro-preview" ;;
+    reviewer)   echo "gemini-3-pro-preview" ;;
+  esac
+}
 
 # Tool allowlists per agent (bullet list lines)
 claude_tools() {
@@ -245,7 +248,7 @@ for a in "${SHARED_AGENTS[@]}"; do
   check_source "$src"
   tools="$(claude_tools "$a")"
   desc="$(agent_description "$a")"
-  model="${CLAUDE_MODEL[$a]}"
+  model="$(claude_model "$a")"
   fm="---
 name: ${a}
 description: ${desc}
@@ -284,7 +287,7 @@ echo "[9] .gemini/agents/"
 for a in "${SHARED_AGENTS[@]}"; do
   src="${CANONICAL}/agents/${a}.md"
   desc="$(agent_description "$a")"
-  model="${GEMINI_MODEL[$a]}"
+  model="$(gemini_model "$a")"
   fm="---
 name: ${a}
 description: ${desc}
@@ -347,120 +350,20 @@ for h in "${CANONICAL}/hooks/"*.py; do
 done
 
 # ---------------------------------------------------------------------------
-# [13] MCP fan-out
+# [13] MCP config fan-out (all 5 CLIs)
 # ---------------------------------------------------------------------------
-MCP_SRC="${CANONICAL}/common/mcp-servers.json"
-if [[ -f "$MCP_SRC" ]]; then
-  # Skip if canonical is effectively empty
-  mcp_empty=$(python3 -c "
-import json, sys
-d = json.load(open(sys.argv[1]))
-s = d.get('mcpServers', {})
-print('yes' if not s else 'no')
-" "$MCP_SRC")
-
-  if [[ "$mcp_empty" == "no" ]]; then
-    echo "[13] MCP fan-out"
-    mcp_json="$(cat "$MCP_SRC")"
-
-    # Claude Code: .mcp.json (identical JSON)
-    compare_or_write "${ROOT}/.mcp.json" "$mcp_json"
-
-    # Cursor: .cursor/mcp.json (identical JSON)
-    compare_or_write "${CURSOR_DIR}/mcp.json" "$mcp_json"
-
-    # Kiro: .kiro/settings/mcp.json (type field removed — kiro-cli uses command/url)
-    kiro_mcp_json=$(python3 -c "
-import json, sys
-d = json.load(open(sys.argv[1]))
-for v in d['mcpServers'].values():
-    v.pop('type', None)
-sys.stdout.write(json.dumps(d, indent=2, ensure_ascii=False))
-" "$MCP_SRC")
-    compare_or_write "${KIRO_DIR}/settings/mcp.json" "$kiro_mcp_json"
-
-    # Gemini: build settings.json canonically (hooks + mcpServers)
-    gemini_settings="${GEMINI_DIR}/settings.json"
-    gemini_full=$(python3 - "$MCP_SRC" <<'PY'
-import json, sys
-mcp = json.load(open(sys.argv[1]))
-server_names = list(mcp["mcpServers"].keys())
-settings = {
-  "hooks": {
-    "BeforeTool": [
-      {"matcher": "read_file", "hooks": [{"name": "unicli-pre-skill-sync", "type": "command", "command": "python3 ./.unicli-rules/hooks/pre_skill_sync.py"}]},
-      {"matcher": "write_file|replace", "hooks": [{"name": "unicli-generated-file-guard", "type": "command", "command": "python3 ./.unicli-rules/hooks/generated_file_guard.py"}]}
-    ],
-    "AfterTool": [
-      {"matcher": "write_file|replace", "hooks": [{"name": "unicli-auto-sync", "type": "command", "command": "python3 ./.unicli-rules/hooks/auto_sync.py"}]}
-    ]
-  },
-  "mcpServers": mcp["mcpServers"],
-  "mcp": {"allowed": server_names}
+echo "[13] MCP config fan-out"
+python3 "${CANONICAL}/hooks/render_mcp.py" "--${MODE}" || {
+  if [[ "$MODE" == "check" ]]; then DRIFT=1; else exit 1; fi
 }
-sys.stdout.write(json.dumps(settings, indent=2) + "\n")
-PY
-)
-    compare_or_write "$gemini_settings" "$gemini_full"
 
-    # Codex: append [mcp_servers.*] TOML sections to config.toml
-    codex_toml="${CODEX_DIR}/config.toml"
-    codex_merged=$(python3 - "$MCP_SRC" "$codex_toml" <<'PYEOF'
-import json, re, sys
-
-mcp = json.load(open(sys.argv[1]))
-toml_path = sys.argv[2]
-
-# Read existing config.toml, strip old [mcp_servers.*] sections
-lines = open(toml_path).read().rstrip("\n").split("\n") if __import__("os").path.isfile(toml_path) else []
-out, skip = [], False
-for line in lines:
-    if re.match(r'^\[mcp_servers\.', line):
-        skip = True; continue
-    if skip and re.match(r'^\[', line):
-        skip = False
-    if skip:
-        continue
-    out.append(line)
-
-# Remove trailing blank lines
-while out and out[-1].strip() == "":
-    out.pop()
-
-base = "\n".join(out)
-
-# Convert each MCP server to TOML
-toml_blocks = []
-for name, cfg in mcp.get("mcpServers", {}).items():
-    block = [f"\n[mcp_servers.{name}]"]
-    if "command" in cfg:
-        block.append(f'command = "{cfg["command"]}"')
-    if "args" in cfg:
-        args_str = ", ".join(f'"{a}"' for a in cfg["args"])
-        block.append(f"args = [{args_str}]")
-    if "url" in cfg:
-        block.append(f'url = "{cfg["url"]}"')
-    env = cfg.get("env", {})
-    if env:
-        # Extract env var names for env_vars array
-        var_names = set()
-        for v in env.values():
-            for m in re.finditer(r'\$\{(\w+)\}', v):
-                var_names.add(m.group(1))
-        if var_names:
-            vl = ", ".join(f'"{v}"' for v in sorted(var_names))
-            block.append(f"env_vars = [{vl}]")
-        block.append(f"\n[mcp_servers.{name}.env]")
-        for ek, ev in env.items():
-            block.append(f'{ek} = "{ev}"')
-    toml_blocks.append("\n".join(block))
-
-sys.stdout.write(base + "\n" + "\n".join(toml_blocks) + "\n")
-PYEOF
-)
-    compare_or_write "$codex_toml" "$codex_merged"
-  fi
-fi
+# ---------------------------------------------------------------------------
+# [14] Specialized agents fan-out (all 5 CLIs)
+# ---------------------------------------------------------------------------
+echo "[14] specialized agents fan-out"
+python3 "${CANONICAL}/hooks/render_specialized_agents.py" "--${MODE}" || {
+  if [[ "$MODE" == "check" ]]; then DRIFT=1; else exit 1; fi
+}
 
 # ---------------------------------------------------------------------------
 # Summary

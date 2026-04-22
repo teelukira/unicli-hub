@@ -101,19 +101,41 @@ If an agent tries to edit any of these directly, the `generated_file_guard.py` P
 
 ## Adding a New Agent
 
+There are two tiers of agents:
+
+### Shared agents (`researcher` / `codegen` / `reviewer`)
+
+These three are defined as bash constants in `sync.sh`. To change their model, tools, or description, edit the `claude_model()`, `gemini_model()`, `claude_tools()`, `agent_description()` functions directly in `.unicli-rules/sync.sh`, then run `--fix`.
+
+### Specialized agents (project-specific)
+
+Drop two files into `.unicli-rules/agents/` and run `sync.sh --fix` — no other file needs touching:
+
 ```bash
-# 1) Write the canonical prompt
+# 1) Write the canonical prompt body
 cat > .unicli-rules/agents/security-scanner.md <<'EOF'
-# Security Scanner Agent
-...
+# Security Scanner
+You are a security analysis agent ...
 EOF
 
-# 2) Add the name to the SHARED_AGENTS array in sync.sh
-#    (and specify description, tool allowlist, model)
+# 2) Write the per-CLI metadata (model, tools, Kiro config)
+cat > .unicli-rules/agents/security-scanner.kiro.json <<'EOF'
+{
+  "name": "security-scanner",
+  "description": "Scan for security vulnerabilities and suggest remediations.",
+  "model": "claude-opus-4.7",
+  "tools": ["fs_read", "execute_bash", "grep", "glob"],
+  "allowedTools": ["fs_read", "execute_bash", "grep", "glob"],
+  "welcomeMessage": "Security Scanner ready.",
+  "keyboardShortcut": "ctrl+shift+9"
+}
+EOF
 
-# 3) Regenerate
+# 3) Regenerate all 5 CLIs at once
 ./.unicli-rules/sync.sh --fix
 ```
+
+`render_specialized_agents.py` auto-discovers every `*.kiro.json` (excluding shared agents) and generates Claude / Cursor / Gemini / Kiro / Codex configs in a single pass.
 
 ## Adding a New Skill
 
@@ -138,15 +160,21 @@ Do not store raw API keys or secrets in your skill directories (e.g. `utils/*.js
 |------|---------|----------|
 | `generated_file_guard.py` | PreToolUse (Edit / Write) | Blocks direct edits to derived files and prints the canonical source to edit. |
 | `auto_sync.py` | PostToolUse (Edit / Write) | When a file under `.unicli-rules/**` is modified, runs `sync.sh --fix` automatically. |
-| `pre_skill_sync.py` | Cursor `beforeReadFile` (Read / TabRead); Gemini `BeforeTool` (`read_file`) | Before reading a skill path, runs `sync.sh --fix` so derived `SKILL.md` files match `.unicli-rules/skills/`. |
+| `pre_skill_sync.py` | Claude Code `Read`; Cursor `beforeReadFile`; Gemini `BeforeTool` (`read_file`) | Before reading a skill path, runs `sync.sh --fix` so derived `SKILL.md` files match `.unicli-rules/skills/`. |
 
 ### Skill sync on other CLIs
 
 - **Codex** — No project hooks in this template; run `./.unicli-rules/sync.sh --fix` manually before using skills.
 - **Kiro** — This repo only wires `beforeFileWrite` / `afterFileWrite` hooks; there is no read-time hook here — use manual sync before skills.
-- **Claude Code** — Optional: add a read-time hook that runs `python3 ./.unicli-rules/hooks/pre_skill_sync.py` (see `.unicli-rules/templates/claude-pre-skill-sync.snippet.json` for a mergeable fragment; confirm field names against current Claude Code docs), or run `./.unicli-rules/sync.sh --fix` manually.
 
-The hooks are pure-Python (stdlib only) and run on Python 3.8+. All five CLIs' hook configs (`.claude/settings.local.json`, `.cursor/hooks.json`, `.gemini/settings.json`, `.kiro/hooks/*.kiro.hook`) call them via `python3`.
+The hooks are pure-Python (stdlib only) and run on Python 3.8+. Hook configs:
+
+| CLI | Config file |
+|-----|-------------|
+| Claude Code | `.claude/settings.local.json` |
+| Cursor | `.cursor/hooks.json` |
+| Gemini CLI | `.gemini/settings.json` |
+| Kiro | `.kiro/hooks/*.kiro.hook` |
 
 ## Installing Codex Prompts
 
@@ -159,7 +187,16 @@ Codex only exposes prompts from `~/.codex/prompts/` as slash commands. Install t
 
 ## CI Integration
 
-Example `.github/workflows/sync-check.yml`:
+A `.pre-commit-config.yaml` is included. Install the pre-commit hook once:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+After that, every commit automatically runs `sync.sh --check` and blocks if any derived file drifts.
+
+For GitHub Actions, add `.github/workflows/sync-check.yml`:
 
 ```yaml
 name: unicli-hub sync check

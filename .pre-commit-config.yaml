@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: unicli-rules-sync-check
+        name: unicli-rules sync check
+        entry: bash .unicli-rules/sync.sh --check
+        language: system
+        pass_filenames: false
+        always_run: true
