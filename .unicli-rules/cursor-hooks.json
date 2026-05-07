@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "python3 .cursor/hooks/generated_file_guard.py",
+        "matcher": "Write|Edit",
+        "failClosed": true,
+        "timeout": 20
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "python3 .cursor/hooks/auto_sync.py",
+        "matcher": "Write|Edit",
+        "timeout": 30
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "python3 .cursor/hooks/pre_skill_sync.py",
+        "matcher": "Read|TabRead",
+        "timeout": 120,
+        "failClosed": false
+      }
+    ]
+  }
+}

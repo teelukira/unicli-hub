@@ -184,11 +184,21 @@ compare_or_write "${CURSOR_DIR}/rules/memory.mdc" "${cursor_mem_fm}
 ${memory_content}"
 
 # ---------------------------------------------------------------------------
-# [5] Kiro symlinks
+# [5] Kiro agent prompts (copy — no symlinks)
 # ---------------------------------------------------------------------------
-echo "[5] .kiro/ symlinks"
-ensure_symlink "../.unicli-rules" "${KIRO_DIR}/unicli-rules"
-ensure_symlink "../../.unicli-rules/agents" "${KIRO_DIR}/agents/prompts"
+echo "[5] .kiro/agents/prompts/"
+# Remove legacy symlinks if present
+for legacy in "${KIRO_DIR}/unicli-rules" "${KIRO_DIR}/agents/prompts"; do
+  [[ -L "$legacy" ]] && rm "$legacy" && echo "removed legacy symlink: ${legacy#${ROOT}/}"
+done
+# Copy each agent prompt .md so file://prompts/{name}.md works in Kiro
+mkdir -p "${KIRO_DIR}/agents/prompts"
+for md in "${CANONICAL}/agents/"*.md; do
+  [[ -e "$md" ]] || continue
+  fname="$(basename "$md")"
+  compare_or_write "${KIRO_DIR}/agents/prompts/${fname}" "$(cat "$md")
+"
+done
 
 # ---------------------------------------------------------------------------
 # [6] Kiro steering (copies)
@@ -200,6 +210,14 @@ compare_or_write "${KIRO_DIR}/steering/02-core-workflow.md" "$(cat "${CANONICAL}
 "
 compare_or_write "${KIRO_DIR}/steering/03-memory.md" "${memory_content}
 "
+
+# Copy Kiro-specific steering files from canonical source if they exist
+for kiro_steering in "${CANONICAL}/kiro-steering/"*.md; do
+  [[ -e "$kiro_steering" ]] || continue
+  fname="$(basename "$kiro_steering")"
+  compare_or_write "${KIRO_DIR}/steering/${fname}" "$(cat "$kiro_steering")
+"
+done
 
 # ---------------------------------------------------------------------------
 # Agent fan-out helpers
@@ -348,6 +366,14 @@ for h in "${CANONICAL}/hooks/"*.py; do
   hname="$(basename "$h")"
   ensure_symlink "../../.unicli-rules/hooks/${hname}" "${CURSOR_DIR}/hooks/${hname}"
 done
+
+# ---------------------------------------------------------------------------
+# [12b] .cursor/hooks.json from canonical
+# ---------------------------------------------------------------------------
+echo "[12b] .cursor/hooks.json"
+check_source "${CANONICAL}/cursor-hooks.json"
+compare_or_write "${CURSOR_DIR}/hooks.json" "$(cat "${CANONICAL}/cursor-hooks.json")
+"
 
 # ---------------------------------------------------------------------------
 # [13] MCP config fan-out (all 5 CLIs)

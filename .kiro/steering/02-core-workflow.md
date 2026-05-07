@@ -25,7 +25,7 @@ The following actions require **explicit user approval** before running:
 - `CLAUDE.md`, `AGENTS.md` at the repository root
 - `.mcp.json` at the repository root
 - `.claude/agents/*.md`
-- `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/mcp.json`
+- `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/mcp.json`, `.cursor/hooks.json`
 - `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*/SKILL.md` (MCP section in `.gemini/settings.json`)
 - `.kiro/steering/*.md`, `.kiro/agents/prompts/*`, `.kiro/settings/mcp.json`
 - `.codex/prompts/*.md` (MCP sections in `.codex/config.toml`)
