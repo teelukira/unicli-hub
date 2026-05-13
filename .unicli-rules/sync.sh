@@ -157,7 +157,7 @@ compare_or_write "${GEMINI_DIR}/GEMINI.md" "$gemini_md"
 # ---------------------------------------------------------------------------
 echo "[4] .cursor/rules/"
 cursor_wf_fm="$(cat "${CANONICAL}/templates/frontmatter/cursor-workflow.yaml")"
-cursor_wf_body="$(cat "${CANONICAL}/core-workflow.md")"
+cursor_wf_body="$(cat "${CANONICAL}/templates/cursor-workflow-slim.md")"
 compare_or_write "${CURSOR_DIR}/rules/workflow.mdc" "${cursor_wf_fm}
 ${cursor_wf_body}
 "
@@ -340,7 +340,7 @@ if [[ "$INSTALL_CODEX_PROMPTS" == "1" ]] && [[ "$MODE" == "fix" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# [11] Skills fan-out
+# [11] Skills fan-out (flat markdown files)
 # ---------------------------------------------------------------------------
 echo "[11] skills fan-out"
 for skill_path in "${CANONICAL}/skills/"*.md; do
@@ -349,6 +349,9 @@ for skill_path in "${CANONICAL}/skills/"*.md; do
   skill_name="${skill_file%.md}"
   body="$(cat "$skill_path")"
 
+  # Claude: .claude/skills/<name>/SKILL.md
+  compare_or_write "${CLAUDE_DIR}/skills/${skill_name}/SKILL.md" "${body}
+"
   # Gemini: .gemini/skills/<name>/SKILL.md
   compare_or_write "${GEMINI_DIR}/skills/${skill_name}/SKILL.md" "${body}
 "
@@ -358,10 +361,38 @@ for skill_path in "${CANONICAL}/skills/"*.md; do
 done
 
 # ---------------------------------------------------------------------------
-# [12] Cursor hooks symlinks (Python)
+# [11b] Folder skills fan-out (directory with SKILL.md + references/)
+# ---------------------------------------------------------------------------
+echo "[11b] folder skills fan-out"
+for skill_dir in "${CANONICAL}/skills/"*/; do
+  [[ -d "$skill_dir" ]] || continue
+  # Skip if it's not a folder skill (must have SKILL.md)
+  src_skillmd="${skill_dir}SKILL.md"
+  [[ -f "$src_skillmd" ]] || continue
+
+  skill_name="$(basename "$skill_dir")"
+  body="$(cat "$src_skillmd")"
+
+  for target_root in "${CLAUDE_DIR}" "${GEMINI_DIR}" "${CURSOR_DIR}"; do
+    dst="${target_root}/skills/${skill_name}/SKILL.md"
+    compare_or_write "$dst" "${body}
+"
+    # Copy skill's own references/ subdirectory if present
+    if [[ -d "${skill_dir}references" ]]; then
+      while IFS= read -r ref_file; do
+        rel="${ref_file#${skill_dir}}"
+        compare_or_write "${target_root}/skills/${skill_name}/${rel}" "$(cat "$ref_file")
+"
+      done < <(find "${skill_dir}references" -type f | sort)
+    fi
+  done
+done
+
+# ---------------------------------------------------------------------------
+# [12] Cursor hooks symlinks
 # ---------------------------------------------------------------------------
 echo "[12] .cursor/hooks/ symlinks"
-for h in "${CANONICAL}/hooks/"*.py; do
+for h in "${CANONICAL}/hooks/"*.py "${CANONICAL}/hooks/"*.sh; do
   [[ -e "$h" ]] || continue
   hname="$(basename "$h")"
   ensure_symlink "../../.unicli-rules/hooks/${hname}" "${CURSOR_DIR}/hooks/${hname}"

@@ -119,11 +119,37 @@ def _gemini_has_pre_skill_read(before_tool: object) -> bool:
 def ensure_gemini_unicli_hooks(existing: dict) -> None:
     """Ensure read_file runs pre_skill_sync when missing (e.g. fresh settings.json)."""
     hooks = existing.setdefault("hooks", {})
-    before = hooks.get("BeforeTool")
+    
+    # Migrate old keys to new ones if they exist
+    if "BeforeTool" in hooks:
+        old_before = hooks.pop("BeforeTool")
+        if isinstance(old_before, list):
+            hooks.setdefault("PreToolUse", []).extend(old_before)
+    if "AfterTool" in hooks:
+        old_after = hooks.pop("AfterTool")
+        if isinstance(old_after, list):
+            hooks.setdefault("PostToolUse", []).extend(old_after)
+
+    # Simple deduplication based on hook name
+    for key in ["PreToolUse", "PostToolUse"]:
+        if key in hooks and isinstance(hooks[key], list):
+            seen_hooks = set()
+            unique_blocks = []
+            for block in hooks[key]:
+                if not isinstance(block, dict):
+                    continue
+                # Use a string representation of the block for identity check
+                block_id = json.dumps(block, sort_keys=True)
+                if block_id not in seen_hooks:
+                    unique_blocks.append(block)
+                    seen_hooks.add(block_id)
+            hooks[key] = unique_blocks
+
+    before = hooks.get("PreToolUse")
     if not isinstance(before, list):
         before = []
     if not _gemini_has_pre_skill_read(before):
-        hooks["BeforeTool"] = [PRE_SKILL_READ_BLOCK] + before
+        hooks["PreToolUse"] = [PRE_SKILL_READ_BLOCK] + before
 
 
 def render_gemini(servers: dict) -> str:

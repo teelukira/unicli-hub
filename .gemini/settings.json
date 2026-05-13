@@ -1,6 +1,6 @@
 {
   "hooks": {
-    "BeforeTool": [
+    "PreToolUse": [
       {
         "matcher": "read_file",
         "hooks": [
@@ -22,7 +22,7 @@
         ]
       }
     ],
-    "AfterTool": [
+    "PostToolUse": [
       {
         "matcher": "write_file|replace",
         "hooks": [

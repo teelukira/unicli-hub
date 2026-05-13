@@ -1,9 +1,3 @@
----
-description: Core workflow rules shared across all AI CLIs. Generated from .unicli-rules/core-workflow.md — do not edit directly.
-globs:
-  - "**/*"
-alwaysApply: true
----
 # Core Workflow (Cursor Slim)
 
 This is the **optimized always-on** Cursor rule. It provides high-level guidance while deferring to the canonical sources for full details.

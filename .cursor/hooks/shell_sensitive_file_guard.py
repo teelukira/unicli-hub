@@ -1,0 +1,1 @@
+../../.unicli-rules/hooks/shell_sensitive_file_guard.py
