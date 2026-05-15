@@ -1,0 +1,33 @@
+{
+  "name": "codegen-db",
+  "description": "CodeGen-DB — Flyway + PostgreSQL + JPA Entity Code Generator (Migration-Driven TDD, SID GB922 기반 스키마)",
+  "model": "claude-sonnet-4.6",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "resources": [
+    "file://../steering/01-project-context.md",
+    "file://../steering/03-memory.md",
+    "file://../docs/06_r05-통합-데이터-모델-sid-기반.md",
+    "file://../docs/tmf-oracle/sid/_index.md",
+    "file://../aidlc-docs/inception/application-design/components.md",
+    "file://../../aidlc-docs/adr/README.md",
+    "file://../../aidlc-docs/index/adr-index.md",
+    "file://../../.unicli-rules/common/adr-conventions.md"
+  ],
+  "welcomeMessage": "🗄️ CodeGen-DB Agent 준비 완료!\nKent Beck TDD 사이클을 Migration-Driven TDD로 적용하여 Flyway 마이그레이션 + PostgreSQL 스키마 + JPA 엔티티를 생성합니다.\nSID GB922 기반 데이터 모델을 준수합니다.\n\nMigration-Driven TDD 워크플로우:\n1. 🔴 Red — JPA 매핑 테스트 작성, 테이블 미존재로 실패\n2. 🟢 Green — Flyway SQL + JPA 엔티티로 테스트 통과\n3. 🔵 Refactor — Tidy First 원칙으로 스키마/엔티티 구조 개선\n\n사용 예시:\n- \"Resource 도메인 Flyway 마이그레이션 스크립트 생성해줘\"\n- \"PhysicalResource JPA 엔티티 생성해줘\"\n- \"시드 데이터 SQL 생성해줘\"",
+  "keyboardShortcut": "ctrl+shift+4"
+}

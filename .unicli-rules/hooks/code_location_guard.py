@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """code_location_guard.py — PreToolUse hook.
 
-Prevents writing code/config files inside documentation-only directories.
-Default protected directory: `aidlc-docs/` and `docs/`.
+Prevents writing code/config files inside aidlc-docs/ (documentation only directory).
+Ported from legacy aidlc-code-location-guard.sh.
 
 Schema support:
   - Claude Code: {"tool_input": {"file_path": "..."}}
@@ -15,9 +15,6 @@ from __future__ import annotations
 
 import json
 import sys
-
-# Directory paths that should only contain markdown/documentation
-DOCS_DIRECTORIES = {"aidlc-docs/", "docs/"}
 
 CODE_EXTENSIONS = {
     ".java", ".kt", ".kts", ".groovy", ".scala",
@@ -76,9 +73,9 @@ def main() -> int:
         return 0
 
     # Normalize: strip leading /.../<repo>/ prefix, keep relative portion
+    # Match if path contains aidlc-docs/
     normalized = path.replace("\\", "/")
-    
-    in_docs = any(d in normalized for d in DOCS_DIRECTORIES)
+    in_docs = "aidlc-docs/" in normalized
     if not in_docs:
         return 0
 
@@ -88,19 +85,19 @@ def main() -> int:
     result = {
         "permission": "deny",
         "user_message": (
-            f"Rule: Documentation directories ({', '.join(DOCS_DIRECTORIES)}) should only contain markdown files. "
-            f"Please move code or configuration files to the workspace root: {path}"
+            f"AI-DLC rule: `aidlc-docs/`에는 문서(.md)만 둘 수 있습니다. "
+            f"코드/설정 파일은 워크스페이스 루트로 이동하세요: {path}"
         ),
         "agent_message": (
-            f"Rule: Documentation directories ({', '.join(DOCS_DIRECTORIES)}) should only contain markdown files. "
-            f"Please move code or configuration files to the workspace root: {path}"
+            f"AI-DLC rule: `aidlc-docs/`에는 문서(.md)만 둘 수 있습니다. "
+            f"코드/설정 파일은 워크스페이스 루트로 이동하세요: {path}"
         ),
         "hookSpecificOutput": {
             "hookType": "PreToolUse",
             "permissionDecision": "block",
             "permissionDecisionReason": (
-                f"Rule: Documentation directories should only contain markdown files. "
-                f"Path: {path}"
+                f"AI-DLC rule: aidlc-docs/ 에는 문서(.md)만 둘 수 있습니다. "
+                f"코드/설정 파일은 워크스페이스 루트로 이동하세요: {path}"
             ),
         }
     }

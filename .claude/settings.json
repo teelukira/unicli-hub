@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__mcp-atlassian__jira_*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".unicli-rules/hooks/jira_gate_guard.py",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__gitlab__create_merge_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".unicli-rules/hooks/gitlab_mr_gate_guard.py",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".unicli-rules/hooks/workflow_transition_guard.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

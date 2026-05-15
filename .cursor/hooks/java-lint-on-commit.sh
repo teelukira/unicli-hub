@@ -1,0 +1,1 @@
+../../.unicli-rules/hooks/java-lint-on-commit.sh

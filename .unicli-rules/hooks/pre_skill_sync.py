@@ -58,7 +58,7 @@ def extract_path(payload: dict) -> str:
 def normalize(path: str) -> str:
     if not path:
         return ""
-    marker = "/unicli-hub/"
+    marker = "/tgo-im-aidlc/"
     if marker in path:
         path = path.split(marker, 1)[1]
     return path.lstrip("/")

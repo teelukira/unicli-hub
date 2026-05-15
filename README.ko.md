@@ -30,7 +30,7 @@
 |-----|-----------|--------|
 | Claude Code | `.claude/` | `CLAUDE.md` |
 | Cursor | `.cursor/rules/`, `.cursor/agents/` | `.cursor/rules/*.mdc` |
-| Gemini CLI | `.gemini/` | `.gemini/GEMINI.md` |
+| Gemini CLI | `.gemini/` | `GEMINI.md` (repo root) |
 | Kiro | `.kiro/steering/`, `.kiro/agents/` | `.kiro/steering/*.md` |
 | OpenAI Codex | `.codex/`, `AGENTS.md` | `AGENTS.md` (루트) |
 
@@ -83,10 +83,10 @@ codex                 # Codex (AGENTS.md 자동 로드)
 
 **편집 금지 (자동 생성)**:
 
-- `CLAUDE.md`, `AGENTS.md` (루트)
+- `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` (루트)
 - `.claude/agents/*.md`
 - `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/skills/*`
-- `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*`
+- `.gemini/agents/*.md`, `.gemini/skills/*`
 - `.kiro/steering/*.md`, `.kiro/agents/prompts/*` (symlink)
 - `.codex/prompts/*.md`
 - MCP (`common/mcp-servers.json`에서 생성): `.mcp.json`, `.cursor/mcp.json`, `.kiro/settings/mcp.json`, `.gemini/settings.json`의 `mcpServers`, `.codex/config.toml`의 생성된 `[[mcpServers]]` 블록

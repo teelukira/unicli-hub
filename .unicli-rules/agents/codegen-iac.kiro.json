@@ -1,0 +1,42 @@
+{
+  "name": "codegen-iac",
+  "description": "CodeGen-IaC — Terraform/HCL Infrastructure Code Generator (Plan-Driven TDD, AWS 공식문서 MCP 활용)",
+  "model": "claude-sonnet-4.6",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "resources": [
+    "file://../steering/01-project-context.md",
+    "file://../steering/03-memory.md",
+    "file://../aidlc-docs/construction/u01-infrastructure/infrastructure-design/infrastructure-design.md",
+    "file://../aidlc-docs/construction/u01-infrastructure/infrastructure-design/deployment-architecture.md",
+    "file://../aidlc-docs/inception/application-design/component-dependency.md",
+    "file://../../aidlc-docs/adr/README.md",
+    "file://../../aidlc-docs/index/adr-index.md",
+    "file://../../.unicli-rules/common/adr-conventions.md"
+  ],
+  "mcpServers": {
+    "aws-docs": {
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-documentation-mcp-server@latest"
+      ],
+      "env": {}
+    }
+  },
+  "welcomeMessage": "🏗️ CodeGen-IaC Agent 준비 완료!\nKent Beck TDD 사이클을 Plan-Driven TDD로 적용하여 Terraform/HCL 인프라 코드를 생성합니다.\nAWS 공식문서를 참조합니다.\n\nPlan-Driven TDD 워크플로우:\n1. 🔴 Red — 리소스 스켈레톤 작성, validate 실패 확인\n2. 🟢 Green — 최소 HCL로 validate 통과 + plan 확인\n3. 🔵 Refactor — Tidy First 원칙으로 모듈 구조 개선\n\n사용 예시:\n- \"VPC + 3AZ Subnet Terraform 모듈 생성해줘\"\n- \"EKS 클러스터 + Node Group 모듈 생성해줘\"\n- \"MSK Serverless 모듈 생성해줘\"",
+  "keyboardShortcut": "ctrl+shift+1"
+}

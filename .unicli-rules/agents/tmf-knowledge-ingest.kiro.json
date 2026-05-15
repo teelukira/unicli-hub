@@ -1,0 +1,67 @@
+{
+  "name": "tmf-knowledge-ingest",
+  "description": "TMF Knowledge Ingest Agent (docs/raw/ PDF/Excel/XMI 파싱 → docs/tmf-oracle/ .md 청크 변환, atom-tmf-kb-mcp 크로스레퍼런스)",
+  "model": "claude-opus-4.7",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "tmf_kb_list_releases",
+    "tmf_kb_pin",
+    "tmf_kb_get_status",
+    "tmf_kb_get_asset",
+    "tmf_kb_get_card",
+    "tmf_kb_get_domain_landscape",
+    "tmf_kb_get_scenario",
+    "tmf_kb_get_view",
+    "tmf_kb_graph_traverse",
+    "tmf_kb_judge",
+    "tmf_kb_search_by_features"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "tmf_kb_list_releases",
+    "tmf_kb_pin",
+    "tmf_kb_get_status",
+    "tmf_kb_get_asset",
+    "tmf_kb_get_card",
+    "tmf_kb_get_domain_landscape",
+    "tmf_kb_get_scenario",
+    "tmf_kb_get_view",
+    "tmf_kb_graph_traverse",
+    "tmf_kb_judge",
+    "tmf_kb_search_by_features"
+  ],
+  "mcpServers": {
+    "atom-tmf-kb-mcp": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/1111207/atom-tmf-kb-mcp",
+        "python",
+        "-m",
+        "tmf_kb_mcp"
+      ],
+      "env": {}
+    }
+  },
+  "resources": [
+    "file://../docs/tmf-oracle/_index.md",
+    "file://../docs/tmf-oracle/openapi/_index.md",
+    "file://../docs/tmf-oracle/etom/_index.md",
+    "file://../docs/tmf-oracle/sid/_index.md",
+    "file://../docs/tmf-oracle/oda/_index.md",
+    "file://../../aidlc-docs/adr/README.md",
+    "file://../../aidlc-docs/index/adr-index.md",
+    "file://../../.unicli-rules/common/adr-conventions.md"
+  ],
+  "welcomeMessage": "📚 TMF Knowledge Ingest Agent 준비 완료!\ndocs/raw/ 의 PDF/Excel/XMI 바이너리를 읽어 docs/tmf-oracle/ 에 규격단위 .md 청크로 변환합니다.\n\n사용 예시:\n- \"TMF639 PDF를 파싱해서 tmf-oracle/openapi/tmf639/ 에 저장해줘\"\n- \"eTOM Excel을 파싱해서 프로세스별 .md로 변환해줘\"\n- \"SID UML/Excel을 파싱해서 도메인별 엔티티 .md로 변환해줘\"\n- \"전체 raw/ 디렉토리를 스캔해서 미변환 파일 목록 보여줘\"",
+  "keyboardShortcut": "ctrl+shift+i"
+}

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """plan_checkbox_tracker.py — PostToolUse hook.
 
-After editing a plan file, prints a checkbox progress summary
+After editing a code-generation plan file, prints a checkbox progress summary
 so the agent can see how many steps are done vs remaining.
+Ported from legacy aidlc-plan-checkbox-tracker.sh.
 
 Schema support:
   - Claude Code: {"tool_input": {"file_path": "..."}}
@@ -19,8 +20,7 @@ import sys
 from pathlib import Path
 
 
-# Matches any file ending in plan.md
-PLAN_PATTERN = re.compile(r".*plan\.md$", re.IGNORECASE)
+PLAN_PATTERN = re.compile(r"aidlc-docs/.+/.*plan\.md$")
 
 
 def extract_path(payload: dict) -> str:
@@ -77,11 +77,7 @@ def main() -> int:
     if not resolved.is_file():
         return 0
 
-    try:
-        content = resolved.read_text(encoding="utf-8")
-    except Exception:
-        return 0
-        
+    content = resolved.read_text(encoding="utf-8")
     done, todo = count_checkboxes(content)
     total = done + todo
 

@@ -1,0 +1,32 @@
+{
+  "name": "qa-tester",
+  "description": "QA-Tester — Independent Build & Test Agent (코드 생성 에이전트와 분리된 독립 QA, 빌드/테스트/실패 진단)",
+  "model": "claude-opus-4.7",
+  "prompt": "file://prompts/qa-tester.md",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "resources": [
+    "file://../steering/01-project-context.md",
+    "file://../steering/03-memory.md",
+    "file://../aidlc-docs/inception/requirements/requirements.md",
+    "file://../../aidlc-docs/adr/README.md",
+    "file://../../aidlc-docs/index/adr-index.md",
+    "file://../../.unicli-rules/common/adr-conventions.md"
+  ],
+  "welcomeMessage": "🧪 QA-Tester Agent 준비 완료!\n코드 생성 에이전트와 독립된 QA 에이전트입니다.\n빌드 실행, 테스트 실행, 결과 분석, 실패 원인 진단을 수행합니다.\n\n사용 예시:\n- \"resource-inventory 프로젝트 빌드 실행해줘\"\n- \"전체 테스트 스위트 실행하고 결과 분석해줘\"\n- \"빌드 실패 원인 진단해줘\"",
+  "keyboardShortcut": "ctrl+shift+5"
+}

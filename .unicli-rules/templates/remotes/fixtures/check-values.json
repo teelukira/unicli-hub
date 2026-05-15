@@ -1,0 +1,11 @@
+{
+  "jira_keys": "PROJ-000 PROJ-001",
+  "unit_name": "u00",
+  "unit_title": "(fixture)",
+  "requirements_path": "aidlc-docs/inception/requirements/requirements.md",
+  "execution_plan_path": "aidlc-docs/inception/plans/execution-plan.md",
+  "code_gen_plan_path": "aidlc-docs/construction/plans/u00-code-generation-plan.md",
+  "approved_at": "2099-01-01T00:00:00Z",
+  "reporter": "fixture-reporter",
+  "assignee": "fixture-assignee"
+}

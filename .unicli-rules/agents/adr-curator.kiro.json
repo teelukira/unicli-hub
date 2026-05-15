@@ -1,0 +1,16 @@
+{
+  "name": "adr-curator",
+  "description": "ADR Curator — Architecture Decision Record Drafter & Reviewer (Nygard 포맷, Supersede 체인 무결성, aidlc-docs/adr/ SSOT)",
+  "model": "claude-sonnet-4.6",
+  "tools": ["fs_read", "fs_write", "execute_bash", "grep", "glob"],
+  "allowedTools": ["fs_read", "fs_write", "execute_bash", "grep", "glob"],
+  "resources": [
+    "file://../steering/01-project-context.md",
+    "file://../../aidlc-docs/adr/README.md",
+    "file://../../aidlc-docs/adr/0000-template.md",
+    "file://../../aidlc-docs/index/adr-index.md",
+    "file://../../.unicli-rules/common/adr-conventions.md"
+  ],
+  "welcomeMessage": "📜 ADR Curator 준비 완료!\nArchitecture Decision Record를 Nygard 포맷으로 작성/리뷰합니다.\n\n주요 기능:\n- 신규 ADR 초안 작성 (다음 시퀀셜 번호 산출)\n- 회고 ADR (Retroactive) — Source-Evidence 기반\n- Supersede 처리 — 이전 ADR Status 갱신 + 본문 보존\n- aidlc-docs/index/adr-index.md 자동 갱신\n\n사용 예시:\n- \"Camunda 8 → Temporal로 변경 결정 ADR 작성\"\n- \"U13e IMOWN bulk migration 결정 ADR화\"\n- \"ADR-0007 가상 스레드를 글로벌 활성으로 supersede\"",
+  "keyboardShortcut": "ctrl+shift+a"
+}

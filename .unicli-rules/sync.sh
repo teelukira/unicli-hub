@@ -80,7 +80,11 @@ assemble_template() {
 
   # Build memory block by concatenating memory files (excluding README.md)
   memory_block=""
-  for mf in "${CANONICAL}/memory/project-facts.md" "${CANONICAL}/memory/conventions.md" "${CANONICAL}/memory/glossary.md"; do
+  for mf in \
+    "${CANONICAL}/memory/project-facts.md" \
+    "${CANONICAL}/memory/conventions.md" \
+    "${CANONICAL}/memory/jira-config.md" \
+    "${CANONICAL}/memory/glossary.md"; do
     if [[ -f "$mf" ]]; then
       memory_block+="$(cat "$mf")"$'\n\n'
     fi
@@ -128,8 +132,15 @@ copy_with_prefix() {
 check_source "${CANONICAL}/core-workflow.md"
 check_source "${CANONICAL}/project-context.md"
 check_source "${CANONICAL}/templates/CLAUDE.md.tmpl"
+check_source "${CANONICAL}/templates/cursor-workflow-slim.md"
+check_source "${CANONICAL}/templates/cursor-subagent-orchestration.mdc"
 check_source "${CANONICAL}/templates/GEMINI.md.tmpl"
 check_source "${CANONICAL}/templates/AGENTS.md.tmpl"
+
+# Check aidlc-docs/SKILLS.md exists (hand-authored — not generated)
+if [[ -d "${ROOT}/aidlc-docs" ]] && [[ ! -f "${ROOT}/aidlc-docs/SKILLS.md" ]]; then
+  echo "WARNING: aidlc-docs/SKILLS.md missing — run: create aidlc-docs/SKILLS.md" >&2
+fi
 
 # ---------------------------------------------------------------------------
 # [1] CLAUDE.md (root)
@@ -146,11 +157,11 @@ agents_md="$(assemble_template "${CANONICAL}/templates/AGENTS.md.tmpl")"
 compare_or_write "${ROOT}/AGENTS.md" "$agents_md"
 
 # ---------------------------------------------------------------------------
-# [3] GEMINI.md
+# [3] GEMINI.md (repo root — Gemini CLI entry)
 # ---------------------------------------------------------------------------
-echo "[3] .gemini/GEMINI.md"
+echo "[3] GEMINI.md"
 gemini_md="$(assemble_template "${CANONICAL}/templates/GEMINI.md.tmpl")"
-compare_or_write "${GEMINI_DIR}/GEMINI.md" "$gemini_md"
+compare_or_write "${ROOT}/GEMINI.md" "$gemini_md"
 
 # ---------------------------------------------------------------------------
 # [4] Cursor rules (workflow + context)
@@ -168,9 +179,18 @@ compare_or_write "${CURSOR_DIR}/rules/project-context.mdc" "${cursor_ctx_fm}
 ${cursor_ctx_body}
 "
 
+echo "[4b] .cursor/rules/subagent-orchestration.mdc"
+compare_or_write "${CURSOR_DIR}/rules/subagent-orchestration.mdc" "$(cat "${CANONICAL}/templates/cursor-subagent-orchestration.mdc")
+"
+
 # Memory rule (always apply)
+
 memory_content=""
-for mf in "${CANONICAL}/memory/project-facts.md" "${CANONICAL}/memory/conventions.md" "${CANONICAL}/memory/glossary.md"; do
+for mf in \
+  "${CANONICAL}/memory/project-facts.md" \
+  "${CANONICAL}/memory/conventions.md" \
+  "${CANONICAL}/memory/jira-config.md" \
+  "${CANONICAL}/memory/glossary.md"; do
   [[ -f "$mf" ]] && memory_content+="$(cat "$mf")"$'\n\n'
 done
 cursor_mem_fm='---
@@ -191,7 +211,7 @@ echo "[5] .kiro/agents/prompts/"
 for legacy in "${KIRO_DIR}/unicli-rules" "${KIRO_DIR}/agents/prompts"; do
   [[ -L "$legacy" ]] && rm "$legacy" && echo "removed legacy symlink: ${legacy#${ROOT}/}"
 done
-# Copy each agent prompt .md so file://prompts/{name}.md works in Kiro
+# Copy each agent prompt .md so file://prompts/{name}.md works
 mkdir -p "${KIRO_DIR}/agents/prompts"
 for md in "${CANONICAL}/agents/"*.md; do
   [[ -e "$md" ]] || continue
@@ -208,8 +228,7 @@ compare_or_write "${KIRO_DIR}/steering/01-project-context.md" "$(cat "${CANONICA
 "
 compare_or_write "${KIRO_DIR}/steering/02-core-workflow.md" "$(cat "${CANONICAL}/core-workflow.md")
 "
-compare_or_write "${KIRO_DIR}/steering/03-memory.md" "${memory_content}
-"
+compare_or_write "${KIRO_DIR}/steering/03-memory.md" "${memory_content}"
 
 # Copy Kiro-specific steering files from canonical source if they exist
 for kiro_steering in "${CANONICAL}/kiro-steering/"*.md; do
@@ -220,7 +239,7 @@ for kiro_steering in "${CANONICAL}/kiro-steering/"*.md; do
 done
 
 # ---------------------------------------------------------------------------
-# Agent fan-out helpers
+# Agent fan-out helpers (shared unicli-hub agents)
 # ---------------------------------------------------------------------------
 SHARED_AGENTS=(researcher codegen reviewer)
 
@@ -240,7 +259,6 @@ gemini_model() {
   esac
 }
 
-# Tool allowlists per agent (bullet list lines)
 claude_tools() {
   case "$1" in
     researcher) printf '  - Read\n  - Glob\n  - Grep\n  - WebSearch\n  - WebFetch\n' ;;
@@ -258,7 +276,7 @@ agent_description() {
 }
 
 # ---------------------------------------------------------------------------
-# [7] .claude/agents/
+# [7] .claude/agents/ (shared agents)
 # ---------------------------------------------------------------------------
 echo "[7] .claude/agents/"
 for a in "${SHARED_AGENTS[@]}"; do
@@ -281,7 +299,7 @@ ${body}
 done
 
 # ---------------------------------------------------------------------------
-# [8] .cursor/agents/
+# [8] .cursor/agents/ (shared agents)
 # ---------------------------------------------------------------------------
 echo "[8] .cursor/agents/"
 for a in "${SHARED_AGENTS[@]}"; do
@@ -299,7 +317,7 @@ ${body}
 done
 
 # ---------------------------------------------------------------------------
-# [9] .gemini/agents/
+# [9] .gemini/agents/ (shared agents)
 # ---------------------------------------------------------------------------
 echo "[9] .gemini/agents/"
 for a in "${SHARED_AGENTS[@]}"; do
@@ -319,7 +337,7 @@ ${body}
 done
 
 # ---------------------------------------------------------------------------
-# [10] .codex/prompts/ (plain markdown — Codex slash commands)
+# [10] .codex/prompts/ (shared agents — Codex slash commands)
 # ---------------------------------------------------------------------------
 echo "[10] .codex/prompts/"
 for a in "${SHARED_AGENTS[@]}"; do
@@ -329,7 +347,6 @@ for a in "${SHARED_AGENTS[@]}"; do
 "
 done
 
-# Optional: install Codex prompts to user directory so slash commands work globally
 if [[ "$INSTALL_CODEX_PROMPTS" == "1" ]] && [[ "$MODE" == "fix" ]]; then
   echo "[10+] installing Codex prompts to ~/.codex/prompts/"
   mkdir -p "${HOME}/.codex/prompts"
@@ -340,7 +357,7 @@ if [[ "$INSTALL_CODEX_PROMPTS" == "1" ]] && [[ "$MODE" == "fix" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# [11] Skills fan-out (flat markdown files)
+# [11] Skills fan-out (flat .md files — ralph-loop, run-tests, etc.)
 # ---------------------------------------------------------------------------
 echo "[11] skills fan-out"
 for skill_path in "${CANONICAL}/skills/"*.md; do
@@ -361,16 +378,18 @@ for skill_path in "${CANONICAL}/skills/"*.md; do
 done
 
 # ---------------------------------------------------------------------------
-# [11b] Folder skills fan-out (directory with SKILL.md + references/)
+# [11b] Folder skills (SKILL.md + references/); shared-references only for aidlc-*
 # ---------------------------------------------------------------------------
 echo "[11b] folder skills fan-out"
 for skill_dir in "${CANONICAL}/skills/"*/; do
   [[ -d "$skill_dir" ]] || continue
-  # Skip if it's not a folder skill (must have SKILL.md)
+  skill_name="$(basename "$skill_dir")"
+  [[ "$skill_name" == "shared-references" ]] && continue
   src_skillmd="${skill_dir}SKILL.md"
   [[ -f "$src_skillmd" ]] || continue
-
-  skill_name="$(basename "$skill_dir")"
+  if [[ "$skill_name" == aidlc-* ]]; then
+    check_source "$src_skillmd"
+  fi
   body="$(cat "$src_skillmd")"
 
   for target_root in "${CLAUDE_DIR}" "${GEMINI_DIR}" "${CURSOR_DIR}"; do
@@ -385,18 +404,46 @@ for skill_dir in "${CANONICAL}/skills/"*/; do
 "
       done < <(find "${skill_dir}references" -type f | sort)
     fi
+    # Copy shared-references/ into each aidlc-* skill's references/ directory
+    if [[ "$skill_name" == aidlc-* ]]; then
+      shared_ref_dir="${CANONICAL}/skills/shared-references"
+      if [[ -d "$shared_ref_dir" ]]; then
+        while IFS= read -r ref_file; do
+          fname="$(basename "$ref_file")"
+          compare_or_write "${target_root}/skills/${skill_name}/references/${fname}" "$(cat "$ref_file")
+"
+        done < <(find "$shared_ref_dir" -type f | sort)
+      fi
+    fi
   done
 done
 
 # ---------------------------------------------------------------------------
-# [12] Cursor hooks symlinks
+# [12] Cursor hooks symlinks (Python)
 # ---------------------------------------------------------------------------
 echo "[12] .cursor/hooks/ symlinks"
-for h in "${CANONICAL}/hooks/"*.py "${CANONICAL}/hooks/"*.sh; do
+for h in "${CANONICAL}/hooks/"*.py; do
   [[ -e "$h" ]] || continue
   hname="$(basename "$h")"
   ensure_symlink "../../.unicli-rules/hooks/${hname}" "${CURSOR_DIR}/hooks/${hname}"
 done
+
+# ---------------------------------------------------------------------------
+# [12a] Cursor hooks symlinks (Ralph Loop shell)
+# ---------------------------------------------------------------------------
+echo "[12a] .cursor/hooks/ ralph*.sh symlinks"
+for h in "${CANONICAL}/hooks/"ralph*.sh; do
+  [[ -e "$h" ]] || continue
+  hname="$(basename "$h")"
+  ensure_symlink "../../.unicli-rules/hooks/${hname}" "${CURSOR_DIR}/hooks/${hname}"
+done
+
+# ---------------------------------------------------------------------------
+# [12aa] Cursor-only: java-lint-on-commit.sh (referenced by cursor-hooks.json)
+# ---------------------------------------------------------------------------
+echo "[12aa] .cursor/hooks/ java-lint-on-commit.sh symlink"
+check_source "${CANONICAL}/hooks/java-lint-on-commit.sh"
+ensure_symlink "../../.unicli-rules/hooks/java-lint-on-commit.sh" "${CURSOR_DIR}/hooks/java-lint-on-commit.sh"
 
 # ---------------------------------------------------------------------------
 # [12b] .cursor/hooks.json from canonical
@@ -404,6 +451,14 @@ done
 echo "[12b] .cursor/hooks.json"
 check_source "${CANONICAL}/cursor-hooks.json"
 compare_or_write "${CURSOR_DIR}/hooks.json" "$(cat "${CANONICAL}/cursor-hooks.json")
+"
+
+# ---------------------------------------------------------------------------
+# [12c] .claude/settings.json (Claude Code project hooks — AI-DLC gates)
+# ---------------------------------------------------------------------------
+echo "[12c] .claude/settings.json"
+check_source "${CANONICAL}/claude-hooks.json"
+compare_or_write "${CLAUDE_DIR}/settings.json" "$(cat "${CANONICAL}/claude-hooks.json")
 "
 
 # ---------------------------------------------------------------------------

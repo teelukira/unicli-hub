@@ -1,0 +1,1 @@
+../../.unicli-rules/hooks/jira_gate_guard.py

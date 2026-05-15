@@ -101,55 +101,178 @@ PRE_SKILL_READ_BLOCK = {
     ],
 }
 
+WRITE_GUARD_BLOCK = {
+    "matcher": "write_file|replace",
+    "hooks": [
+        {
+            "name": "aidlc-code-guard",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/code_location_guard.py",
+        },
+        {
+            "name": "aidlc-generated-file-guard",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/generated_file_guard.py",
+        },
+        {
+            "name": "aidlc-workflow-transition-guard",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/workflow_transition_guard.py",
+        },
+    ],
+}
 
-def _gemini_has_pre_skill_read(before_tool: object) -> bool:
-    if not isinstance(before_tool, list):
-        return False
-    for block in before_tool:
-        if not isinstance(block, dict):
-            continue
-        if block.get("matcher") != "read_file":
-            continue
-        for h in block.get("hooks") or []:
-            if isinstance(h, dict) and h.get("name") == "unicli-pre-skill-sync":
-                return True
-    return False
+SHELL_GUARD_BLOCK = {
+    "matcher": "run_shell_command",
+    "hooks": [
+        {
+            "name": "aidlc-shell-sensitive-file-guard",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/shell_sensitive_file_guard.py",
+        },
+        {
+            "name": "aidlc-java-lint-on-commit",
+            "type": "command",
+            "command": "bash ./.unicli-rules/hooks/java-lint-on-commit.sh",
+        },
+    ],
+}
+
+JIRA_GUARD_BLOCK = {
+    "matcher": "mcp_mcp-atlassian_.*",
+    "hooks": [
+        {
+            "name": "aidlc-jira-gate-guard",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/jira_gate_guard.py",
+        }
+    ],
+}
+
+GITLAB_GUARD_BLOCK = {
+    "matcher": "mcp_gitlab_create_merge_request",
+    "hooks": [
+        {
+            "name": "aidlc-gitlab-mr-gate-guard",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/gitlab_mr_gate_guard.py",
+        }
+    ],
+}
+
+POST_TOOL_SYNC_BLOCK = {
+    "matcher": "write_file|replace",
+    "hooks": [
+        {
+            "name": "aidlc-state-audit",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/state_audit.py",
+        },
+        {
+            "name": "aidlc-plan-checkbox",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/plan_checkbox_tracker.py",
+        },
+        {
+            "name": "aidlc-adr-memory-sync-nudge",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/adr_memory_sync_nudge.py",
+        },
+        {
+            "name": "aidlc-auto-sync",
+            "type": "command",
+            "command": "python3 ./.unicli-rules/hooks/auto_sync.py",
+        },
+    ],
+}
+
+AFTER_AGENT_BLOCK = {
+    "hooks": [
+        {
+            "name": "ralph-capture-response",
+            "type": "command",
+            "command": "bash ./.unicli-rules/hooks/ralph-capture-response.sh",
+        }
+    ]
+}
+
+SESSION_END_BLOCK = {
+    "hooks": [
+        {
+            "name": "ralph-stop-hook",
+            "type": "command",
+            "command": "bash ./.unicli-rules/hooks/ralph-stop-hook.sh",
+        }
+    ]
+}
 
 
 def ensure_gemini_unicli_hooks(existing: dict) -> None:
-    """Ensure read_file runs pre_skill_sync when missing (e.g. fresh settings.json)."""
+    """Ensure all AI-DLC hooks are correctly configured for Gemini CLI."""
     hooks = existing.setdefault("hooks", {})
     
-    # Migrate old keys to new ones if they exist
-    if "BeforeTool" in hooks:
-        old_before = hooks.pop("BeforeTool")
-        if isinstance(old_before, list):
-            hooks.setdefault("PreToolUse", []).extend(old_before)
-    if "AfterTool" in hooks:
-        old_after = hooks.pop("AfterTool")
-        if isinstance(old_after, list):
-            hooks.setdefault("PostToolUse", []).extend(old_after)
+    # 1. Migrate wrong keys (PreToolUse/PostToolUse) back to correct Gemini keys (BeforeTool/AfterTool)
+    # Also clean up SessionStart/SessionEnd if they were misconfigured
+    for old_key, new_key in [("PreToolUse", "BeforeTool"), ("PostToolUse", "AfterTool")]:
+        if old_key in hooks:
+            old_val = hooks.pop(old_key)
+            if isinstance(old_val, list):
+                hooks.setdefault(new_key, []).extend(old_val)
 
-    # Simple deduplication based on hook name
-    for key in ["PreToolUse", "PostToolUse"]:
+    # 2. Clean up old blocks that contain our canonical hook names
+    our_hook_names = {
+        "unicli-pre-skill-sync", "aidlc-code-guard", "aidlc-generated-file-guard",
+        "aidlc-workflow-transition-guard", "aidlc-shell-sensitive-file-guard",
+        "aidlc-java-lint-on-commit", "aidlc-jira-gate-guard", "aidlc-gitlab-mr-gate-guard",
+        "aidlc-state-audit", "aidlc-plan-checkbox", "aidlc-adr-memory-sync-nudge",
+        "aidlc-auto-sync", "ralph-capture-response", "ralph-stop-hook"
+    }
+    
+    for key in ["BeforeTool", "AfterTool", "AfterAgent", "SessionEnd"]:
+        if key in hooks and isinstance(hooks[key], list):
+            filtered_blocks = []
+            for block in hooks[key]:
+                if not isinstance(block, dict):
+                    continue
+                inner_hooks = block.get("hooks") or []
+                contains_our_hook = any(
+                    isinstance(h, dict) and h.get("name") in our_hook_names 
+                    for h in inner_hooks
+                )
+                if not contains_our_hook:
+                    filtered_blocks.append(block)
+            hooks[key] = filtered_blocks
+
+    # 3. Inject canonical blocks
+    # BeforeTool
+    bt = hooks.setdefault("BeforeTool", [])
+    bt.insert(0, PRE_SKILL_READ_BLOCK)
+    bt.append(WRITE_GUARD_BLOCK)
+    bt.append(SHELL_GUARD_BLOCK)
+    bt.append(JIRA_GUARD_BLOCK)
+    bt.append(GITLAB_GUARD_BLOCK)
+
+    # AfterTool
+    at = hooks.setdefault("AfterTool", [])
+    at.append(POST_TOOL_SYNC_BLOCK)
+
+    # Lifecycle hooks
+    hooks.setdefault("AfterAgent", []).append(AFTER_AGENT_BLOCK)
+    hooks.setdefault("SessionEnd", []).append(SESSION_END_BLOCK)
+
+    # 4. Final deduplication based on block content identity
+    for key in ["BeforeTool", "AfterTool", "AfterAgent", "SessionEnd"]:
         if key in hooks and isinstance(hooks[key], list):
             seen_hooks = set()
             unique_blocks = []
             for block in hooks[key]:
                 if not isinstance(block, dict):
                     continue
-                # Use a string representation of the block for identity check
                 block_id = json.dumps(block, sort_keys=True)
                 if block_id not in seen_hooks:
                     unique_blocks.append(block)
                     seen_hooks.add(block_id)
             hooks[key] = unique_blocks
-
-    before = hooks.get("PreToolUse")
-    if not isinstance(before, list):
-        before = []
-    if not _gemini_has_pre_skill_read(before):
-        hooks["PreToolUse"] = [PRE_SKILL_READ_BLOCK] + before
 
 
 def render_gemini(servers: dict) -> str:
@@ -179,18 +302,18 @@ def render_gemini(servers: dict) -> str:
 
 
 def render_codex_toml(servers: dict) -> str:
-    """Generate [mcp_servers.*] dotted-table blocks for Codex config.toml.
+    """Generate TOML [[mcpServers]] array for Codex config.toml.
 
-    Codex CLI uses [mcp_servers.<name>] dotted tables (not array-of-tables).
+    Codex CLI uses TOML array-of-tables for MCP servers.
     HTTP-type servers are skipped (Codex only supports stdio).
-    See: https://developers.openai.com/codex/config-reference
+    See: https://github.com/openai/codex/blob/main/docs/config.md
     """
-    import re as _re
-    blocks: list[str] = []
+    lines: list[str] = []
     for name, cfg in servers.items():
         if cfg.get("type") == "http":
-            continue
-        lines: list[str] = [f"[mcp_servers.{name}]"]
+            continue  # Codex stdio only
+        lines.append("[[mcpServers]]")
+        lines.append(f'name = "{name}"')
         cmd = cfg.get("command", "")
         if cmd:
             lines.append(f'command = "{cmd}"')
@@ -200,43 +323,25 @@ def render_codex_toml(servers: dict) -> str:
             lines.append(f"args = [{args_toml}]")
         env = cfg.get("env", {})
         if env:
-            var_names = set()
-            for v in env.values():
-                for m in _re.finditer(r'\$\{(\w+)\}', v):
-                    var_names.add(m.group(1))
-            if var_names:
-                vl = ", ".join(f'"{v}"' for v in sorted(var_names))
-                lines.append(f"env_vars = [{vl}]")
-            lines.append(f"")
-            lines.append(f"[mcp_servers.{name}.env]")
-            for ek, ev in env.items():
-                lines.append(f'{ek} = "{ev}"')
-        blocks.append("\n".join(lines))
-    return "\n\n".join(blocks) + ("\n" if blocks else "")
+            lines.append("[mcpServers.env]  # last table — must follow scalar keys")
+            for k, v in env.items():
+                lines.append(f'{k} = "{v}"')
+        lines.append("")
+    return "\n".join(lines)
 
 
 def merge_codex_toml(existing_toml: str, mcp_toml: str) -> str:
-    """Replace [mcp_servers.*] blocks in existing config.toml, preserving other settings."""
+    """Replace [[mcpServers]] block in existing config.toml, preserving other settings."""
     import re
-    # Strip existing [mcp_servers.*] sections (same logic as sync.sh)
-    lines = existing_toml.rstrip("\n").split("\n") if existing_toml.strip() else []
-    out: list[str] = []
-    skip = False
-    for line in lines:
-        if re.match(r'^\[mcp_servers\.', line):
-            skip = True
-            continue
-        if skip and re.match(r'^\[', line):
-            skip = False
-        if skip:
-            continue
-        out.append(line)
-    while out and out[-1].strip() == "":
-        out.pop()
-    base = "\n".join(out)
+    # Strip everything from the generated MCP comment onwards (idempotent anchor)
+    anchor = "# MCP servers — generated by render_mcp.py, do not edit directly"
+    if anchor in existing_toml:
+        base = existing_toml[:existing_toml.index(anchor)].rstrip()
+    else:
+        base = existing_toml.rstrip()
     if not mcp_toml.strip():
         return base + "\n"
-    return base + "\n\n" + mcp_toml
+    return base + "\n\n" + anchor + "\n" + mcp_toml
 
 
 # ---------------------------------------------------------------------------

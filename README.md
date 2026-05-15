@@ -30,7 +30,7 @@ When you constantly hop between Free/Basic tiers of different AI CLIs to bypass 
 |-----|------------------|-------------|
 | Claude Code | `.claude/` | `CLAUDE.md` |
 | Cursor | `.cursor/rules/`, `.cursor/agents/` | `.cursor/rules/*.mdc` |
-| Gemini CLI | `.gemini/` | `.gemini/GEMINI.md` |
+| Gemini CLI | `.gemini/` | `GEMINI.md` (repo root) |
 | Kiro | `.kiro/steering/`, `.kiro/agents/` | `.kiro/steering/*.md` |
 | OpenAI Codex | `.codex/`, `AGENTS.md` | `AGENTS.md` (root) |
 
@@ -83,10 +83,10 @@ codex                 # Codex (loads AGENTS.md automatically)
 
 **Never edit these (auto-generated)**:
 
-- `CLAUDE.md`, `AGENTS.md` at the root
+- `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` at the root
 - `.claude/agents/*.md`
 - `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/skills/*`
-- `.gemini/GEMINI.md`, `.gemini/agents/*.md`, `.gemini/skills/*`
+- `.gemini/agents/*.md`, `.gemini/skills/*`
 - `.kiro/steering/*.md`, `.kiro/agents/prompts/*` (symlink)
 - `.codex/prompts/*.md`
 - MCP (from `common/mcp-servers.json`): `.mcp.json`, `.cursor/mcp.json`, `.kiro/settings/mcp.json`, `.gemini/settings.json` (`mcpServers` key), `.codex/config.toml` (generated `[[mcpServers]]` block)
