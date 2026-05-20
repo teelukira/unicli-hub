@@ -1,8 +1,7 @@
 ---
-description: Independently review changes for correctness, security, reuse, and convention compliance.
-source: .unicli-rules/agents/reviewer.md
+description: Shared reviewer agent
+source: hub/agents/reviewer.md
 ---
-
 ---
 name: reviewer
 description: Independently review changes for correctness, security, reuse, and convention compliance.

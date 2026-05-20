@@ -150,3 +150,4 @@ Always include in the Task prompt:
 1. Active unit name and description
 2. Relevant extension flags
 3. Any pending user answer from session-continuity step
+

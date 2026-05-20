@@ -1,8 +1,7 @@
 ---
-description: Investigate code and external sources; produce evidence-based summaries without speculation.
-source: .unicli-rules/agents/researcher.md
+description: Shared researcher agent
+source: hub/agents/researcher.md
 ---
-
 ---
 name: researcher
 description: Investigate code and external sources; produce evidence-based summaries without speculation.

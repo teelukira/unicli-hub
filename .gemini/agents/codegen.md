@@ -1,9 +1,7 @@
 ---
 name: codegen
-description: Implement approved plans with minimal, focused edits; reuse existing utilities; run tests.
 model: gemini-3-pro-preview
 ---
-
 ---
 name: codegen
 description: Implement approved plans with minimal, focused edits; reuse existing utilities; run tests.

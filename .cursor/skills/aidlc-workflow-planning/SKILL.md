@@ -71,3 +71,4 @@ Log raw input. DO NOT PROCEED until approved.
 
 Mark `[x] Workflow Planning` in state.md.
 Log `APPROVAL-STAGE: WORKFLOW_PLANNING_APPROVED` to audit.md.
+

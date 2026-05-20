@@ -1,8 +1,7 @@
 ---
-description: Implement approved plans with minimal, focused edits; reuse existing utilities; run tests.
-source: .unicli-rules/agents/codegen.md
+description: Shared codegen agent
+source: hub/agents/codegen.md
 ---
-
 ---
 name: codegen
 description: Implement approved plans with minimal, focused edits; reuse existing utilities; run tests.

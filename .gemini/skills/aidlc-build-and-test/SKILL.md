@@ -172,3 +172,4 @@ On yes:
    ```
 2. Call `gitlab_create_merge_request` with title including all ticket keys. Set `description` to the rendered body stdout. The fill-in sections (변경 요약, 관련 ADR, 영향 범위, 검증, 리뷰어 참고 사항) in `.gitlab/merge_request_templates/default.md` are completed by the developer after MR creation.
 Log `MR-CREATED: !{mr-number} [{ticket-keys}]` to audit.md.
+

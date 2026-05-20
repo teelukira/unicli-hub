@@ -1,9 +1,7 @@
 ---
 name: reviewer
-description: Independently review changes for correctness, security, reuse, and convention compliance.
 model: gemini-3-pro-preview
 ---
-
 ---
 name: reviewer
 description: Independently review changes for correctness, security, reuse, and convention compliance.

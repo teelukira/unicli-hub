@@ -95,3 +95,4 @@ Log raw user input to audit.md. DO NOT PROCEED until user responds.
 
 Mark `[x] Functional Design` in unit construction progress.
 Log `APPROVAL-STAGE: FUNCTIONAL_DESIGN_APPROVED [unit={unit}]` to audit.md.
+

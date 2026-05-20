@@ -1,9 +1,7 @@
 ---
 name: researcher
-description: Investigate code and external sources; produce evidence-based summaries without speculation.
 model: gemini-3-pro-preview
 ---
-
 ---
 name: researcher
 description: Investigate code and external sources; produce evidence-based summaries without speculation.

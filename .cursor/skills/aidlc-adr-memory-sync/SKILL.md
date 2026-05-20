@@ -130,3 +130,4 @@ aidlc-adr-memory-sync 완료:
 - `aidlc-docs/index/adr-index.md` 도 건드리지 않음 (PostToolUse hook 재발화 방지)
 - write_memory는 MCP 도구 → Edit/Write matcher에 걸리지 않아 무한 루프 없음
 - Superseded ADR은 catalog의 Status만 `Superseded by NNNN` 으로 표시; per-ADR memo 삭제 불필요
+

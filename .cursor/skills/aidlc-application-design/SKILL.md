@@ -86,3 +86,4 @@ Log raw input. DO NOT PROCEED until approved.
 
 Mark `[x] Application Design` in state.md.
 Log `APPROVAL-STAGE: APPLICATION_DESIGN_APPROVED` to audit.md.
+

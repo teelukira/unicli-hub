@@ -2,23 +2,21 @@
 
 > *(Company won't sponsor your tools? We got you.)*
 
-**UniCLI-Hub** is a centralized context management workspace for developers who are tired of AI subscription fatigue.
+**UniCLI-Hub** is a centralized **SSOT (Single Source of Truth) Framework** for developers who are tired of AI subscription fatigue and context fragmentation.
 
-## Why did I build this? (The "Broke Developer" Problem)
+## The Problem: Subscription Fatigue & Context Fragmentation
 
-Let's be honest. AI tools are amazing, but paying $20/month for *every single one* of them is not. Maybe your company doesn't sponsor AI tools, or maybe you just want to maximize the free tiers of Gemini, Claude Code, Cursor, and Kiro-CLI without losing your mind.
+AI tools are amazing, but paying $20/month for *every single one* is unsustainable. When you jump between free tiers of different AI CLIs (Claude, Gemini, Cursor, etc.) to bypass rate limits, your AI's "brain" becomes fragmented. You lose your custom skills, agents, and project memory.
 
-When you constantly hop between Free/Basic tiers of different AI CLIs to bypass token limits, your AI's "brain" becomes fragmented. Your `agent.md` is here, your custom skills are there, and the AI keeps forgetting the project context.
+## The Solution: One Hub to Rule Them All
 
-## The Solution
-
-**UniCLI-Hub** acts as the Single Source of Truth (SSOT) for your AI workflows. It centralizes your sub-agents, memory, and skills so you can seamlessly switch to another tool the moment you hit a rate limit.
+**UniCLI-Hub** centralizes your **Agents, Skills, Hooks, and MCP Servers** in a single directory. It automatically fans out these assets to all supported CLI tools, ensuring that no matter which tool you are using *right now*, it has the same context and capabilities.
 
 **With UniCLI-Hub, you can:**
-
-- **Run out of Claude tokens?** Switch to Gemini CLI without re-explaining your entire project architecture.
-- **Keep a unified memory:** Share `.cursorrules`, Kiro system prompts, and Claude contexts from one single directory.
-- **Save Money:** Maximize your productivity using a combination of free tiers and single subscriptions without losing the "Pro" experience.
+- **Switch Seamlessly:** Run out of Claude tokens? Switch to Gemini or Antigravity (agy) without re-explaining your architecture.
+- **Unified Memory:** Share project facts, conventions, and glossaries across all tools.
+- **Automated Tooling:** Centralize MCP server definitions and hook logic.
+- **Save Money:** Maximize the value of free tiers by treating multiple tools as a single "Pro" experience.
 
 > Prefer 한국어? See [README.ko.md](./README.ko.md).
 
@@ -28,246 +26,89 @@ When you constantly hop between Free/Basic tiers of different AI CLIs to bypass 
 
 | CLI | Derived location | Entry point |
 |-----|------------------|-------------|
-| Claude Code | `.claude/` | `CLAUDE.md` |
-| Cursor | `.cursor/rules/`, `.cursor/agents/` | `.cursor/rules/*.mdc` |
-| Gemini CLI | `.gemini/` | `GEMINI.md` (repo root) |
-| Kiro | `.kiro/steering/`, `.kiro/agents/` | `.kiro/steering/*.md` |
-| OpenAI Codex | `.codex/`, `AGENTS.md` | `AGENTS.md` (root) |
+| **Antigravity (agy)** | `.agy/` | `AGY.md` |
+| **Claude Code** | `.claude/` | `CLAUDE.md` |
+| **Gemini CLI** | `.gemini/` | `GEMINI.md` |
+| **Cursor** | `.cursor/` | `.cursor/rules/*.mdc` |
+| **Kiro** | `.kiro/` | `.kiro/steering/*.md` |
+| **OpenAI Codex** | `.codex/` | `AGENTS.md` |
+
+---
 
 ## Quick Start
 
 ```bash
-# 1) Clone (or use this directory as a starting point)
+# 1) Clone the framework
 git clone <this-repo> my-project && cd my-project
 
-# 2) Edit the canonical sources to match your project
-#    - .unicli-rules/project-context.md
-#    - .unicli-rules/memory/project-facts.md
-#    - .unicli-rules/memory/conventions.md
-#    - .unicli-rules/memory/glossary.md
+# 2) Edit the SSOT sources in hub/
+#    - hub/project-context.md
+#    - hub/memory/project-facts.md
+#    - hub/mcp-servers.json
 
-# 3) Regenerate every CLI's derived files
-./.unicli-rules/sync.sh --fix
+# 3) Synchronize all CLI targets
+./sync.sh --fix
 
-# 4) Open the project with any supported CLI
+# 4) Launch your favorite tool
+agy                   # Antigravity CLI
 claude                # Claude Code
-cursor .              # Cursor
 gemini                # Gemini CLI
-kiro                  # Kiro
-codex                 # Codex (loads AGENTS.md automatically)
+cursor .              # Cursor
 ```
 
-## Canonical vs Derived
+---
 
-**Edit these files** (`.unicli-rules/`):
+## Framework Structure
 
-```
-.unicli-rules/
-├── core-workflow.md          # tool-agnostic workflow
-├── project-context.md        # project context
-├── agents/{researcher,codegen,reviewer}.md
-├── skills/{scaffold-module,run-tests}.md
-├── memory/{project-facts,conventions,glossary}.md
-├── common/{tool-matrix,approval-gates}.md, mcp-servers.json
-├── templates/
-│   ├── CLAUDE.md.tmpl
-│   ├── GEMINI.md.tmpl
-│   ├── AGENTS.md.tmpl
-│   └── frontmatter/*.yaml
-├── hooks/
-│   ├── generated_file_guard.py   # PreToolUse  — blocks edits to derived files
-│   ├── auto_sync.py              # PostToolUse — runs sync.sh on canonical edits
-│   └── render_mcp.py             # renders MCP configs for all five CLIs
-└── sync.sh
-```
+UniCLI-Hub separates the **Framework Core** from your **Project Data**.
 
-**Never edit these (auto-generated)**:
+### 1. The Hub (`hub/`) — YOUR DATA
+This is where you define the **Single Source of Truth**. **Edit these files.**
+- `hub/agents/`: Canonical prompts for shared and specialized agents.
+- `hub/skills/`: Custom skills (markdown + references).
+- `hub/hooks/`: Shared Python hook logic.
+- `hub/memory/`: Project facts, conventions, and glossary.
+- `hub/mcp-servers.json`: Unified MCP configuration.
+- `hub/project-context.md`: The "big picture" of your project.
 
-- `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` at the root
-- `.claude/agents/*.md`
-- `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/skills/*`
-- `.gemini/agents/*.md`, `.gemini/skills/*`
-- `.kiro/steering/*.md`, `.kiro/agents/prompts/*` (symlink)
-- `.codex/prompts/*.md`
-- MCP (from `common/mcp-servers.json`): `.mcp.json`, `.cursor/mcp.json`, `.kiro/settings/mcp.json`, `.gemini/settings.json` (`mcpServers` key), `.codex/config.toml` (generated `[[mcpServers]]` block)
+### 2. The Core (`.unicli-hub/`) — FRAMEWORK LOGIC
+Internal logic for fanning out assets. You rarely need to touch this.
+- `scripts/`: Python renderers for Agents, Skills, Hooks, MCP, and Templates.
+- `templates/`: Base templates for CLI entry points (`CLAUDE.md.tmpl`, etc.).
 
-If an agent tries to edit any of these directly, the `generated_file_guard.py` PreToolUse hook blocks the write and tells it to edit the canonical source instead.
+### 3. Derived Targets (Generated)
+**Never edit these directly.** They are managed by `./sync.sh`.
+- Root: `CLAUDE.md`, `GEMINI.md`, `AGY.md`, `AGENTS.md`.
+- Tool Dirs: `.claude/`, `.gemini/`, `.cursor/`, `.kiro/`, `.codex/`, `.agy/`.
 
-## The Rule: Only `sync.sh` Touches Derived Directories
+---
 
-- Editing via **`./.unicli-rules/sync.sh`** is the one sanctioned path into `.cursor/`, `.claude/`, `.gemini/`, `.kiro/`, `.codex/`.
-- Any other write (by an AI agent or by hand) to those directories is blocked by the Python guard hook.
-- Want to change an agent's prompt, a skill, memory, or MCP servers? Edit under `.unicli-rules/`, run `sync.sh --fix`. That's the only workflow.
+## The Rule: Edit Once, Sync Everywhere
 
-## Adding a New Agent
+1.  Modify your canonical source under `hub/`.
+2.  Run `./sync.sh --fix`.
+3.  The framework uses **Python-based guards** (`generated_file_guard.py`) to block accidental edits to derived files, redirecting you back to the `hub/`.
 
-There are two tiers of agents:
+---
 
-### Shared agents (`researcher` / `codegen` / `reviewer`)
+## Advanced Features
 
-These three are defined as bash constants in `sync.sh`. To change their model, tools, or description, edit the `claude_model()`, `gemini_model()`, `claude_tools()`, `agent_description()` functions directly in `.unicli-rules/sync.sh`, then run `--fix`.
+### Unified MCP Configuration
+Edit `hub/mcp-servers.json` to define your tools (Tavily, JIRA, GitLab, etc.). Running `./sync.sh` will automatically configure them for all supported CLIs, including updating the `allowed` list for Gemini and Antigravity.
 
-### Specialized agents (project-specific)
+### Specialized Agents
+Drop a markdown prompt into `hub/agents/` and a `.kiro.json` metadata file. The framework will generate the corresponding agent for all five platforms.
 
-Drop two files into `.unicli-rules/agents/` and run `sync.sh --fix` — no other file needs touching:
-
-```bash
-# 1) Write the canonical prompt body
-cat > .unicli-rules/agents/security-scanner.md <<'EOF'
-# Security Scanner
-You are a security analysis agent ...
-EOF
-
-# 2) Write the per-CLI metadata (model, tools, Kiro config)
-cat > .unicli-rules/agents/security-scanner.kiro.json <<'EOF'
-{
-  "name": "security-scanner",
-  "description": "Scan for security vulnerabilities and suggest remediations.",
-  "model": "claude-opus-4.7",
-  "tools": ["fs_read", "execute_bash", "grep", "glob"],
-  "allowedTools": ["fs_read", "execute_bash", "grep", "glob"],
-  "welcomeMessage": "Security Scanner ready.",
-  "keyboardShortcut": "ctrl+shift+9"
-}
-EOF
-
-# 3) Regenerate all 5 CLIs at once
-./.unicli-rules/sync.sh --fix
-```
-
-`render_specialized_agents.py` auto-discovers every `*.kiro.json` (excluding shared agents) and generates Claude / Cursor / Gemini / Kiro / Codex configs in a single pass.
-
-## Adding a New Skill
-
-Just create `.unicli-rules/skills/<name>.md`. `sync.sh` fans it out to Gemini and Cursor automatically.
-
-### Skill Secrets Management
-
-Do not store raw API keys or secrets in your skill directories (e.g. `utils/*.json`). Instead:
-1. Store secrets in the project root `.env.local` (which is git-ignored).
-2. Use `python-dotenv` to dynamically load secrets by searching upwards for the `.env.local` file.
-3. See the provided example in `.unicli-rules/skills/example-skill/utils/secrets_manager.py`.
-
-## Editing Memory
-
-1. Edit any file under `.unicli-rules/memory/`.
-2. Run `./.unicli-rules/sync.sh --fix`.
-3. Restart your CLI session (or start a new thread) to pick up the new context.
-
-## Hooks (Python)
-
-| Hook | Trigger | Behavior |
-|------|---------|----------|
-| `generated_file_guard.py` | PreToolUse (Edit / Write) | Blocks direct edits to derived files and prints the canonical source to edit. |
-| `auto_sync.py` | PostToolUse (Edit / Write) | When a file under `.unicli-rules/**` is modified, runs `sync.sh --fix` automatically. |
-| `pre_skill_sync.py` | Claude Code `Read`; Cursor `beforeReadFile`; Gemini `BeforeTool` (`read_file`) | Before reading a skill path, runs `sync.sh --fix` so derived `SKILL.md` files match `.unicli-rules/skills/`. |
-
-### Skill sync on other CLIs
-
-- **Codex** — No project hooks in this template; run `./.unicli-rules/sync.sh --fix` manually before using skills.
-- **Kiro** — This repo only wires `beforeFileWrite` / `afterFileWrite` hooks; there is no read-time hook here — use manual sync before skills.
-
-The hooks are pure-Python (stdlib only) and run on Python 3.8+. Hook configs:
-
-| CLI | Config file |
-|-----|-------------|
-| Claude Code | `.claude/settings.local.json` |
-| Cursor | `.cursor/hooks.json` |
-| Gemini CLI | `.gemini/settings.json` |
-| Kiro | `.kiro/hooks/*.kiro.hook` |
-
-## Installing Codex Prompts
-
-Codex only exposes prompts from `~/.codex/prompts/` as slash commands. Install them from this project with:
-
-```bash
-./.unicli-rules/sync.sh --install-codex-prompts
-# Available afterwards: /unicli-researcher, /unicli-codegen, /unicli-reviewer
-```
+---
 
 ## CI Integration
 
-A `.pre-commit-config.yaml` is included. Install the pre-commit hook once:
-
+A `.pre-commit-config.yaml` is included. Install it to ensure no derived files drift in your commits:
 ```bash
-pip install pre-commit
 pre-commit install
 ```
+This runs `./sync.sh --check` before every commit.
 
-After that, every commit automatically runs `sync.sh --check` and blocks if any derived file drifts.
+---
 
-For GitHub Actions, add `.github/workflows/sync-check.yml`:
-
-```yaml
-name: unicli-hub sync check
-on: [pull_request]
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: ./.unicli-rules/sync.sh --check
-```
-
-`sync.sh --check` exits non-zero whenever a derived file drifts from the canonical source, so any PR that forgot to run `--fix` fails CI.
-
-## Dodging the Rate Limits (April 2026 snapshot)
-
-Every AI CLI caps its free and $20/mo tier tightly, and those caps are **independent per vendor**. That's the whole reason UniCLI-Hub exists: share one canonical context across all five and rotate between them whenever you hit a wall.
-
-### Free vs. $20/mo tier — side-by-side
-
-| CLI | Free tier | $20/mo paid tier | Notes |
-|-----|-----------|------------------|-------|
-| **Claude Code** | Claude Free: ~15–40 messages / 5h | **Pro $20/mo**: ~10–40 prompts / 5h + weekly cap (introduced Aug 2025) | Caps are shared between claude.ai chat and Claude Code. |
-| **Cursor** | Hobby: 50 slow premium requests + 2,000 tab completions / month | **Pro $20/mo**: unlimited Auto mode + $20 premium credit pool + unlimited completions | Fast queue only on paid plans. |
-| **Gemini CLI** | Personal Google account: ~1,000 requests/day on Flash, 60 RPM; Gemini 2.5 Pro capped at 100/day | **Gemini Code Assist Standard $19/mo**: higher quotas (customizable per model/org) | Pro-model quota is the real scarce resource. |
-| **Kiro** | 50 credits/month + 500 bonus credits (first 30 days) | **Pro $20/mo**: 1,000 credits/month; overage $0.04/credit (opt-in) | New-user waitlist active since 2025. Unused credits don't roll over. |
-| **Codex CLI** | No true free tier — ChatGPT Free has only limited Codex access | **ChatGPT Plus $20/mo**: ~400–2,000 GPT-5.4 local messages / 5h, plus cloud tasks | 2× Codex-usage promo on Pro $100 tier runs through May 31, 2026. |
-
-*Numbers approximate. Providers change these frequently; re-check before relying on them. Sources are listed at the bottom of this section.*
-
-### How this hub lets you slip between the caps
-
-- **Claude's 5-hour cap kicked in mid-task?** Open the same project in Gemini CLI — `GEMINI.md` already carries your context, agents, and memory. No re-briefing.
-- **Used up Cursor premium credits before the week ends?** Switch to Claude Code or Codex CLI. Your `researcher` / `codegen` / `reviewer` agents are defined once in `.unicli-rules/agents/` and exposed to all five CLIs.
-- **Saving Gemini 2.5 Pro's 100/day for hard problems?** Burn routine edits through Flash (1,000/day) or Claude Code via the same `codegen` agent — same output style because they share `conventions.md`.
-- **Kiro credits running dry?** Fail over to whichever CLI still has budget. Since memory and conventions live in `.unicli-rules/memory/`, the next tool starts with identical assumptions, not a blank slate.
-- **Only one subscription in your pocket?** Free tiers across Gemini / Kiro / Claude each cover a different slice of the day — the hub makes that *combined budget* usable instead of siloed.
-
-The goal isn't to run all five at once. It's that **switching costs drop to zero**, so whichever CLI is under its cap *right now* is the one you use — without re-uploading your project or re-explaining your architecture.
-
-### Sources
-
-- [Claude Code: rate limits, pricing, and alternatives — Northflank](https://northflank.com/blog/claude-rate-limits-claude-code-pricing-cost)
-- [Using Claude Code with your Pro or Max plan — Anthropic Help Center](https://support.claude.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan)
-- [Claude Code limits: quotas & rate limits guide — TrueFoundry](https://www.truefoundry.com/blog/claude-code-limits-explained)
-- [Gemini CLI: quotas and pricing](https://geminicli.com/docs/resources/quota-and-pricing/)
-- [Gemini 2.5 Pro free-tier daily quota (100 RPD)](https://www.aifreeapi.com/en/posts/gemini-2-5-pro-free-tier-daily-quota-rpd)
-- [Gemini Code Assist quotas and limits — Google for Developers](https://developers.google.com/gemini-code-assist/resources/quotas)
-- [Cursor pricing explained 2026 — Vantage](https://www.vantage.sh/blog/cursor-pricing-explained)
-- [Cursor free-tier guide (50 premium + 2,000 completions)](https://eastondev.com/blog/en/posts/dev/20260110-cursor-free-quota-guide/)
-- [Kiro pricing (official)](https://kiro.dev/pricing/)
-- [Kiro Pro 1,000 credits details — MorphLLM](https://www.morphllm.com/kiro-pricing)
-- [Codex pricing (official)](https://developers.openai.com/codex/pricing)
-- [Using Codex with your ChatGPT plan — OpenAI Help Center](https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan)
-
-## FAQ
-
-**Q. Symlinks are broken on Windows.**
-Enable `core.symlinks=true` in Git for Windows, or fork `sync.sh` to replace the symlink steps with copies.
-
-**Q. `/unicli-researcher` doesn't show up in Codex.**
-Run `./.unicli-rules/sync.sh --install-codex-prompts` first — Codex scans `~/.codex/prompts/`, not the project path.
-
-**Q. I only use one CLI.**
-Use that CLI's derived directory. The others can be ignored or deleted. You can also trim the steps in `sync.sh` that you don't need.
-
-## Recent Updates
-
-- **Unified Secret Management**: Introduced `python-dotenv` integration for skills to safely load secrets from the root `.env.local` file.
-- **Agent Model Management**: Centralized model configuration for agents in SSOT.
-- **MCP Configuration**: Unified MCP server definitions across all 5 supported CLIs.
-
-**Q. How do I change agent models?**
-Edit the `CLAUDE_MODEL` / `GEMINI_MODEL` associative arrays in `.unicli-rules/sync.sh`.
+*UniCLI-Hub: One Hub to rule them all.*

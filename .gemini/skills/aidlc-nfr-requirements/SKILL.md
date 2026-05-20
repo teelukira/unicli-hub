@@ -73,3 +73,4 @@ Approval must be clear and unambiguous.
 Log raw user input to audit.md. DO NOT PROCEED until user responds.
 
 Mark `[x] NFR Requirements` and log `APPROVAL-STAGE: NFR_REQUIREMENTS_APPROVED [unit={unit}]` on "Continue".
+

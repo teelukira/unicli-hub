@@ -129,3 +129,4 @@ python3 scripts/render-ai-dlc-remote-templates.py --target jira --values-file /t
 4. Add `**Jira Ticket**: NWAE-###` to the unit section in `aidlc-docs/aidlc-state.md`
 
 On failure: log placeholder per §4 of jira-integration.md — do NOT block stage advancement.
+

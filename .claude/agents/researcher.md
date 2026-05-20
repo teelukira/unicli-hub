@@ -1,14 +1,7 @@
 ---
 name: researcher
-description: Investigate code and external sources; produce evidence-based summaries without speculation.
 model: claude-opus-4-7
-tools:
-  - Read
-  - Glob
-  - Grep
-  - WebSearch
-  - WebFetch---
-
+---
 ---
 name: researcher
 description: Investigate code and external sources; produce evidence-based summaries without speculation.

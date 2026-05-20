@@ -1,236 +1,112 @@
-# UniCLI-Hub: 짠돌이 AI 유목민을 위한 워크스페이스
+# UniCLI-Hub: AI 유목민을 위한 통합 워크스페이스
 
-> *(회사가 AI 툴 비용을 안 대준다고요? 저희가 해결해드릴게요.)*
+> *(회사가 도구를 안 사주나요? 저희가 도와드립니다.)*
 
-**UniCLI-Hub**는 AI 구독료 피로에 지친 개발자를 위한 **통합 컨텍스트 관리 워크스페이스**입니다.
+**UniCLI-Hub**는 AI 구독 피로와 컨텍스트 파편화에 지친 개발자들을 위한 중앙 집중식 **SSOT (Single Source of Truth) 프레임워크**입니다.
 
-## 왜 만들었나 ("가난한 개발자" 문제)
+## 문제: 구독 피로와 컨텍스트 파편화
 
-솔직해지죠. AI 도구는 훌륭하지만 모두에게 월 20달러씩 내는 건 다른 얘기입니다. 회사가 AI 도구를 지원해주지 않거나, Gemini·Claude Code·Cursor·Kiro-CLI의 무료 티어를 제정신으로 최대한 활용하고 싶을 수 있습니다.
+AI 도구들은 훌륭하지만, 모든 도구에 매달 $20씩 지불하는 것은 부담스럽습니다. 할당량(Rate Limit)을 피하기 위해 여러 AI CLI(Claude, Gemini, Cursor 등)의 무료 티어를 오가다 보면, 커스텀 스킬, 에이전트 설정, 프로젝트 메모리가 도구마다 흩어져 AI의 "두뇌"가 파편화됩니다.
 
-토큰 한도를 피하려고 여러 AI CLI의 Free/Basic 티어를 계속 갈아타다 보면, AI의 "뇌"가 조각납니다. `agent.md`는 여기, 커스텀 스킬은 저기, 프로젝트 컨텍스트는 매번 다시 설명해야 하죠.
+## 해결책: 모든 도구를 지배하는 단 하나의 허브
 
-## 해결책
+**UniCLI-Hub**는 **에이전트, 스킬, 훅, MCP 서버** 설정을 단일 디렉토리에 중앙 집중화합니다. 이 자산들은 지원되는 모든 CLI 도구로 자동 배포(Fan-out)되어, 현재 어떤 도구를 사용하든 동일한 컨텍스트와 기능을 유지할 수 있게 합니다.
 
-**UniCLI-Hub**는 AI 워크플로우의 **Single Source of Truth (SSOT)** 역할을 합니다. 서브에이전트·메모리·스킬을 한 곳에 모아, 토큰 한도에 걸리는 순간 다른 도구로 매끄럽게 전환할 수 있게 합니다.
-
-**UniCLI-Hub로 할 수 있는 일:**
-
-- **Claude 토큰이 떨어졌다?** 프로젝트 아키텍처를 다시 설명하지 않고 Gemini CLI로 바로 전환.
-- **통합 메모리 유지:** `.cursorrules`, Kiro 시스템 프롬프트, Claude 컨텍스트를 한 디렉토리에서 공유.
-- **비용 절감:** 무료 티어 조합과 단일 구독만으로 "Pro" 경험을 유지.
-
-> English version: [README.md](./README.md)
+**UniCLI-Hub와 함께라면:**
+- **끊김 없는 전환:** Claude 토큰이 다 떨어졌나요? 아키텍처를 다시 설명할 필요 없이 Gemini나 Antigravity(agy)로 즉시 전환하세요.
+- **통합 메모리:** 프로젝트 사실 관계, 컨벤션, 용어집을 모든 도구가 공유합니다.
+- **자동화된 도구 연동:** MCP 서버 정의와 훅 로직을 한 곳에서 관리합니다.
+- **비용 절감:** 여러 무료 티어를 하나의 "Pro" 경험처럼 활용하여 생산성을 극대화하세요.
 
 ---
 
-## 지원 CLI
+## 지원되는 CLI
 
-| CLI | 파생 위치 | 진입점 |
-|-----|-----------|--------|
-| Claude Code | `.claude/` | `CLAUDE.md` |
-| Cursor | `.cursor/rules/`, `.cursor/agents/` | `.cursor/rules/*.mdc` |
-| Gemini CLI | `.gemini/` | `GEMINI.md` (repo root) |
-| Kiro | `.kiro/steering/`, `.kiro/agents/` | `.kiro/steering/*.md` |
-| OpenAI Codex | `.codex/`, `AGENTS.md` | `AGENTS.md` (루트) |
+| CLI | 파생 경로 | 진입점 (Entry Point) |
+|-----|------------------|-------------|
+| **Antigravity (agy)** | `.agy/` | `AGY.md` |
+| **Claude Code** | `.claude/` | `CLAUDE.md` |
+| **Gemini CLI** | `.gemini/` | `GEMINI.md` |
+| **Cursor** | `.cursor/` | `.cursor/rules/*.mdc` |
+| **Kiro** | `.kiro/` | `.kiro/steering/*.md` |
+| **OpenAI Codex** | `.codex/` | `AGENTS.md` |
 
-## Quick Start
+---
+
+## 빠른 시작
 
 ```bash
-# 1) 템플릿 복제 (또는 이 디렉토리를 시작점으로)
+# 1) 프레임워크 클론
 git clone <this-repo> my-project && cd my-project
 
-# 2) 프로젝트에 맞게 원천 파일 편집
-#    - .unicli-rules/project-context.md
-#    - .unicli-rules/memory/project-facts.md
-#    - .unicli-rules/memory/conventions.md
-#    - .unicli-rules/memory/glossary.md
+# 2) hub/ 디렉토리에서 SSOT 소스 수정
+#    - hub/project-context.md
+#    - hub/memory/project-facts.md
+#    - hub/mcp-servers.json
 
-# 3) 모든 CLI의 파생 파일 재생성
-./.unicli-rules/sync.sh --fix
+# 3) 모든 CLI 타겟 동기화
+./sync.sh --fix
 
-# 4) 원하는 CLI로 열기
+# 4) 원하는 도구 실행
+agy                   # Antigravity CLI
 claude                # Claude Code
-cursor .              # Cursor
 gemini                # Gemini CLI
-kiro                  # Kiro
-codex                 # Codex (AGENTS.md 자동 로드)
+cursor .              # Cursor
 ```
 
-## Canonical vs Derived
+---
 
-**편집해야 할 파일** (`.unicli-rules/`):
+## 프레임워크 구조
 
-```
-.unicli-rules/
-├── core-workflow.md          # 도구 중립 워크플로우
-├── project-context.md        # 프로젝트 컨텍스트
-├── agents/{researcher,codegen,reviewer}.md
-├── skills/{scaffold-module,run-tests}.md
-├── memory/{project-facts,conventions,glossary}.md
-├── common/{tool-matrix,approval-gates}.md, mcp-servers.json
-├── templates/
-│   ├── CLAUDE.md.tmpl
-│   ├── GEMINI.md.tmpl
-│   ├── AGENTS.md.tmpl
-│   └── frontmatter/*.yaml
-├── hooks/
-│   ├── generated_file_guard.py   # PreToolUse  — 파생 파일 직접 편집 차단
-│   ├── auto_sync.py              # PostToolUse — canonical 편집 시 sync.sh 자동 실행
-│   └── render_mcp.py             # 5개 CLI용 MCP 설정 렌더
-└── sync.sh
-```
+UniCLI-Hub는 **프레임워크 코어**와 **프로젝트 데이터**를 분리하여 관리합니다.
 
-**편집 금지 (자동 생성)**:
+### 1. 허브 (`hub/`) — 당신의 데이터
+**Single Source of Truth**가 정의되는 곳입니다. **이곳의 파일들을 수정하세요.**
+- `hub/agents/`: 공통 및 특화 에이전트의 원본 프롬프트.
+- `hub/skills/`: 커스텀 스킬 (마크다운 + 참조 자료).
+- `hub/hooks/`: 공유 Python 훅 로직.
+- `hub/memory/`: 프로젝트 사실 관계, 컨벤션, 용어집.
+- `hub/mcp-servers.json`: 통합 MCP 설정.
+- `hub/project-context.md`: 프로젝트의 전체적인 맥락.
 
-- `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` (루트)
-- `.claude/agents/*.md`
-- `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/skills/*`
-- `.gemini/agents/*.md`, `.gemini/skills/*`
-- `.kiro/steering/*.md`, `.kiro/agents/prompts/*` (symlink)
-- `.codex/prompts/*.md`
-- MCP (`common/mcp-servers.json`에서 생성): `.mcp.json`, `.cursor/mcp.json`, `.kiro/settings/mcp.json`, `.gemini/settings.json`의 `mcpServers`, `.codex/config.toml`의 생성된 `[[mcpServers]]` 블록
+### 2. 코어 (`.unicli-hub/`) — 프레임워크 로직
+자산을 배포하기 위한 내부 로직입니다. 일반적으로 수정할 필요가 없습니다.
+- `scripts/`: 에이전트, 스킬, 훅, MCP, 템플릿용 Python 렌더러.
+- `templates/`: CLI별 진입점 템플릿 (`CLAUDE.md.tmpl` 등).
 
-에이전트가 이런 파일을 직접 수정하려 하면 `generated_file_guard.py` PreToolUse 훅이 차단하고, 대신 편집해야 할 canonical 경로를 알려줍니다.
+### 3. 파생 타겟 (자동 생성)
+**직접 수정하지 마세요.** `./sync.sh`에 의해 관리됩니다.
+- 루트: `CLAUDE.md`, `GEMINI.md`, `AGY.md`, `AGENTS.md`.
+- 도구 디렉토리: `.claude/`, `.gemini/`, `.cursor/`, `.kiro/`, `.codex/`, `.agy/`.
 
-## 규칙: `sync.sh`만이 파생 디렉토리를 건드린다
+---
 
-- **`./.unicli-rules/sync.sh`**를 통한 수정만이 `.cursor/`, `.claude/`, `.gemini/`, `.kiro/`, `.codex/` 에 쓰기를 허용합니다.
-- 그 외 경로로 (에이전트든 수동이든) 쓰는 모든 시도는 Python guard 훅이 차단합니다.
-- 에이전트 프롬프트·스킬·메모리·MCP 서버 목록을 바꾸고 싶다면 `.unicli-rules/`에서 편집하고 `sync.sh --fix`를 실행하세요. 이 한 가지 워크플로우만 있으면 됩니다.
+## 대원칙: 한 곳에서 수정하고 모든 곳에서 동기화
 
-## 새 에이전트 추가
+1.  `hub/` 하위의 소스를 수정합니다.
+2.  `./sync.sh --fix`를 실행합니다.
+3.  프레임워크의 **Python 가드**(`generated_file_guard.py`)가 파생 파일에 대한 직접 수정을 차단하고 `hub/`로 안내합니다.
 
+---
+
+## 주요 기능
+
+### 통합 MCP 설정
+`hub/mcp-servers.json`에서 도구(Tavily, JIRA, GitLab 등)를 정의하세요. `./sync.sh`를 실행하면 모든 CLI에 설정이 배포되며, Gemini와 Antigravity의 `allowed` 리스트도 자동으로 업데이트됩니다.
+
+### 특화 에이전트 추가
+`hub/agents/`에 마크다운 프롬프트와 `.kiro.json` 메타데이터를 추가하면, 프레임워크가 모든 플랫폼에 맞는 에이전트를 자동으로 생성합니다.
+
+---
+
+## CI 연동
+
+`.pre-commit-config.yaml`이 포함되어 있습니다. 커밋 시 파생 파일이 소스와 어긋나지 않도록 설정하세요:
 ```bash
-# 1) canonical 프롬프트 작성
-cat > .unicli-rules/agents/security-scanner.md <<'EOF'
-# Security Scanner Agent
-...
-EOF
-
-# 2) sync.sh의 SHARED_AGENTS 배열에 이름 추가
-#    (description, tool allowlist, model도 함께 지정)
-
-# 3) 재생성
-./.unicli-rules/sync.sh --fix
+pre-commit install
 ```
+이제 모든 커밋 전에 `./sync.sh --check`가 실행됩니다.
 
-## 새 스킬 추가
+---
 
-`.unicli-rules/skills/<name>.md`만 만들면 sync가 Gemini·Cursor로 자동 배포합니다.
-
-### 스킬 시크릿 관리
-
-스킬 디렉토리(`utils/*.json` 등) 내부에 직접 API 키나 시크릿을 저장하지 마세요. 대신:
-1. 시크릿 키는 프로젝트 루트의 `.env.local`에 저장합니다 (Git에서 제외됨).
-2. 스킬 내 파이썬 스크립트에서는 `python-dotenv`를 사용하여 상위 디렉토리를 탐색해 `.env.local`을 로드합니다.
-3. 제공된 `.unicli-rules/skills/example-skill/utils/secrets_manager.py` 예제를 참고하세요.
-
-## 메모리 편집
-
-1. `.unicli-rules/memory/*.md` 편집
-2. `./.unicli-rules/sync.sh --fix`
-3. CLI 세션 재시작(또는 새 스레드)하면 반영
-
-## 훅 (Python)
-
-| Hook | 트리거 | 동작 |
-|------|--------|------|
-| `generated_file_guard.py` | PreToolUse (Edit / Write) | 파생 파일 직접 편집을 차단하고, 편집해야 할 canonical 경로를 출력 |
-| `auto_sync.py` | PostToolUse (Edit / Write) | `.unicli-rules/**` 수정 감지 시 `sync.sh --fix` 자동 실행 |
-| `pre_skill_sync.py` | Cursor `beforeReadFile` (Read / TabRead); Gemini `BeforeTool` (`read_file`) | 스킬 경로를 읽기 전에 `sync.sh --fix`를 실행해 파생 `SKILL.md`가 `.unicli-rules/skills/`와 일치하게 함 |
-
-### 다른 CLI에서 스킬 sync
-
-- **Codex** — 이 템플릿에는 프로젝트 훅이 없습니다. 스킬을 쓰기 전에 `./.unicli-rules/sync.sh --fix`를 수동 실행하세요.
-- **Kiro** — 이 저장소는 `beforeFileWrite` / `afterFileWrite` 훅만 연결합니다. 읽기 직전 훅은 없으므로 스킬 사용 전 수동 sync 하세요.
-- **Claude Code** — 선택: 읽기 시점에 `python3 ./.unicli-rules/hooks/pre_skill_sync.py`를 호출하는 훅을 추가하세요(병합용 예시: `.unicli-rules/templates/claude-pre-skill-sync.snippet.json`; 필드명은 최신 Claude Code 문서와 대조). 또는 `./.unicli-rules/sync.sh --fix`를 수동 실행하세요.
-
-훅은 **순수 Python(표준 라이브러리만)**, Python 3.8+ 호환입니다. 5개 CLI의 훅 설정(`.claude/settings.local.json`, `.cursor/hooks.json`, `.gemini/settings.json`, `.kiro/hooks/*.kiro.hook`)이 모두 `python3`로 호출합니다.
-
-## Codex 프롬프트 설치
-
-Codex는 `~/.codex/prompts/`의 프롬프트만 slash command로 노출합니다. 설치 명령:
-
-```bash
-./.unicli-rules/sync.sh --install-codex-prompts
-# → /unicli-researcher, /unicli-codegen, /unicli-reviewer
-```
-
-## CI 통합
-
-`.github/workflows/sync-check.yml` 예시:
-
-```yaml
-name: unicli-hub sync check
-on: [pull_request]
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: ./.unicli-rules/sync.sh --check
-```
-
-`sync.sh --check`은 파생 파일이 canonical과 drift가 있을 때 종료 코드 1을 반환하므로, `--fix`를 잊고 PR을 올리면 CI가 실패합니다.
-
-## Rate Limit 피하기 (2026년 4월 기준)
-
-모든 AI CLI는 무료/$20 티어 사용량을 빡빡하게 제한하고, **그 제한은 각 벤더마다 독립적**입니다. UniCLI-Hub가 존재하는 이유가 바로 이것 — canonical 컨텍스트 하나를 5개 CLI에 공유해, 한 도구에서 벽에 부딪히면 즉시 다른 도구로 넘어가도록 만듭니다.
-
-### 무료 vs. $20/월 티어 — 한눈에 비교
-
-| CLI | 무료 티어 | $20/월 유료 티어 | 비고 |
-|-----|-----------|------------------|------|
-| **Claude Code** | Claude Free: 5시간당 약 15–40 메시지 | **Pro $20/월**: 5시간당 약 10–40 프롬프트 + 주간 한도 (2025-08 도입) | claude.ai 채팅과 Claude Code가 한도를 공유 |
-| **Cursor** | Hobby: 월 50 slow premium 요청 + 2,000 tab completion | **Pro $20/월**: Auto 모드 무제한 + $20 premium 크레딧 풀 + tab completion 무제한 | Fast queue는 유료에서만 |
-| **Gemini CLI** | 개인 Google 계정: Flash 약 1,000 req/일, 60 RPM; Gemini 2.5 Pro는 100/일로 제한 | **Gemini Code Assist Standard $19/월**: 더 높은 할당(모델/조직별 커스터마이즈) | Pro 모델 할당이 실질적 병목 |
-| **Kiro** | 월 50 크레딧 + 최초 30일 보너스 500 크레딧 | **Pro $20/월**: 월 1,000 크레딧; 초과 시 크레딧당 $0.04 (opt-in) | 2025년부터 신규 사용자 대기열 존재. 미사용 크레딧은 이월 불가 |
-| **Codex CLI** | 실질적 무료 티어 없음 — ChatGPT Free는 Codex 접근 제한적 | **ChatGPT Plus $20/월**: 5시간당 GPT-5.4 로컬 메시지 약 400–2,000 + 클라우드 태스크 | Pro $100 티어 2× 프로모션 2026-05-31까지 |
-
-*수치는 근사치입니다. 벤더가 자주 바꾸므로, 중요한 판단 전에 재확인하세요. 출처는 이 섹션 하단에 있습니다.*
-
-### 허브가 제한 사이를 빠져나가게 하는 방법
-
-- **Claude 5시간 한도에 걸렸다?** 같은 프로젝트를 Gemini CLI로 열기. `GEMINI.md`에 컨텍스트·에이전트·메모리가 이미 담겨 있으므로 재설명이 필요 없습니다.
-- **Cursor premium 크레딧이 주중에 바닥났다?** Claude Code 또는 Codex CLI로 전환. `researcher` / `codegen` / `reviewer` 에이전트는 `.unicli-rules/agents/`에 한 번 정의되어 5개 CLI에 그대로 노출됩니다.
-- **Gemini 2.5 Pro의 100/일을 어려운 문제에 아껴두고 싶다?** 루틴한 수정은 Flash(1,000/일)나 Claude Code의 같은 `codegen` 에이전트로 처리 — `conventions.md`를 공유하므로 출력 스타일도 동일.
-- **Kiro 크레딧이 떨어져간다?** 여유 있는 CLI로 페일오버. 메모리와 컨벤션이 `.unicli-rules/memory/`에 있으니 다음 도구도 백지 상태가 아닌 동일 가정으로 시작합니다.
-- **주머니에 구독 하나뿐?** Gemini / Kiro / Claude의 무료 티어는 각기 다른 시간대/용도를 커버합니다. 허브는 이 **합산 예산**을 사일로가 아닌 하나로 쓸 수 있게 합니다.
-
-목표는 5개를 동시에 돌리는 게 아닙니다. **전환 비용이 0에 수렴**하기 때문에, 지금 한도가 남아 있는 CLI를 그때그때 선택해서 쓰되 프로젝트를 다시 업로드하거나 아키텍처를 다시 설명하지 않아도 된다는 점이 핵심입니다.
-
-### 출처
-
-- [Claude Code: rate limits, pricing, and alternatives — Northflank](https://northflank.com/blog/claude-rate-limits-claude-code-pricing-cost)
-- [Using Claude Code with your Pro or Max plan — Anthropic Help Center](https://support.claude.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan)
-- [Claude Code limits: quotas & rate limits guide — TrueFoundry](https://www.truefoundry.com/blog/claude-code-limits-explained)
-- [Gemini CLI: quotas and pricing](https://geminicli.com/docs/resources/quota-and-pricing/)
-- [Gemini 2.5 Pro free-tier daily quota (100 RPD)](https://www.aifreeapi.com/en/posts/gemini-2-5-pro-free-tier-daily-quota-rpd)
-- [Gemini Code Assist quotas and limits — Google for Developers](https://developers.google.com/gemini-code-assist/resources/quotas)
-- [Cursor pricing explained 2026 — Vantage](https://www.vantage.sh/blog/cursor-pricing-explained)
-- [Cursor free-tier guide (50 premium + 2,000 completions)](https://eastondev.com/blog/en/posts/dev/20260110-cursor-free-quota-guide/)
-- [Kiro pricing (official)](https://kiro.dev/pricing/)
-- [Kiro Pro 1,000 credits details — MorphLLM](https://www.morphllm.com/kiro-pricing)
-- [Codex pricing (official)](https://developers.openai.com/codex/pricing)
-- [Using Codex with your ChatGPT plan — OpenAI Help Center](https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan)
-
-## FAQ
-
-**Q. Windows에서 symlink가 깨져요.**
-Git for Windows의 `core.symlinks=true` 설정을 활성화하거나, `sync.sh`의 symlink 구간을 copy로 포크하세요.
-
-**Q. Codex에서 `/unicli-researcher`가 안 보여요.**
-`./.unicli-rules/sync.sh --install-codex-prompts`를 먼저 실행하세요. Codex는 프로젝트 경로가 아닌 `~/.codex/prompts/`만 스캔합니다.
-
-**Q. 특정 CLI만 써요.**
-해당 CLI의 파생 디렉토리만 사용하면 됩니다. 나머지는 무시하거나 삭제해도 됩니다. `sync.sh`에서 불필요한 단계를 지울 수도 있어요.
-
-## 최근 업데이트
-
-- **통합 시크릿 관리**: 스킬들이 루트 `.env.local`에서 안전하게 키를 불러올 수 있도록 `python-dotenv` 기반 예제를 추가했습니다.
-- **에이전트 모델 관리**: SSOT 내에서 에이전트 모델 설정을 중앙 집중화했습니다.
-- **MCP 설정 통합**: 5개 CLI 모두에 대해 공통된 MCP 서버 정의를 지원합니다.
-
-**Q. 에이전트 모델을 바꾸려면?**
-`.unicli-rules/sync.sh`의 `CLAUDE_MODEL`, `GEMINI_MODEL` 연관 배열을 편집하세요.
+*UniCLI-Hub: 모든 도구를 지배하는 단 하나의 허브.*

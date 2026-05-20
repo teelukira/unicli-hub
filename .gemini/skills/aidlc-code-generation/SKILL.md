@@ -176,3 +176,4 @@ Log raw input. DO NOT PROCEED until user responds.
 
 Mark `[x] Code Generation` in unit progress.
 Log `APPROVAL-STAGE: CODE_GENERATION_APPROVED [unit={unit}]` to audit.md.
+

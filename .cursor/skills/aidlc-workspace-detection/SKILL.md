@@ -125,3 +125,4 @@ Report findings to user:
 - Next stage to execute
 
 Auto-proceed (no approval needed). Instruct user to invoke `aidlc-workflow` or the specific next skill.
+

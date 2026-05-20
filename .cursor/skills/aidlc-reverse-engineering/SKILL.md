@@ -80,3 +80,4 @@ Wait for user response. Log to audit.md (raw input). DO NOT PROCEED until approv
 Mark `[x] Reverse Engineering` in `aidlc-docs/aidlc-state.md`.
 Log `APPROVAL-STAGE: REVERSE_ENGINEERING_APPROVED` to audit.md.
 Notify user to continue with `aidlc-requirements-analysis` (or invoke `aidlc-workflow`).
+

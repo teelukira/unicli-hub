@@ -1,9 +1,0 @@
----
-description: >-
-  Slim AI-DLC entry for Cursor — delegates to aidlc-workflow skill and
-  .unicli-rules/ on demand. Generated from
-  .unicli-rules/templates/cursor-workflow-slim.md — do not edit directly.
-globs:
-  - "**/*"
-alwaysApply: true
----

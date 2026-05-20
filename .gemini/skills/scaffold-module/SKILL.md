@@ -22,3 +22,4 @@ Generate the basic structure for a new module or package. Follow project convent
 
 - List of files that were created.
 - Recommendation for the next implementation step.
+

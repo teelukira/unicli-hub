@@ -85,3 +85,4 @@ Approval must be clear and unambiguous.
 Log raw user input to audit.md. DO NOT PROCEED until user responds.
 
 Mark `[x] Infrastructure Design` and log `APPROVAL-STAGE: INFRASTRUCTURE_DESIGN_APPROVED [unit={unit}]` on "Continue".
+
