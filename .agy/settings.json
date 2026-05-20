@@ -15,61 +15,8 @@
       }
     ]
   },
-  "mcpServers": {
-    "tavily": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://mcp.tavily.com/mcp/",
-        "--header",
-        "Authorization:Bearer ${TAVILY_API_KEY}"
-      ],
-      "env": {
-        "TAVILY_API_KEY": "${TAVILY_API_KEY}"
-      }
-    },
-    "mcp-atlassian": {
-      "command": "uvx",
-      "args": [
-        "mcp-atlassian"
-      ],
-      "env": {
-        "JIRA_URL": "${JIRA_URL}",
-        "JIRA_PERSONAL_TOKEN": "${JIRA_PERSONAL_TOKEN}",
-        "CONFLUENCE_URL": "${CONFLUENCE_URL}",
-        "CONFLUENCE_PERSONAL_TOKEN": "${CONFLUENCE_PERSONAL_TOKEN}"
-      }
-    },
-    "gitlab": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-gitlab"
-      ],
-      "env": {
-        "GITLAB_PERSONAL_ACCESS_TOKEN": "${GITLAB_PERSONAL_ACCESS_TOKEN}",
-        "GITLAB_API_URL": "${GITLAB_API_URL}",
-        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-      }
-    },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--isolated"
-      ],
-      "env": {
-        "PLAYWRIGHT_MCP_ISOLATED": "true"
-      }
-    }
-  },
+  "mcpServers": {},
   "mcp": {
-    "allowed": [
-      "tavily",
-      "mcp-atlassian",
-      "gitlab",
-      "playwright"
-    ]
+    "allowed": []
   }
 }
