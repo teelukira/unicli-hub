@@ -906,6 +906,13 @@ Keep project-specific terminology here. Any word that is used with a meaning dif
 
 
 
+---
+### AGY Special Instructions
+- This is a test plugin for AGY.
+- It should only appear in AGY.md.
+
+
+
 
 ---
 

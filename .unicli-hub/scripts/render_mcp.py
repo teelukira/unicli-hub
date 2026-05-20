@@ -6,9 +6,12 @@ render_mcp.py — Fan-out MCP configurations from hub/mcp-servers.json to all ta
 import json
 import sys
 import pathlib
+import os
+import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 CANONICAL = ROOT / "hub" / "mcp-servers.json"
+ENV_LOCAL = ROOT / ".env.local"
 
 TARGETS = {
     "claude": ROOT / ".mcp.json",
@@ -19,6 +22,33 @@ TARGETS = {
 
 MODE = "fix"
 DRIFT = False
+
+def load_env(path: pathlib.Path) -> dict:
+    env = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"): continue
+            if "=" in line:
+                key, val = line.split("=", 1)
+                env[key.strip()] = val.strip()
+    return env
+
+def substitute_env(data, env_vars: dict):
+    if isinstance(data, dict):
+        return {k: substitute_env(v, env_vars) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [substitute_env(i, env_vars) for i in data]
+    elif isinstance(data, str):
+        def replacer(match):
+            var_name = match.group(1)
+            val = os.environ.get(var_name) or env_vars.get(var_name)
+            if val is None:
+                print(f"ERROR: Missing environment variable '${var_name}' in .env.local or shell environment.")
+                sys.exit(1)
+            return val
+        return re.sub(r"\${(\w+)}", replacer, data)
+    return data
 
 def compare_or_write(target: pathlib.Path, content: str):
     global DRIFT
@@ -49,8 +79,12 @@ def main():
         print(f"ERROR: {CANONICAL} not found")
         sys.exit(1)
 
+    env_vars = load_env(ENV_LOCAL)
     src = read_json(CANONICAL)
-    servers = src.get("mcpServers", {})
+    raw_servers = src.get("mcpServers", {})
+    
+    # Substitute variables
+    servers = substitute_env(raw_servers, env_vars)
 
     # 1. Claude & Cursor (Pure JSON)
     mcp_json = json.dumps({"mcpServers": servers}, indent=2, ensure_ascii=False) + "\n"

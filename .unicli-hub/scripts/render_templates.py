@@ -23,7 +23,7 @@ def compare_or_write(target: pathlib.Path, content: str):
         target.write_text(content, encoding="utf-8")
         print(f"wrote: {target.relative_to(ROOT)}")
 
-def assemble(tmpl_path: pathlib.Path) -> str:
+def assemble(tmpl_path: pathlib.Path, cli_name: str) -> str:
     if not tmpl_path.exists(): return ""
     tmpl = tmpl_path.read_text(encoding="utf-8")
     
@@ -35,22 +35,32 @@ def assemble(tmpl_path: pathlib.Path) -> str:
         p = HUB / "memory" / mf
         if p.exists(): memory += p.read_text(encoding="utf-8") + "\n\n"
         
-    return tmpl.replace("{{PROJECT_CONTEXT}}", ctx).replace("{{CORE_WORKFLOW}}", wf).replace("{{MEMORY}}", memory)
+    plugins = ""
+    plugin_dir = HUB / "plugins" / cli_name
+    if plugin_dir.is_dir():
+        for pf in sorted(plugin_dir.glob("*.md")):
+            plugins += pf.read_text(encoding="utf-8") + "\n\n"
+            
+    return (tmpl.replace("{{PROJECT_CONTEXT}}", ctx)
+                .replace("{{CORE_WORKFLOW}}", wf)
+                .replace("{{MEMORY}}", memory)
+                .replace("{{PLUGINS}}", plugins))
 
 def main():
     global MODE, DRIFT
     for arg in sys.argv[1:]:
         if arg in ["--fix", "--check"]: MODE = arg[2:]
 
+    # mapping of: output_filename -> (template_path, cli_name)
     targets = {
-        "CLAUDE.md": TEMPLATES / "CLAUDE.md.tmpl",
-        "GEMINI.md": TEMPLATES / "GEMINI.md.tmpl",
-        "AGY.md": TEMPLATES / "AGY.md.tmpl",
-        "AGENTS.md": TEMPLATES / "AGENTS.md.tmpl",
+        "CLAUDE.md": (TEMPLATES / "CLAUDE.md.tmpl", "claude"),
+        "GEMINI.md": (TEMPLATES / "GEMINI.md.tmpl", "gemini"),
+        "AGY.md": (TEMPLATES / "AGY.md.tmpl", "agy"),
+        "AGENTS.md": (TEMPLATES / "AGENTS.md.tmpl", "agents"),
     }
 
-    for name, tmpl in targets.items():
-        content = assemble(tmpl)
+    for name, (tmpl, cli_name) in targets.items():
+        content = assemble(tmpl, cli_name)
         if content: compare_or_write(ROOT / name, content)
 
     if MODE == "check" and DRIFT:
