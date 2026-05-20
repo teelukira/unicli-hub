@@ -1,1 +1,0 @@
-../../.unicli-rules/hooks/adr_memory_sync_nudge.py

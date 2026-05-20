@@ -1,1 +1,0 @@
-../../.unicli-rules/hooks/render_specialized_agents.py

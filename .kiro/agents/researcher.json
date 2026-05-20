@@ -1,6 +1,0 @@
-{
-  "name": "researcher",
-  "description": "Investigate code and external sources; produce evidence-based summaries without speculation.",
-  "promptFile": "prompts/researcher.md",
-  "tools": ["read", "search", "web"]
-}

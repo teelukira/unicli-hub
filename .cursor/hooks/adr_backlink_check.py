@@ -1,1 +1,0 @@
-../../.unicli-rules/hooks/adr_backlink_check.py

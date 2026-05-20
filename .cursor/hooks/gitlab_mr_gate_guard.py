@@ -1,1 +1,0 @@
-../../.unicli-rules/hooks/gitlab_mr_gate_guard.py
