@@ -58,7 +58,7 @@ def extract_path(payload: dict) -> str:
 def normalize(path: str) -> str:
     if not path:
         return ""
-    marker = "/tgo-im-aidlc/"
+    marker = "/unicli-hub/"
     if marker in path:
         path = path.split(marker, 1)[1]
     return path.lstrip("/")
@@ -71,7 +71,9 @@ def matches_skill_read(rel: str) -> bool:
         return True
     if fnmatch(rel, ".gemini/skills/*/SKILL.md"):
         return True
-    if fnmatch(rel, ".unicli-rules/skills/*.md"):
+    if fnmatch(rel, ".agy/skills/*/SKILL.md"):
+        return True
+    if fnmatch(rel, "hub/skills/*.md"):
         return True
     return False
 
@@ -87,6 +89,11 @@ def within_debounce(stamp_path: Path) -> bool:
 
 
 def main() -> int:
+    # 0. Recursion Guard
+    if os.environ.get("UNICLI_HOOK_ACTIVE") == "1":
+        return 0
+    os.environ["UNICLI_HOOK_ACTIVE"] = "1"
+
     raw = sys.stdin.read()
     if not raw.strip():
         return 0
@@ -102,7 +109,7 @@ def main() -> int:
 
     hook_dir = Path(__file__).resolve().parent
     root = hook_dir.parent.parent
-    sync_script = root / ".unicli-rules" / "sync.sh"
+    sync_script = root / "sync.sh"
     stamp_path = hook_dir.parent / STAMP_NAME
 
     if not sync_script.is_file() or not os.access(sync_script, os.X_OK):

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """auto_sync.py — PostToolUse hook.
 
-When the agent writes to any file under `.unicli-rules/**`, this hook
+When the agent writes to any file under `hub/**`, this hook
 runs `sync.sh --fix` so every derived CLI directory stays in sync.
-Runs silently (exit 0) for writes outside the canonical tree to avoid
-infinite loops.
+Runs silently (exit 0) for writes outside the canonical tree or if
+already running within a hook to avoid infinite loops.
 """
 
 from __future__ import annotations
@@ -16,13 +16,13 @@ import sys
 from pathlib import Path
 
 CANONICAL_PREFIXES = (
-    ".unicli-rules/core-workflow.md",
-    ".unicli-rules/project-context.md",
-    ".unicli-rules/agents/",
-    ".unicli-rules/skills/",
-    ".unicli-rules/memory/",
-    ".unicli-rules/common/",
-    ".unicli-rules/templates/",
+    "hub/core-workflow.md",
+    "hub/project-context.md",
+    "hub/agents/",
+    "hub/skills/",
+    "hub/memory/",
+    "hub/common/",
+    "hub/templates/",
 )
 
 
@@ -50,6 +50,11 @@ def extract_path(payload: dict) -> str:
 
 
 def main() -> int:
+    # 0. Recursion Guard: prevent hang if we're already in a sync/hook process
+    if os.environ.get("UNICLI_HOOK_ACTIVE") == "1":
+        return 0
+    os.environ["UNICLI_HOOK_ACTIVE"] = "1"
+
     raw = sys.stdin.read()
     if not raw.strip():
         return 0
@@ -67,7 +72,7 @@ def main() -> int:
 
     hook_dir = Path(__file__).resolve().parent
     root = hook_dir.parent.parent
-    sync_script = root / ".unicli-rules" / "sync.sh"
+    sync_script = root / "sync.sh"
 
     if not sync_script.is_file() or not os.access(sync_script, os.X_OK):
         print(
