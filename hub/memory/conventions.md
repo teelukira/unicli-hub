@@ -1,3 +1,9 @@
+---
+name: conventions
+description: Project-wide code and documentation conventions for AI CLIs.
+type: memory
+---
+
 # Conventions
 
 Project-wide code and documentation conventions live here. AI CLIs generating or editing code must honor them.

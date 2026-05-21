@@ -19,25 +19,38 @@
     "  .cursor/mcp.json                      ← Cursor",
     "  .vscode/mcp.json                      ← VS Code / Kiro",
     "  .mcp.json                             ← Claude Code (project root)",
-    "  .agents/mcp_config.json               ← legacy / other agents"
+    "  .agents/mcp_config.json               ← legacy / other agents",
+    "",
+    "【per-CLI 분기】",
+    "  - _overrides: { cli_name: { ...patch } }  — 특정 CLI 에만 다른 값 적용",
+    "  - _targets: [\"claude\", \"cursor\"]          — 명시 CLI 에만 포함 (기본은 모두)",
+    "  - _comment, _overrides, _targets 키는 fanout 출력에서 자동 제거됨"
   ],
   "mcpServers": {
     "tavily": {
-      "_comment": "args에 Bearer 토큰이 필요 → wrapper script 사용. TAVILY_API_KEY는 ~/.zshrc 에서 로드.",
+      "_comment": "args에 Bearer 토큰이 필요 → wrapper script 사용. TAVILY_API_KEY는 ~/.zshrc 에서 로드. wrapper script 표준 위치: ~/.config/mcp/tavily-mcp.sh (현재 ~/.gemini/scripts/에 있으면 이동 권장)",
       "command": "/bin/zsh",
-      "args": ["-l", "-c", "exec /Users/1111207/.gemini/scripts/tavily-mcp.sh"],
+      "args": [
+        "-l",
+        "-c",
+        "exec /Users/1111207/.gemini/scripts/tavily-mcp.sh"
+      ],
       "env": {}
     },
     "aws-core": {
       "command": "uvx",
-      "args": ["awslabs.core-mcp-server@latest"],
+      "args": [
+        "awslabs.core-mcp-server@latest"
+      ],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       }
     },
     "aws-docs": {
       "command": "uvx",
-      "args": ["awslabs.aws-documentation-mcp-server@latest"],
+      "args": [
+        "awslabs.aws-documentation-mcp-server@latest"
+      ],
       "env": {
         "AWS_DOCUMENTATION_PARTITION": "aws",
         "FASTMCP_LOG_LEVEL": "ERROR"
@@ -46,7 +59,9 @@
     "aws-iam": {
       "_comment": "AWS_PROFILE, AWS_REGION 은 ~/.zshrc 에서 상속",
       "command": "uvx",
-      "args": ["awslabs.iam-mcp-server@latest"],
+      "args": [
+        "awslabs.iam-mcp-server@latest"
+      ],
       "env": {
         "AWS_REGION": "ap-northeast-2",
         "FASTMCP_LOG_LEVEL": "ERROR"
@@ -55,7 +70,9 @@
     "aws-iac": {
       "_comment": "AWS_PROFILE 은 ~/.zshrc 에서 상속",
       "command": "uvx",
-      "args": ["awslabs.aws-iac-mcp-server@latest"],
+      "args": [
+        "awslabs.aws-iac-mcp-server@latest"
+      ],
       "env": {
         "AWS_REGION": "ap-northeast-2",
         "FASTMCP_LOG_LEVEL": "ERROR"
@@ -64,7 +81,9 @@
     "aws-eks": {
       "_comment": "AWS_PROFILE 은 ~/.zshrc 에서 상속",
       "command": "uvx",
-      "args": ["awslabs.eks-mcp-server@latest"],
+      "args": [
+        "awslabs.eks-mcp-server@latest"
+      ],
       "env": {
         "AWS_REGION": "ap-northeast-2",
         "FASTMCP_LOG_LEVEL": "ERROR"
@@ -73,7 +92,9 @@
     "aws-cloudwatch": {
       "_comment": "AWS_PROFILE 은 ~/.zshrc 에서 상속",
       "command": "uvx",
-      "args": ["awslabs.cloudwatch-mcp-server@latest"],
+      "args": [
+        "awslabs.cloudwatch-mcp-server@latest"
+      ],
       "env": {
         "AWS_REGION": "ap-northeast-2",
         "FASTMCP_LOG_LEVEL": "ERROR"
@@ -81,7 +102,10 @@
     },
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest", "--isolated"],
+      "args": [
+        "@playwright/mcp@latest",
+        "--isolated"
+      ],
       "env": {
         "PLAYWRIGHT_MCP_ISOLATED": "true"
       }
@@ -89,30 +113,77 @@
     "mcp-atlassian": {
       "_comment": "JIRA_URL, JIRA_PERSONAL_TOKEN, CONFLUENCE_URL, CONFLUENCE_PERSONAL_TOKEN 은 ~/.zshrc 에서 상속",
       "command": "uvx",
-      "args": ["mcp-atlassian"],
+      "args": [
+        "mcp-atlassian"
+      ],
       "env": {}
     },
     "atom-tmf-kb-mcp": {
       "command": "uv",
-      "args": ["run", "--directory", "/Users/1111207/atom-tmf-kb-mcp", "python", "-m", "tmf_kb_mcp"],
-      "env": {}
+      "args": [
+        "run",
+        "--directory",
+        "/Users/1111207/atom-tmf-kb-mcp",
+        "python",
+        "-m",
+        "tmf_kb_mcp"
+      ],
+      "env": {},
+      "_comment": "Project-specific TMF KB. Remove or update the --directory path for your project.",
+      "_targets": [
+        "claude",
+        "cursor"
+      ]
     },
     "serena": {
       "command": "serena",
-      "args": ["start-mcp-server", "--context=claude-code", "--project-from-cwd"],
-      "env": {}
+      "args": [
+        "start-mcp-server",
+        "--context=claude-code",
+        "--project-from-cwd"
+      ],
+      "env": {},
+      "_overrides": {
+        "gemini": {
+          "args": [
+            "start-mcp-server",
+            "--context=ide-assistant",
+            "--project-from-cwd"
+          ]
+        },
+        "cursor": {
+          "args": [
+            "start-mcp-server",
+            "--context=ide-assistant",
+            "--project-from-cwd"
+          ]
+        },
+        "antigravity": {
+          "args": [
+            "start-mcp-server",
+            "--context=ide-assistant",
+            "--project-from-cwd"
+          ]
+        }
+      }
     },
     "gitlab": {
       "_comment": "GITLAB_PERSONAL_ACCESS_TOKEN, GITLAB_API_URL 은 ~/.zshrc 에서 상속",
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-gitlab"],
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-gitlab"
+      ],
       "env": {
         "NODE_TLS_REJECT_UNAUTHORIZED": "0"
       }
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@context7/mcp-server@latest"],
+      "args": [
+        "-y",
+        "@context7/mcp-server@latest"
+      ],
       "env": {}
     }
   }

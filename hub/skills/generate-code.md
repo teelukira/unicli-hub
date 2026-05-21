@@ -1,8 +1,10 @@
-# Skill: generate-code
-description: >-
-  Generate production-quality code for the active feature or task.
-  Use when the user asks to implement, add, or write code.
+---
+name: generate-code
+description: >
+  Skill: generate-code
 allowed-tools: [Read, Edit, Write, Bash]
+---
+
 
 ## When to Use
 

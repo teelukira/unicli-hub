@@ -1,3 +1,9 @@
+---
+name: glossary
+description: Project-specific terminology. Fill in terms that differ from plain English.
+type: memory
+---
+
 # Glossary
 
 Keep project-specific terminology here. Any word that is used with a meaning different from plain English must be recorded.

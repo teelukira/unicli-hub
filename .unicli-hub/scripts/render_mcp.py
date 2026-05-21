@@ -77,13 +77,38 @@ def read_json(path: pathlib.Path) -> dict:
                 return {}
     return {}
 
-def strip_comments(data):
-    """Recursively strip keys starting with '_'."""
+def strip_meta(data):
+    """Recursively strip unicli-hub meta keys (_comment, _overrides, _targets, etc.)."""
     if isinstance(data, dict):
-        return {k: strip_comments(v) for k, v in data.items() if not k.startswith("_")}
+        return {k: strip_meta(v) for k, v in data.items() if not k.startswith("_")}
     elif isinstance(data, list):
-        return [strip_comments(i) for i in data]
+        return [strip_meta(i) for i in data]
     return data
+
+# Keep strip_comments as an alias for backwards compatibility
+strip_comments = strip_meta
+
+
+def apply_overrides(server: dict, cli: str) -> dict:
+    """Merge target-specific _overrides into server config."""
+    overrides = server.get("_overrides", {})
+    if cli not in overrides:
+        return server
+    import copy
+    merged = copy.deepcopy(server)
+    merged.update(overrides[cli])
+    return merged
+
+
+def filter_servers(raw_servers: dict, cli: str) -> dict:
+    """Filter servers by _targets (if specified) and apply _overrides."""
+    result = {}
+    for name, cfg in raw_servers.items():
+        targets = cfg.get("_targets")
+        if targets is not None and cli not in targets:
+            continue  # excluded from this CLI
+        result[name] = apply_overrides(cfg, cli)
+    return result
 
 def main():
     global MODE, DRIFT, TARGET_CLI
@@ -101,45 +126,45 @@ def main():
     src = read_json(CANONICAL)
     raw_servers = src.get("mcpServers", {})
     
-    # Substitute variables
-    servers = substitute_env(raw_servers, env_vars)
+    # Substitute env variables (before per-CLI filtering so overrides can also ref env vars)
+    raw_servers_subst = substitute_env(raw_servers, env_vars)
 
-    # 1. Claude & Cursor (Pure JSON)
-    if TARGET_CLI in [None, "claude", "cursor"]:
-        mcp_json = json.dumps({"mcpServers": servers}, indent=2, ensure_ascii=False) + "\n"
-        if TARGET_CLI in [None, "claude"]: compare_or_write(TARGETS["claude"], mcp_json)
-        if TARGET_CLI in [None, "cursor"]: compare_or_write(TARGETS["cursor"], mcp_json)
+    # 1. Claude (Pure JSON — default args, no overrides)
+    if TARGET_CLI in [None, "claude"]:
+        cli_servers = filter_servers(raw_servers_subst, "claude")
+        clean = strip_meta(cli_servers)
+        compare_or_write(TARGETS["claude"], json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
 
-    # 2. Gemini (Merged JSON)
+    # 2. Cursor (Pure JSON — ide-assistant context)
+    if TARGET_CLI in [None, "cursor"]:
+        cli_servers = filter_servers(raw_servers_subst, "cursor")
+        clean = strip_meta(cli_servers)
+        compare_or_write(TARGETS["cursor"], json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
+
+    # 3. Gemini (Merged JSON — preserves hooks/mcp.allowed)
     if TARGET_CLI in [None, "gemini"]:
         path = TARGETS["gemini"]
         existing = read_json(path)
-        
-        # Gemini is strict: strip all _comment keys
-        clean_servers = strip_comments(servers)
-        existing["mcpServers"] = clean_servers
-        
-        # Ensure 'mcp' allowed list is updated
-        if "mcp" not in existing: existing["mcp"] = {}
-        existing["mcp"]["allowed"] = list(clean_servers.keys())
-        
+        cli_servers = filter_servers(raw_servers_subst, "gemini")
+        clean = strip_meta(cli_servers)
+        existing["mcpServers"] = clean
+        if "mcp" not in existing:
+            existing["mcp"] = {}
+        existing["mcp"]["allowed"] = list(clean.keys())
         compare_or_write(path, json.dumps(existing, indent=2, ensure_ascii=False) + "\n")
 
-    # 3. Antigravity (Distinct JSON with serverUrl)
+    # 4. Antigravity (mcp_config.json — ide-assistant context)
     if TARGET_CLI in [None, "antigravity"]:
+        cli_servers = filter_servers(raw_servers_subst, "antigravity")
         ag_servers = {}
-        for name, cfg in servers.items():
+        for name, cfg in cli_servers.items():
             ag_cfg = dict(cfg)
             t = ag_cfg.pop("type", None)
             if t == "http":
-                if "url" in ag_cfg:
-                    ag_cfg["serverUrl"] = ag_cfg.pop("url")
-                elif "httpUrl" in ag_cfg:
-                    ag_cfg["serverUrl"] = ag_cfg.pop("httpUrl")
+                ag_cfg["serverUrl"] = ag_cfg.pop("url", ag_cfg.pop("httpUrl", ""))
             ag_servers[name] = ag_cfg
-
-        ag_json = json.dumps({"mcpServers": ag_servers}, indent=2, ensure_ascii=False) + "\n"
-        compare_or_write(ROOT / ".agents" / "mcp_config.json", ag_json)
+        clean = strip_meta(ag_servers)
+        compare_or_write(ROOT / ".agents" / "mcp_config.json", json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
 
     if MODE == "check" and DRIFT:
         sys.exit(1)

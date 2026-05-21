@@ -1,8 +1,10 @@
-# Skill: generate-plan
-description: >-
-  Break down a feature or unit of work into a step-by-step implementation plan
-  before any code is written. Use before starting any non-trivial change.
+---
+name: generate-plan
+description: >
+  Skill: generate-plan
 allowed-tools: [Read, Write]
+---
+
 
 ## When to Use
 

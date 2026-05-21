@@ -1,3 +1,9 @@
+---
+name: project-facts
+description: Core project facts — team, repo, decisions, environments. Fill in before use.
+type: memory
+---
+
 # Project Facts
 
 > **Template.** Fill in the real project facts. Leaving vague "TBD" values actively hurts AI output — be specific or delete the section.

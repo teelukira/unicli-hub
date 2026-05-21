@@ -3,79 +3,46 @@
   "hooks": {
     "preToolUse": [
       {
-        "command": "./hub/hooks/code_location_guard.py",
-        "matcher": "Write|Edit",
-        "failClosed": true,
-        "timeout": 20
-      },
-      {
-        "command": "./hub/hooks/generated_file_guard.py",
-        "matcher": "Write|Edit",
-        "failClosed": true,
-        "timeout": 20
-      },
-      {
-        "command": "./hub/hooks/workflow_transition_guard.py",
-        "matcher": "Write|Edit",
-        "failClosed": true,
+        "command": "python3 hub/hooks/pre_tool_use.py",
+        "matcher": "*",
+        "failClosed": false,
         "timeout": 20
       }
     ],
     "postToolUse": [
       {
-        "command": "./hub/hooks/state_audit.py",
-        "matcher": "Write|Edit",
-        "timeout": 20
-      },
-      {
-        "command": "./hub/hooks/plan_checkbox_tracker.py",
-        "matcher": "Write|Edit",
-        "timeout": 20
-      },
-      {
-        "command": "./hub/hooks/auto_sync.py",
-        "matcher": "Write|Edit",
+        "command": "python3 hub/hooks/post_tool_use.py",
+        "matcher": "*",
+        "failClosed": false,
         "timeout": 30
       }
     ],
     "beforeShellExecution": [
       {
-        "command": "./hub/hooks/shell_sensitive_file_guard.py",
-        "matcher": "aidlc-docs/aidlc-state\\.md|aidlc-docs/audit\\.md|code-generation-plan\\.md|git\\s+push|git\\s+merge|gh\\s+pr\\s+create",
-        "failClosed": true,
-        "timeout": 20
-      },
-      {
-        "command": "./hub/hooks/java-lint-on-commit.sh",
-        "matcher": "git\\s+commit",
-        "failClosed": true,
-        "timeout": 120
+        "command": "python3 hub/hooks/before_shell_execution.py",
+        "failClosed": false,
+        "timeout": 10
       }
     ],
     "beforeMCPExecution": [
       {
-        "command": "./hub/hooks/jira_gate_guard.py",
-        "matcher": "jira_",
-        "failClosed": true,
-        "timeout": 20
-      },
-      {
-        "command": "./hub/hooks/gitlab_mr_gate_guard.py",
-        "matcher": "gitlab_create_merge_request",
-        "failClosed": true,
-        "timeout": 20
+        "command": "python3 hub/hooks/before_mcp_execution.py",
+        "failClosed": false,
+        "timeout": 10
       }
     ],
     "stop": [
       {
-        "command": "./hub/hooks/ralph-stop-hook.sh",
-        "timeout": 30
+        "command": "python3 hub/hooks/stop.py",
+        "failClosed": false,
+        "timeout": 10
       }
     ],
     "afterAgentResponse": [
       {
-        "command": "./hub/hooks/ralph-capture-response.sh",
-        "timeout": 20
+        "command": "python3 hub/hooks/post_tool_use.py",
+        "failClosed": false,
+        "timeout": 10
       }
     ]
   }

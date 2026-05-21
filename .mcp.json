@@ -1,7 +1,6 @@
 {
   "mcpServers": {
     "tavily": {
-      "_comment": "args에 Bearer 토큰이 필요 → wrapper script 사용. TAVILY_API_KEY는 ~/.zshrc 에서 로드.",
       "command": "/bin/zsh",
       "args": [
         "-l",
@@ -30,7 +29,6 @@
       }
     },
     "aws-iam": {
-      "_comment": "AWS_PROFILE, AWS_REGION 은 ~/.zshrc 에서 상속",
       "command": "uvx",
       "args": [
         "awslabs.iam-mcp-server@latest"
@@ -41,7 +39,6 @@
       }
     },
     "aws-iac": {
-      "_comment": "AWS_PROFILE 은 ~/.zshrc 에서 상속",
       "command": "uvx",
       "args": [
         "awslabs.aws-iac-mcp-server@latest"
@@ -52,7 +49,6 @@
       }
     },
     "aws-eks": {
-      "_comment": "AWS_PROFILE 은 ~/.zshrc 에서 상속",
       "command": "uvx",
       "args": [
         "awslabs.eks-mcp-server@latest"
@@ -63,7 +59,6 @@
       }
     },
     "aws-cloudwatch": {
-      "_comment": "AWS_PROFILE 은 ~/.zshrc 에서 상속",
       "command": "uvx",
       "args": [
         "awslabs.cloudwatch-mcp-server@latest"
@@ -84,7 +79,6 @@
       }
     },
     "mcp-atlassian": {
-      "_comment": "JIRA_URL, JIRA_PERSONAL_TOKEN, CONFLUENCE_URL, CONFLUENCE_PERSONAL_TOKEN 은 ~/.zshrc 에서 상속",
       "command": "uvx",
       "args": [
         "mcp-atlassian"
@@ -113,7 +107,6 @@
       "env": {}
     },
     "gitlab": {
-      "_comment": "GITLAB_PERSONAL_ACCESS_TOKEN, GITLAB_API_URL 은 ~/.zshrc 에서 상속",
       "command": "npx",
       "args": [
         "-y",
