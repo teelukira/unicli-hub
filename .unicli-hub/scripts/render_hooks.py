@@ -18,7 +18,6 @@ CURSOR_HOOKS_SRC = HUB / "cursor-hooks.json"
 CLAUDE_SETTINGS = ROOT / ".claude" / "settings.json"
 CURSOR_HOOKS = ROOT / ".cursor" / "hooks.json"
 GEMINI_SETTINGS = ROOT / ".gemini" / "settings.json"
-AGY_SETTINGS = ROOT / ".agy" / "settings.json"
 
 MODE = "fix"
 DRIFT = False
@@ -86,7 +85,6 @@ def main():
     render_claude()
     render_cursor()
     render_gemini_like(GEMINI_SETTINGS)
-    render_gemini_like(AGY_SETTINGS)
 
     if MODE == "check" and DRIFT:
         sys.exit(1)

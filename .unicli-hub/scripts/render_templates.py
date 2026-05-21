@@ -55,7 +55,6 @@ def main():
     targets = {
         "CLAUDE.md": (TEMPLATES / "CLAUDE.md.tmpl", "claude"),
         "GEMINI.md": (TEMPLATES / "GEMINI.md.tmpl", "gemini"),
-        "AGY.md": (TEMPLATES / "AGY.md.tmpl", "agy"),
         "AGENTS.md": (TEMPLATES / "AGENTS.md.tmpl", "agents"),
     }
 

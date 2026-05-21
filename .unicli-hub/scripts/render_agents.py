@@ -15,8 +15,9 @@ TARGETS = {
     "claude": ROOT / ".claude" / "agents",
     "cursor": ROOT / ".cursor" / "agents",
     "gemini": ROOT / ".gemini" / "agents",
-    "agy": ROOT / ".agy" / "agents",
     "codex": ROOT / ".codex" / "prompts",
+    "antigravity": ROOT / ".agents" / "agents",
+    "antigravity_global": pathlib.Path.home() / ".gemini" / "antigravity-cli" / "agents",
 }
 
 SHARED_AGENTS = ["researcher", "codegen", "reviewer"]
@@ -24,7 +25,6 @@ SHARED_AGENTS = ["researcher", "codegen", "reviewer"]
 MODELS = {
     "claude": {"researcher": "claude-opus-4-7", "codegen": "claude-sonnet-4-6", "reviewer": "claude-opus-4-7"},
     "gemini": {"researcher": "gemini-3-pro-preview", "codegen": "gemini-3-pro-preview", "reviewer": "gemini-3-pro-preview"},
-    "agy": {"researcher": "agy-pro", "codegen": "agy-flash", "reviewer": "agy-pro"},
 }
 
 MODE = "fix"
@@ -39,7 +39,10 @@ def compare_or_write(target: pathlib.Path, content: str):
             DRIFT = True
     else:
         target.write_text(content, encoding="utf-8")
-        print(f"wrote: {target.relative_to(ROOT)}")
+        try:
+            print(f"wrote: {target.relative_to(ROOT)}")
+        except ValueError:
+            print(f"wrote: {target}")
 
 def render_shared():
     for a in SHARED_AGENTS:
@@ -55,13 +58,24 @@ def render_shared():
         fm = f"---\ndescription: Shared {a} agent\nsource: hub/agents/{a}.md\n---\n"
         compare_or_write(TARGETS["cursor"] / f"{a}.md", fm + body)
         
-        # Gemini / Agy
-        for t in ["gemini", "agy"]:
-            fm = f"---\nname: {a}\nmodel: {MODELS[t][a]}\n---\n"
+        # Gemini
+        for t in ["gemini"]:
+            fm = f"---\nname: {a}\nmodel: {MODELS[t].get(a, 'gemini-3-pro-preview')}\n---\n"
             compare_or_write(TARGETS[t] / f"{a}.md", fm + body)
             
         # Codex
         compare_or_write(TARGETS["codex"] / f"{a}.md", body)
+
+        # Antigravity
+        antigravity_content = json.dumps({
+            "name": a,
+            "description": f"Shared {a} agent",
+            "system_prompt": body,
+            "enable_mcp_tools": True,
+            "enable_write_tools": True
+        }, indent=2)
+        compare_or_write(TARGETS["antigravity"] / a / "agent.json", antigravity_content)
+        compare_or_write(TARGETS["antigravity_global"] / a / "agent.json", antigravity_content)
 
 def main():
     global MODE, DRIFT

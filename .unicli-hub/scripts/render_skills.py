@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 render_skills.py — Fan-out skills from hub/skills/ to all AI CLI targets.
-Supports Claude, Gemini, Cursor, Antigravity (agy), Kiro, and Codex.
+Supports Claude, Gemini, Cursor, Antigravity, Kiro, and Codex.
 """
 
 import sys
@@ -15,7 +15,7 @@ TARGETS = {
     "claude": ROOT / ".claude" / "skills",
     "gemini": ROOT / ".gemini" / "skills",
     "cursor": ROOT / ".cursor" / "skills",
-    "agy": ROOT / ".agy" / "skills",
+    "antigravity": ROOT / ".agents" / "skills",
 }
 
 # Flat targets
