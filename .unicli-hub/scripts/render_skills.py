@@ -7,6 +7,7 @@ Supports Claude, Gemini, Cursor, Antigravity, Kiro, and Codex.
 import sys
 import pathlib
 import re
+import shutil
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 CANONICAL = ROOT / "hub" / "skills"
@@ -25,6 +26,7 @@ CODEX_PROMPTS = ROOT / ".codex" / "prompts"
 MODE = "fix"
 TARGET_CLI = None
 DRIFT = False
+PRODUCED_SKILLS: set = set()
 
 def compare_or_write(target: pathlib.Path, content: str):
     global DRIFT
@@ -104,6 +106,68 @@ def copy_references(skill_name: str, current_skill_content: str):
                 rel_path = ref_file.relative_to(ref_src)
                 compare_or_write(ref_dst_root / rel_path, ref_file.read_text(encoding="utf-8"))
 
+def reconcile():
+    """Delete skills in target dirs that were not produced by this renderer."""
+    global DRIFT
+    targets_to_check = {}
+    if TARGET_CLI is None:
+        targets_to_check = dict(TARGETS)
+    elif TARGET_CLI in TARGETS:
+        targets_to_check = {TARGET_CLI: TARGETS[TARGET_CLI]}
+
+    for _cli, target_dir in targets_to_check.items():
+        if not target_dir.exists():
+            continue
+        for item in sorted(target_dir.iterdir()):
+            if item.is_dir() and item.name not in PRODUCED_SKILLS:
+                if MODE == "fix":
+                    shutil.rmtree(item)
+                    try:
+                        print(f"removed stale skill: {item.relative_to(ROOT)}")
+                    except ValueError:
+                        print(f"removed stale skill: {item}")
+                else:
+                    try:
+                        print(f"DRIFT (stale skill): {item.relative_to(ROOT)}")
+                    except ValueError:
+                        print(f"DRIFT (stale skill): {item}")
+                    DRIFT = True
+
+    if TARGET_CLI in [None, "kiro"] and KIRO_STEERING.exists():
+        for f in sorted(KIRO_STEERING.glob("skill-*.md")):
+            skill_name = f.stem[len("skill-"):]
+            if skill_name not in PRODUCED_SKILLS:
+                if MODE == "fix":
+                    f.unlink()
+                    try:
+                        print(f"removed stale skill: {f.relative_to(ROOT)}")
+                    except ValueError:
+                        print(f"removed stale skill: {f}")
+                else:
+                    try:
+                        print(f"DRIFT (stale skill): {f.relative_to(ROOT)}")
+                    except ValueError:
+                        print(f"DRIFT (stale skill): {f}")
+                    DRIFT = True
+
+    if TARGET_CLI in [None, "codex"] and CODEX_PROMPTS.exists():
+        for f in sorted(CODEX_PROMPTS.glob("skill-*.md")):
+            skill_name = f.stem[len("skill-"):]
+            if skill_name not in PRODUCED_SKILLS:
+                if MODE == "fix":
+                    f.unlink()
+                    try:
+                        print(f"removed stale skill: {f.relative_to(ROOT)}")
+                    except ValueError:
+                        print(f"removed stale skill: {f}")
+                else:
+                    try:
+                        print(f"DRIFT (stale skill): {f.relative_to(ROOT)}")
+                    except ValueError:
+                        print(f"DRIFT (stale skill): {f}")
+                    DRIFT = True
+
+
 def main():
     global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
@@ -126,15 +190,16 @@ def main():
     # 1. Process flat markdown files
     for md_path in sorted(CANONICAL.glob("*.md")):
         skill_name = md_path.stem
+        PRODUCED_SKILLS.add(skill_name)
         body = md_path.read_text(encoding="utf-8")
         for target_root in target_roots:
             compare_or_write(target_root / skill_name / "SKILL.md", body + "\n")
-        
+
         if TARGET_CLI in [None, "kiro"]:
             compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
         if TARGET_CLI in [None, "codex"]:
             compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
-        
+
         copy_references(skill_name, body)
 
     # 2. Process folder skills
@@ -143,16 +208,19 @@ def main():
         skill_md = skill_dir / "SKILL.md"
         if not skill_md.is_file(): continue
         skill_name = skill_dir.name
+        PRODUCED_SKILLS.add(skill_name)
         body = skill_md.read_text(encoding="utf-8")
         for target_root in target_roots:
             compare_or_write(target_root / skill_name / "SKILL.md", body + "\n")
-        
+
         if TARGET_CLI in [None, "kiro"]:
             compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
         if TARGET_CLI in [None, "codex"]:
             compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
-        
+
         copy_references(skill_name, body)
+
+    reconcile()
 
     if MODE == "check" and DRIFT:
         sys.exit(1)

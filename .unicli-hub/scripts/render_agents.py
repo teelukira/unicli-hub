@@ -7,6 +7,7 @@ import sys
 import pathlib
 import json
 import re
+import shutil
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 HUB = ROOT / "hub"
@@ -31,6 +32,7 @@ MODELS = {
 MODE = "fix"
 TARGET_CLI = None
 DRIFT = False
+PRODUCED_AGENTS: set = set()
 
 def compare_or_write(target: pathlib.Path, content: str):
     global DRIFT
@@ -62,6 +64,7 @@ def split_frontmatter(content: str):
 
 def render_shared():
     for a in SHARED_AGENTS:
+        PRODUCED_AGENTS.add(a)
         src = AGENTS_SRC / f"{a}.md"
         if not src.exists(): continue
         raw_content = src.read_text(encoding="utf-8")
@@ -121,6 +124,47 @@ def render_shared():
             compare_or_write(TARGETS["antigravity"] / a / "agent.json", antigravity_content)
             compare_or_write(TARGETS["antigravity_global"] / a / "agent.json", antigravity_content)
 
+def reconcile():
+    """Delete agents in target dirs that were not produced by this renderer."""
+    global DRIFT
+    targets_to_check = {k: v for k, v in TARGETS.items()
+                        if TARGET_CLI is None or k == TARGET_CLI}
+    for cli, target_dir in targets_to_check.items():
+        if not target_dir.exists():
+            continue
+        if cli in ("antigravity", "antigravity_global"):
+            for subdir in sorted(target_dir.iterdir()):
+                if subdir.is_dir() and subdir.name not in PRODUCED_AGENTS:
+                    if MODE == "fix":
+                        shutil.rmtree(subdir)
+                        try:
+                            print(f"removed stale agent: {subdir.relative_to(ROOT)}")
+                        except ValueError:
+                            print(f"removed stale agent: {subdir}")
+                    else:
+                        try:
+                            print(f"DRIFT (stale agent): {subdir.relative_to(ROOT)}")
+                        except ValueError:
+                            print(f"DRIFT (stale agent): {subdir}")
+                        DRIFT = True
+        else:
+            for f in sorted(target_dir.iterdir()):
+                if f.is_file() and f.suffix == ".md" and not f.name.startswith("skill-"):
+                    if f.stem not in PRODUCED_AGENTS:
+                        if MODE == "fix":
+                            f.unlink()
+                            try:
+                                print(f"removed stale agent: {f.relative_to(ROOT)}")
+                            except ValueError:
+                                print(f"removed stale agent: {f}")
+                        else:
+                            try:
+                                print(f"DRIFT (stale agent): {f.relative_to(ROOT)}")
+                            except ValueError:
+                                print(f"DRIFT (stale agent): {f}")
+                            DRIFT = True
+
+
 def main():
     global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
@@ -131,6 +175,7 @@ def main():
 
     render_shared()
     # Specialized agents could be handled here by looking for *.json in hub/agents/
+    reconcile()
 
     if MODE == "check" and DRIFT:
         sys.exit(1)
