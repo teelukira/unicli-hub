@@ -17,7 +17,6 @@ TARGETS = {
     "claude": ROOT / ".mcp.json",
     "cursor": ROOT / ".cursor" / "mcp.json",
     "gemini": ROOT / ".gemini" / "settings.json",
-    "agy": ROOT / ".agy" / "settings.json",
 }
 
 MODE = "fix"
@@ -50,16 +49,23 @@ def substitute_env(data, env_vars: dict):
         return re.sub(r"\${(\w+)}", replacer, data)
     return data
 
+def _display_path(path: pathlib.Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def compare_or_write(target: pathlib.Path, content: str):
     global DRIFT
     target.parent.mkdir(parents=True, exist_ok=True)
     if MODE == "check":
         if not target.exists() or target.read_text(encoding="utf-8") != content:
-            print(f"DRIFT: {target.relative_to(ROOT)}")
+            print(f"DRIFT: {_display_path(target)}")
             DRIFT = True
     else:
         target.write_text(content, encoding="utf-8")
-        print(f"wrote: {target.relative_to(ROOT)}")
+        print(f"wrote: {_display_path(target)}")
 
 def read_json(path: pathlib.Path) -> dict:
     if path.exists():
@@ -91,8 +97,8 @@ def main():
     compare_or_write(TARGETS["claude"], mcp_json)
     compare_or_write(TARGETS["cursor"], mcp_json)
 
-    # 2. Gemini & Agy (Merged JSON)
-    for t in ["gemini", "agy"]:
+    # 2. Gemini (Merged JSON)
+    for t in ["gemini"]:
         path = TARGETS[t]
         existing = read_json(path)
         existing["mcpServers"] = servers
@@ -101,6 +107,21 @@ def main():
         existing["mcp"]["allowed"] = list(servers.keys())
         
         compare_or_write(path, json.dumps(existing, indent=2, ensure_ascii=False) + "\n")
+
+    # 3. Antigravity (Distinct JSON with serverUrl)
+    ag_servers = {}
+    for name, cfg in servers.items():
+        ag_cfg = dict(cfg)
+        t = ag_cfg.pop("type", None)
+        if t == "http":
+            if "url" in ag_cfg:
+                ag_cfg["serverUrl"] = ag_cfg.pop("url")
+            elif "httpUrl" in ag_cfg:
+                ag_cfg["serverUrl"] = ag_cfg.pop("httpUrl")
+        ag_servers[name] = ag_cfg
+
+    ag_json = json.dumps({"mcpServers": ag_servers}, indent=2, ensure_ascii=False) + "\n"
+    compare_or_write(ROOT / ".agents" / "mcp_config.json", ag_json)
 
     if MODE == "check" and DRIFT:
         sys.exit(1)
