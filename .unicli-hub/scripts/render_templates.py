@@ -11,6 +11,7 @@ HUB = ROOT / "hub"
 TEMPLATES = ROOT / ".unicli-hub" / "templates"
 
 MODE = "fix"
+TARGET_CLI = None
 DRIFT = False
 
 def compare_or_write(target: pathlib.Path, content: str):
@@ -47,9 +48,12 @@ def assemble(tmpl_path: pathlib.Path, cli_name: str) -> str:
                 .replace("{{PLUGINS}}", plugins))
 
 def main():
-    global MODE, DRIFT
+    global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
-        if arg in ["--fix", "--check"]: MODE = arg[2:]
+        if arg in ["--fix", "--check"]: 
+            MODE = arg[2:]
+        elif arg.startswith("--target="):
+            TARGET_CLI = arg.split("=")[1]
 
     # mapping of: output_filename -> (template_path, cli_name)
     targets = {
@@ -59,6 +63,12 @@ def main():
     }
 
     for name, (tmpl, cli_name) in targets.items():
+        if TARGET_CLI is not None:
+            if cli_name == "agents" and TARGET_CLI != "antigravity":
+                continue
+            if cli_name != "agents" and cli_name != TARGET_CLI:
+                continue
+
         content = assemble(tmpl, cli_name)
         if content: compare_or_write(ROOT / name, content)
 

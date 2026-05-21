@@ -3,19 +3,19 @@
   "hooks": {
     "preToolUse": [
       {
-        "command": ".cursor/hooks/code_location_guard.py",
+        "command": "./hub/hooks/code_location_guard.py",
         "matcher": "Write|Edit",
         "failClosed": true,
         "timeout": 20
       },
       {
-        "command": ".cursor/hooks/generated_file_guard.py",
+        "command": "./hub/hooks/generated_file_guard.py",
         "matcher": "Write|Edit",
         "failClosed": true,
         "timeout": 20
       },
       {
-        "command": ".cursor/hooks/workflow_transition_guard.py",
+        "command": "./hub/hooks/workflow_transition_guard.py",
         "matcher": "Write|Edit",
         "failClosed": true,
         "timeout": 20
@@ -23,30 +23,30 @@
     ],
     "postToolUse": [
       {
-        "command": ".cursor/hooks/state_audit.py",
+        "command": "./hub/hooks/state_audit.py",
         "matcher": "Write|Edit",
         "timeout": 20
       },
       {
-        "command": ".cursor/hooks/plan_checkbox_tracker.py",
+        "command": "./hub/hooks/plan_checkbox_tracker.py",
         "matcher": "Write|Edit",
         "timeout": 20
       },
       {
-        "command": ".cursor/hooks/auto_sync.py",
+        "command": "./hub/hooks/auto_sync.py",
         "matcher": "Write|Edit",
         "timeout": 30
       }
     ],
     "beforeShellExecution": [
       {
-        "command": ".cursor/hooks/shell_sensitive_file_guard.py",
+        "command": "./hub/hooks/shell_sensitive_file_guard.py",
         "matcher": "aidlc-docs/aidlc-state\\.md|aidlc-docs/audit\\.md|code-generation-plan\\.md|git\\s+push|git\\s+merge|gh\\s+pr\\s+create",
         "failClosed": true,
         "timeout": 20
       },
       {
-        "command": ".cursor/hooks/java-lint-on-commit.sh",
+        "command": "./hub/hooks/java-lint-on-commit.sh",
         "matcher": "git\\s+commit",
         "failClosed": true,
         "timeout": 120
@@ -54,13 +54,13 @@
     ],
     "beforeMCPExecution": [
       {
-        "command": ".cursor/hooks/jira_gate_guard.py",
+        "command": "./hub/hooks/jira_gate_guard.py",
         "matcher": "jira_",
         "failClosed": true,
         "timeout": 20
       },
       {
-        "command": ".cursor/hooks/gitlab_mr_gate_guard.py",
+        "command": "./hub/hooks/gitlab_mr_gate_guard.py",
         "matcher": "gitlab_create_merge_request",
         "failClosed": true,
         "timeout": 20
@@ -68,13 +68,13 @@
     ],
     "stop": [
       {
-        "command": ".cursor/hooks/ralph-stop-hook.sh",
+        "command": "./hub/hooks/ralph-stop-hook.sh",
         "timeout": 30
       }
     ],
     "afterAgentResponse": [
       {
-        "command": ".cursor/hooks/ralph-capture-response.sh",
+        "command": "./hub/hooks/ralph-capture-response.sh",
         "timeout": 20
       }
     ]

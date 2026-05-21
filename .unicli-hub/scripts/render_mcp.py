@@ -20,6 +20,7 @@ TARGETS = {
 }
 
 MODE = "fix"
+TARGET_CLI = None
 DRIFT = False
 
 def load_env(path: pathlib.Path) -> dict:
@@ -76,10 +77,21 @@ def read_json(path: pathlib.Path) -> dict:
                 return {}
     return {}
 
+def strip_comments(data):
+    """Recursively strip keys starting with '_'."""
+    if isinstance(data, dict):
+        return {k: strip_comments(v) for k, v in data.items() if not k.startswith("_")}
+    elif isinstance(data, list):
+        return [strip_comments(i) for i in data]
+    return data
+
 def main():
-    global MODE, DRIFT
+    global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
-        if arg in ["--fix", "--check"]: MODE = arg[2:]
+        if arg in ["--fix", "--check"]: 
+            MODE = arg[2:]
+        elif arg.startswith("--target="):
+            TARGET_CLI = arg.split("=")[1]
 
     if not CANONICAL.exists():
         print(f"ERROR: {CANONICAL} not found")
@@ -93,35 +105,41 @@ def main():
     servers = substitute_env(raw_servers, env_vars)
 
     # 1. Claude & Cursor (Pure JSON)
-    mcp_json = json.dumps({"mcpServers": servers}, indent=2, ensure_ascii=False) + "\n"
-    compare_or_write(TARGETS["claude"], mcp_json)
-    compare_or_write(TARGETS["cursor"], mcp_json)
+    if TARGET_CLI in [None, "claude", "cursor"]:
+        mcp_json = json.dumps({"mcpServers": servers}, indent=2, ensure_ascii=False) + "\n"
+        if TARGET_CLI in [None, "claude"]: compare_or_write(TARGETS["claude"], mcp_json)
+        if TARGET_CLI in [None, "cursor"]: compare_or_write(TARGETS["cursor"], mcp_json)
 
     # 2. Gemini (Merged JSON)
-    for t in ["gemini"]:
-        path = TARGETS[t]
+    if TARGET_CLI in [None, "gemini"]:
+        path = TARGETS["gemini"]
         existing = read_json(path)
-        existing["mcpServers"] = servers
+        
+        # Gemini is strict: strip all _comment keys
+        clean_servers = strip_comments(servers)
+        existing["mcpServers"] = clean_servers
+        
         # Ensure 'mcp' allowed list is updated
         if "mcp" not in existing: existing["mcp"] = {}
-        existing["mcp"]["allowed"] = list(servers.keys())
+        existing["mcp"]["allowed"] = list(clean_servers.keys())
         
         compare_or_write(path, json.dumps(existing, indent=2, ensure_ascii=False) + "\n")
 
     # 3. Antigravity (Distinct JSON with serverUrl)
-    ag_servers = {}
-    for name, cfg in servers.items():
-        ag_cfg = dict(cfg)
-        t = ag_cfg.pop("type", None)
-        if t == "http":
-            if "url" in ag_cfg:
-                ag_cfg["serverUrl"] = ag_cfg.pop("url")
-            elif "httpUrl" in ag_cfg:
-                ag_cfg["serverUrl"] = ag_cfg.pop("httpUrl")
-        ag_servers[name] = ag_cfg
+    if TARGET_CLI in [None, "antigravity"]:
+        ag_servers = {}
+        for name, cfg in servers.items():
+            ag_cfg = dict(cfg)
+            t = ag_cfg.pop("type", None)
+            if t == "http":
+                if "url" in ag_cfg:
+                    ag_cfg["serverUrl"] = ag_cfg.pop("url")
+                elif "httpUrl" in ag_cfg:
+                    ag_cfg["serverUrl"] = ag_cfg.pop("httpUrl")
+            ag_servers[name] = ag_cfg
 
-    ag_json = json.dumps({"mcpServers": ag_servers}, indent=2, ensure_ascii=False) + "\n"
-    compare_or_write(ROOT / ".agents" / "mcp_config.json", ag_json)
+        ag_json = json.dumps({"mcpServers": ag_servers}, indent=2, ensure_ascii=False) + "\n"
+        compare_or_write(ROOT / ".agents" / "mcp_config.json", ag_json)
 
     if MODE == "check" and DRIFT:
         sys.exit(1)

@@ -20,6 +20,7 @@ CURSOR_HOOKS = ROOT / ".cursor" / "hooks.json"
 GEMINI_SETTINGS = ROOT / ".gemini" / "settings.json"
 
 MODE = "fix"
+TARGET_CLI = None
 DRIFT = False
 
 def compare_or_write(target: pathlib.Path, content: str):
@@ -36,20 +37,20 @@ def compare_or_write(target: pathlib.Path, content: str):
 def read_json(path: pathlib.Path) -> dict:
     if path.exists():
         with path.open(encoding="utf-8") as f:
-            return json.load(f)
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {}
     return {}
 
 def render_claude():
     if not CLAUDE_HOOKS_SRC.exists(): return
     content = CLAUDE_HOOKS_SRC.read_text(encoding="utf-8")
-    # Replace old path placeholder with new framework path if needed
-    content = content.replace("./.unicli-rules/hooks/", "./hub/hooks/")
     compare_or_write(CLAUDE_SETTINGS, content)
 
 def render_cursor():
     if not CURSOR_HOOKS_SRC.exists(): return
     content = CURSOR_HOOKS_SRC.read_text(encoding="utf-8")
-    content = content.replace("./.unicli-rules/hooks/", "./hub/hooks/")
     compare_or_write(CURSOR_HOOKS, content)
 
 def render_gemini_like(target_path: pathlib.Path):
@@ -64,7 +65,9 @@ def render_gemini_like(target_path: pathlib.Path):
         "type": "command",
         "command": "python3 hub/hooks/pre_skill_sync.py"
     }
-    if skill_sync not in bt: bt.insert(0, skill_sync)
+    # Check if already exists to avoid duplicates
+    if not any(h.get("name") == skill_sync["name"] for h in bt):
+        bt.insert(0, skill_sync)
 
     # Auto sync hook
     at = hooks.setdefault("AfterTool", [])
@@ -73,18 +76,22 @@ def render_gemini_like(target_path: pathlib.Path):
         "type": "command",
         "command": "python3 hub/hooks/auto_sync.py"
     }
-    if auto_sync not in at: at.append(auto_sync)
+    if not any(h.get("name") == auto_sync["name"] for h in at):
+        at.append(auto_sync)
 
     compare_or_write(target_path, json.dumps(existing, indent=2, ensure_ascii=False) + "\n")
 
 def main():
-    global MODE, DRIFT
+    global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
-        if arg in ["--fix", "--check"]: MODE = arg[2:]
+        if arg in ["--fix", "--check"]: 
+            MODE = arg[2:]
+        elif arg.startswith("--target="):
+            TARGET_CLI = arg.split("=")[1]
 
-    render_claude()
-    render_cursor()
-    render_gemini_like(GEMINI_SETTINGS)
+    if TARGET_CLI in [None, "claude"]: render_claude()
+    if TARGET_CLI in [None, "cursor"]: render_cursor()
+    if TARGET_CLI in [None, "gemini"]: render_gemini_like(GEMINI_SETTINGS)
 
     if MODE == "check" and DRIFT:
         sys.exit(1)

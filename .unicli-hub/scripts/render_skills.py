@@ -23,6 +23,7 @@ KIRO_STEERING = ROOT / ".kiro" / "steering"
 CODEX_PROMPTS = ROOT / ".codex" / "prompts"
 
 MODE = "fix"
+TARGET_CLI = None
 DRIFT = False
 
 def compare_or_write(target: pathlib.Path, content: str):
@@ -89,7 +90,13 @@ def copy_references(skill_name: str, current_skill_content: str):
     if not all_ref_srcs:
         return
 
-    for target_path in TARGETS.values():
+    targets_to_process = []
+    if TARGET_CLI is None:
+        targets_to_process = list(TARGETS.values())
+    elif TARGET_CLI in TARGETS:
+        targets_to_process = [TARGETS[TARGET_CLI]]
+
+    for target_path in targets_to_process:
         ref_dst_root = target_path / skill_name / "references"
         for ref_src in all_ref_srcs:
             for ref_file in ref_src.rglob("*"):
@@ -98,22 +105,36 @@ def copy_references(skill_name: str, current_skill_content: str):
                 compare_or_write(ref_dst_root / rel_path, ref_file.read_text(encoding="utf-8"))
 
 def main():
-    global MODE, DRIFT
+    global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
-        if arg in ["--fix", "--check"]: MODE = arg[2:]
+        if arg in ["--fix", "--check"]: 
+            MODE = arg[2:]
+        elif arg.startswith("--target="):
+            TARGET_CLI = arg.split("=")[1]
 
     if not CANONICAL.is_dir():
         print(f"ERROR: {CANONICAL} not found", file=sys.stderr)
         sys.exit(1)
 
+    # Determine which targets to process
+    target_roots = []
+    if TARGET_CLI is None:
+        target_roots = list(TARGETS.values())
+    elif TARGET_CLI in TARGETS:
+        target_roots = [TARGETS[TARGET_CLI]]
+
     # 1. Process flat markdown files
     for md_path in sorted(CANONICAL.glob("*.md")):
         skill_name = md_path.stem
         body = md_path.read_text(encoding="utf-8")
-        for target_root in TARGETS.values():
+        for target_root in target_roots:
             compare_or_write(target_root / skill_name / "SKILL.md", body + "\n")
-        compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
-        compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
+        
+        if TARGET_CLI in [None, "kiro"]:
+            compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
+        if TARGET_CLI in [None, "codex"]:
+            compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
+        
         copy_references(skill_name, body)
 
     # 2. Process folder skills
@@ -123,10 +144,14 @@ def main():
         if not skill_md.is_file(): continue
         skill_name = skill_dir.name
         body = skill_md.read_text(encoding="utf-8")
-        for target_root in TARGETS.values():
+        for target_root in target_roots:
             compare_or_write(target_root / skill_name / "SKILL.md", body + "\n")
-        compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
-        compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
+        
+        if TARGET_CLI in [None, "kiro"]:
+            compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
+        if TARGET_CLI in [None, "codex"]:
+            compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
+        
         copy_references(skill_name, body)
 
     if MODE == "check" and DRIFT:
