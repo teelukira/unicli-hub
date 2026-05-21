@@ -1,8 +1,9 @@
-# Skill: generate-plan
+---
+name: generate-plan
 description: >-
-  Break down a feature or unit of work into a step-by-step implementation plan
-  before any code is written. Use before starting any non-trivial change.
-allowed-tools: [Read, Write]
+  Create an implementation plan before writing code. Use when the task is non-trivial or requires clarifying approach before coding.
+allowed-tools: [Read, Bash]
+---
 
 ## When to Use
 

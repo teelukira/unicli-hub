@@ -1,10 +1,9 @@
 ---
 name: generate-plan
-description: >
-  Skill: generate-plan
-allowed-tools: [Read, Write]
+description: >-
+  Create an implementation plan before writing code. Use when the task is non-trivial or requires clarifying approach before coding.
+allowed-tools: [Read, Bash]
 ---
-
 
 ## When to Use
 

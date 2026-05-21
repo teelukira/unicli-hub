@@ -1,10 +1,9 @@
 ---
 name: review-code
-description: >
-  Skill: review-code
+description: >-
+  Review code changes for quality, correctness, security, and project convention adherence. Use before merging a PR or after a codegen subagent completes.
 allowed-tools: [Read, Bash]
 ---
-
 
 ## When to Use
 
