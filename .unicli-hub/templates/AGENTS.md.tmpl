@@ -1,17 +1,37 @@
 # AGENTS.md
 
 > Shared root agent-guide document — read by Codex, Cursor, and Claude via common conventions.
+> **This file is generated. Edit the canonical sources under `hub/`.**
 
 ---
 
-## Memory
+## Memory (placed at top to stay inside Codex `project_doc_max_bytes`)
 
 {{MEMORY}}
----
-{{PLUGINS}}
 
 ---
 
 ## Project Context
 
 {{PROJECT_CONTEXT}}
+
+---
+
+## Core Workflow
+
+{{CORE_WORKFLOW}}
+
+---
+
+## Agents & Skills
+
+- Agent definitions: `hub/agents/`
+- Skill definitions: `hub/skills/`
+- Per-CLI derived paths: see `hub/common/tool-matrix.md`.
+
+## Sync
+
+```bash
+./sync.sh --fix     # regenerate all derived files
+./sync.sh --check   # CI drift detection
+```

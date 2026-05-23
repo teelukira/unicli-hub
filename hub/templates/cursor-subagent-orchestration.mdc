@@ -1,0 +1,193 @@
+---
+description: "AI-DLC 서브에이전트 오케스트레이션 — Kiro 구성과 동일한 권위, Cursor Task 매핑"
+alwaysApply: true
+---
+
+# AI-DLC 서브에이전트 오케스트레이션 (Cursor)
+
+Cursor에서는 Kiro의 **`use_subagent → InvokeSubagents`** 패턴을 **`Task`** 도구로 수행합니다.
+**에이전트 정의·프롬프트·단축키·모델은 Kiro가 단일 진실 공급원**이며, Cursor는 동일 권위로 읽고 실행합니다.
+
+## Kiro 단일 기준 (필수 참조)
+
+| 구분 | 경로 |
+|------|------|
+| 에이전트 등록 | `.kiro/agents/*.json` — `name`, `description`, `model`, `prompt` → `.kiro/agents/prompts/<name>.md` |
+| 프롬프트 (최우선) | `.kiro/agents/prompts/<name>.md` (Kiro에 등록된 에이전트만 해당) |
+| 워크플로 상세 | `.kiro/steering/02-aidlc-workflow.md` (INCEPTION·서브에이전트 가이드·Build and Test) |
+| Construction 상세 | `.kiro/steering/04-aidlc-construction-guide.md` (Code Generation·Unit 규칙) |
+| Cursor 래퍼 (보조) | `.cursor/agents/<name>.md` — 위 Kiro 프롬프트를 먼저 읽으라고 안내 |
+| 실행 절차 보조 | `.cursor/skills/<name>/SKILL.md` — Kiro 프롬프트와 **충돌 시 Kiro 프롬프트 우선** |
+
+## Kiro 등록 에이전트 (9종) — JSON·프롬프트·단축키
+
+아래는 **`.kiro/agents/*.json` 기준**이다 (모델·단축키 불일치 시 JSON이 우선).
+
+| agent_name | 설정 파일 | 프롬프트 | 단축키 | 모델 (json) |
+|------------|-----------|----------|--------|----------------|
+| `aidlc-researcher` | `aidlc-researcher.json` | `prompts/aidlc-researcher.md` | Ctrl+Shift+R | claude-opus-4.6 |
+| `tmf-knowledge-ingest` | `tmf-knowledge-ingest.json` | `prompts/tmf-knowledge-ingest.md` | Ctrl+Shift+I | claude-opus-4.6 |
+| `codegen-iac` | `codegen-iac.json` | `prompts/codegen-iac.md` | Ctrl+Shift+1 | claude-sonnet-4.6 |
+| `codegen-backend` | `codegen-backend.json` | `prompts/codegen-backend.md` | Ctrl+Shift+2 | claude-sonnet-4.6 |
+| `codegen-frontend` | `codegen-frontend.json` | `prompts/codegen-frontend.md` | Ctrl+Shift+3 | claude-sonnet-4.6 |
+| `codegen-db` | `codegen-db.json` | `prompts/codegen-db.md` | Ctrl+Shift+4 | claude-sonnet-4.6 |
+| `qa-tester` | `qa-tester.json` | `prompts/qa-tester.md` | Ctrl+Shift+5 | claude-opus-4.6 |
+| `tmf-compliance-reviewer` | `tmf-compliance-reviewer.json` | `prompts/tmf-compliance-reviewer.md` | Ctrl+Shift+6 | claude-opus-4.6 |
+| `web-integration-tester` | `web-integration-tester.json` | `prompts/web-integration-tester.md` | Ctrl+Shift+7 | claude-sonnet-4.6 |
+
+## 권위 순서 (위임 시마다)
+
+1. **`.kiro/agents/prompts/<name>.md`** 전체 (해당 이름이 위 표에 있는 경우)
+2. **`.cursor/skills/<name>/SKILL.md`** — 절차·체크리스트 보조
+3. `.kiro/steering/` 및 `aidlc-docs/` 컨텍스트 (에이전트 JSON `resources`·steering 참고)
+
+## Kiro 호출 ↔ Cursor Task (동일 의미)
+
+Kiro:
+
+```text
+use_subagent → InvokeSubagents
+  agent_name: "{agent_name}"
+  query: "{작업 지시}"
+  relevant_context: "{플랜·경로·컨텍스트}"
+```
+
+Cursor (동일 정보를 `prompt`에 넣음):
+
+```text
+Task(
+  subagent_type: "generalPurpose",
+  description: "{agent_name} — {한 줄 요약}",
+  prompt: "
+    Kiro agent_name: {agent_name}
+    1) Read and follow .kiro/agents/prompts/{agent_name}.md in full.
+    2) Then align with .cursor/skills/{agent_name}/SKILL.md if present.
+    query: {작업 지시}
+    relevant_context: {플랜·경로·컨텍스트}
+  "
+)
+```
+
+병렬은 Kiro와 같이 **한 번에 여러 `Task`** 또는 Kiro의 `subagents:` 배열과 동일하게 **여러 에이전트 동시 위임**으로 처리한다.
+
+## Code Generation — Kiro와 동일 (steering/04)
+
+### 매핑 (4종 + Unit 규칙)
+
+steering **`04-aidlc-construction-guide.md`** 와 동일:
+
+| 서브에이전트 | 전문 영역 | 단축키 | 적용 |
+|-------------|----------|--------|------|
+| `codegen-iac` | Terraform/HCL + AWS | Ctrl+Shift+1 | U01 |
+| `codegen-backend` | Java 21 + Spring Boot 3.4.x | Ctrl+Shift+2 | U02~U10 |
+| `codegen-frontend` | React 18 + TypeScript | Ctrl+Shift+3 | U11 |
+| `codegen-db` | Flyway + PostgreSQL + JPA Entity | Ctrl+Shift+4 | U01-DB, U02~U10 (DB) |
+
+| Unit 유형 | 호출 순서 (Kiro 규칙) |
+|----------|------------------------|
+| U01 Infrastructure | `codegen-iac` 단독 |
+| U01-DB | `codegen-db` 단독 |
+| U02~U10 Backend Service | **`codegen-db` → `codegen-backend`** (스키마 의존 시 DB 먼저) |
+| U11 Frontend | `codegen-frontend` 단독 |
+
+### Kiro 예시 (Part 2 Step) — Cursor에서도 동일 문맥으로 Task 작성
+
+```text
+use_subagent → InvokeSubagents
+  agent_name: "codegen-backend"
+  query: "U02 Step N: {step 설명}"
+  relevant_context: "aidlc-docs/construction/plans/u02-code-generation-plan.md 의 Step N"
+```
+
+**주의 (Kiro와 동일)**: DB 스키마에 의존하는 JPA는 반드시 **`codegen-db` 완료 후** `codegen-backend`.
+
+## INCEPTION — Kiro와 동일 (steering/02)
+
+- **`aidlc-researcher`**: Requirements/Application Design/NFR 등에서 조사 — `research/` 저장
+- **`tmf-knowledge-ingest`**: `docs/raw/` → `docs/tmf-oracle/` 청크
+
+호출 형식은 위 **Kiro 호출 ↔ Cursor Task** 절을 따른다. 상세 예시는 **`.kiro/steering/02-aidlc-workflow.md`** 의 해당 절을 사용한다.
+
+## TMF Knowledge Preparation — Kiro와 동일 (steering/02)
+
+절차·부족 자료 안내 형식·호출 예시는 **`.kiro/steering/02-aidlc-workflow.md` 의 "TMF Knowledge Preparation"** 을 따른다.
+
+### Unit별 TMF 의존성 매트릭스 (Kiro steering/02와 동일)
+
+| Unit | OpenAPI | SID | eTOM | ODA |
+|------|---------|-----|------|-----|
+| U02 Resource Inventory | TMF639 ✅ | resource-domain (physical/logical-resource) | operations/rlm (Resource Lifecycle Mgmt) | IG1171, IG1242 (TMFC639) |
+| U03 Resource Catalog | TMF634 | resource-domain (resource-specification) | strategy-infrastructure-product | IG1171, IG1242 (TMFC634) |
+| U04 Change Management | TMF641, TMF702 | service-domain, common-domain | operations/slm, e2e-flows | IG1171, IG1242 (TMFC641, TMFC702) |
+| U06 Data Reconciliation | TMF642, TMF621 | resource-domain, common-domain | operations/rlm | IG1171, IG1242 (TMFC642, TMFC621) |
+| U07 Legacy Integration | TMF639, TMF634 | resource-domain | operations/rlm | GB998 (concepts) |
+| U08 IP Address Mgmt | TMF639 | resource-domain (logical-resource) | operations/rlm | — |
+| U09 Zone Management | TMF639 | resource-domain, common-domain (location) | operations/rlm | — |
+| U10 Topology Service | TMF639 | resource-domain (compound-resource) | operations/rlm | — |
+| U11 Frontend MVP | — | — | — | GB998 (concepts) |
+
+## Build and Test — Kiro와 동일 (steering/02 · 04)
+
+| 서브에이전트 | 역할 | 단축키 | 설정 파일 |
+|-------------|------|--------|-----------|
+| `qa-tester` | 빌드·테스트·진단 (Anti-Bias) | Ctrl+Shift+5 | `qa-tester.json` |
+| `tmf-compliance-reviewer` | TMF-01~TMF-09 검증 | Ctrl+Shift+6 | `tmf-compliance-reviewer.json` |
+| `web-integration-tester` | API 스키마 + Playwright E2E | Ctrl+Shift+7 | `web-integration-tester.json` |
+
+### 흐름 (Kiro steering/02와 동일)
+
+```text
+Code Generation 완료 (대상 Unit)
+  │
+  ▼
+병렬 가능: qa-tester | tmf-compliance-reviewer | web-integration-tester
+  ├─ FAIL → fix-request → 해당 codegen 에이전트 위임 → 재검증 (최대 3회)
+  └─ 전체 PASS → Build and Test 완료
+```
+
+### 피드백 루프 (Kiro와 동일)
+
+1. **qa-tester / tmf-compliance-reviewer / web-integration-tester는 코드를 수정하지 않음** (읽기·실행·분석만)
+2. 실패 시 fix-request → codegen 에이전트 위임
+3. 최대 3회 반복 후 에스컬레이션
+4. **체크박스·audit.md는 메인 에이전트가 수행**
+
+
+## Remote MCP (Jira / GitLab MR)
+
+The main agent records approval markers in the audit log and performs or sequences `jira_*` and `gitlab_create_merge_request` MCP calls per `aidlc-requirements-analysis`, `aidlc-code-generation`, and `aidlc-build-and-test`. When using `Task` to delegate, ensure the main thread writes the markers required by `.cursor/rules/workflow.mdc` (**Remote workflow gates**) before the subagent invokes remote MCP, or keep remote MCP on the main thread.
+
+## Build and Test — FAIL feedback (codegen delegation)
+
+- `qa-tester`, `tmf-compliance-reviewer`, and `web-integration-tester` **must not** modify product code (analyze / run / report only).
+- When a gate is **FAIL**, the **main** agent creates `aidlc-docs/construction/{unit}/build-and-test/fix-request-{unit}.md`, then invokes **Task** for the matching Kiro codegen agent (`codegen-backend`, `codegen-db`, `codegen-frontend`, or `codegen-iac`) per `hub/construction/build-and-test.md`. Re-run the failed gate(s). Stop after **three** failed remediation cycles and escalate to the user.
+- Each Task must load `.kiro/agents/prompts/{agent_name}.md` first, then align with `.cursor/skills/{agent_name}/SKILL.md`.
+
+---
+
+## 부록: Cursor 전용 TMF 파이프라인 (Kiro `agents/*.json` 없음)
+
+다음 역할은 **`.kiro/agents/`에 JSON이 없으며**, 본 저장소에서만 `.cursor/agents/` + `.cursor/skills/`로 정의된다. **권위는 해당 SKILL**이며, Kiro 4종 Codegen **앞단 옵션**으로만 사용한다.
+
+| 이름 | 권위 파일 | 용도 |
+|------|-----------|------|
+| `tmf-architect` | `.cursor/skills/tmf-architect/SKILL.md` | `specs/tmf/{unit}/` 명세 산출 (코드 작성 없음) |
+| `contract-first-api` | `.cursor/skills/contract-first-api/SKILL.md` | 스펙 기반 서버 인터페이스/DTO/Entity 생성 |
+
+**선택적 순서 (TMF Contract-First가 필요한 경우에만)**:
+`tmf-architect` → `contract-first-api` → **`codegen-db` → `codegen-backend`** (이후는 Kiro steering/04와 동일).
+`contract-first-api`는 스펙이 있어야 하므로 **`tmf-architect` 산출 후** 호출한다.
+
+Task 예시:
+
+```text
+Task(
+  subagent_type: "generalPurpose",
+  description: "tmf-architect — U02 spec",
+  prompt: "
+    No Kiro JSON for this role. Follow .cursor/skills/tmf-architect/SKILL.md.
+    query: U02 TMF639 api-spec + sid-mapping + state-machine
+    relevant_context: specs/tmf/u02/, docs/tmf-oracle/
+  "
+)
+```

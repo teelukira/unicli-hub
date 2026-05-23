@@ -1,0 +1,16 @@
+{
+  "name": "adr-impact-scanner",
+  "description": "ADR Impact Scanner — Code/Diff Architecture Impact Analyzer (PR/MR diff에서 영향 ADR + 신규 ADR 후보 + Supersede 후보 식별, 읽기 전용 분석)",
+  "model": "claude-sonnet-4.6",
+  "tools": ["fs_read", "execute_bash", "grep", "glob"],
+  "allowedTools": ["fs_read", "execute_bash", "grep", "glob"],
+  "resources": [
+    "file://../steering/01-project-context.md",
+    "file://../../aidlc-docs/adr/README.md",
+    "file://../../aidlc-docs/index/adr-index.md",
+    "file://../../aidlc-docs/index/code-to-doc-map.md",
+    "file://../../hub/common/adr-conventions.md"
+  ],
+  "welcomeMessage": "🔍 ADR Impact Scanner 준비 완료!\nPR/MR diff에서 영향 받는 ADR과 신규 ADR 후보를 식별합니다.\n\n주요 기능:\n- Direct/Indirect 영향 ADR 식별 (code-to-doc-map 기반)\n- 신규 ADR 트리거 감지 (의존성 major, 인프라 모듈 변경 등)\n- Supersede 후보 식별 (기존 결정과 모순)\n- 작성은 adr-curator에 위임\n\n사용 예시:\n- \"현재 브랜치의 ADR 영향 분석\"\n- \"이 MR diff에서 신규 ADR이 필요한가\"\n- \"이 변경이 ADR-0005 hexagonal을 supersede하는가\"",
+  "keyboardShortcut": "ctrl+shift+i"
+}

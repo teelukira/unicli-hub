@@ -13,7 +13,6 @@ HUB = ROOT / "hub"
 # Canonical hook sources (SSOT)
 CLAUDE_HOOKS_SRC = HUB / "claude-hooks.json"
 CURSOR_HOOKS_SRC = HUB / "cursor-hooks.json"
-GEMINI_HOOKS_SRC = HUB / "gemini-hooks.json"
 
 # Targets
 CLAUDE_SETTINGS = ROOT / ".claude" / "settings.json"
@@ -62,17 +61,10 @@ def render_cursor():
 
 
 def render_gemini():
-    """Merge hub/gemini-hooks.json into .gemini/settings.json hooks block.
-
-    Replaces the entire hooks block so stale entries are removed on each sync.
-    Non-hooks keys (mcpServers, mcp) are preserved.
-    """
-    if not GEMINI_HOOKS_SRC.exists():
+    if not CLAUDE_HOOKS_SRC.exists():
         return
-    src_hooks = read_json(GEMINI_HOOKS_SRC).get("hooks", {})
-    existing = read_json(GEMINI_SETTINGS)
-    existing["hooks"] = src_hooks
-    compare_or_write(GEMINI_SETTINGS, json.dumps(existing, indent=2, ensure_ascii=False) + "\n")
+    content = CLAUDE_HOOKS_SRC.read_text(encoding="utf-8")
+    compare_or_write(GEMINI_SETTINGS, content)
 
 
 def main():
@@ -87,7 +79,7 @@ def main():
         render_claude()
     if TARGET_CLI in [None, "cursor"]:
         render_cursor()
-    if TARGET_CLI in [None, "gemini"]:
+    if TARGET_CLI in [None, "antigravity", "gemini"]:
         render_gemini()
 
     if MODE == "check" and DRIFT:

@@ -14,7 +14,6 @@ CANONICAL = ROOT / "hub" / "skills"
 
 TARGETS = {
     "claude": ROOT / ".claude" / "skills",
-    "gemini": ROOT / ".gemini" / "skills",
     "cursor": ROOT / ".cursor" / "skills",
     "antigravity": ROOT / ".agents" / "skills",
 }
@@ -38,6 +37,24 @@ def compare_or_write(target: pathlib.Path, content: str):
     else:
         target.write_text(content, encoding="utf-8")
         print(f"wrote: {target.relative_to(ROOT)}")
+
+
+def compare_or_write_bytes(target: pathlib.Path, content: bytes):
+    global DRIFT
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if MODE == "check":
+        if not target.exists() or target.read_bytes() != content:
+            try:
+                print(f"DRIFT: {target.relative_to(ROOT)}")
+            except ValueError:
+                print(f"DRIFT: {target}")
+            DRIFT = True
+    else:
+        target.write_bytes(content)
+        try:
+            print(f"wrote: {target.relative_to(ROOT)}")
+        except ValueError:
+            print(f"wrote: {target}")
 
 def get_dependencies(content: str) -> list:
     # Look for depends_on: [skill1, skill2] or depends_on: skill1
@@ -105,6 +122,36 @@ def copy_references(skill_name: str, current_skill_content: str):
                 if not ref_file.is_file(): continue
                 rel_path = ref_file.relative_to(ref_src)
                 compare_or_write(ref_dst_root / rel_path, ref_file.read_text(encoding="utf-8"))
+
+
+def copy_folder_skill_contents(skill_name: str):
+    skill_dir = CANONICAL / skill_name
+    if not skill_dir.is_dir():
+        return
+
+    targets_to_process = []
+    if TARGET_CLI is None:
+        targets_to_process = list(TARGETS.values())
+    elif TARGET_CLI in TARGETS:
+        targets_to_process = [TARGETS[TARGET_CLI]]
+
+    for path in skill_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        rel_path = path.relative_to(skill_dir)
+        if rel_path.parts[0] in ["SKILL.md", "references"]:
+            continue
+        if "__pycache__" in path.parts or path.name.endswith(".pyc"):
+            continue
+        if path.name == ".DS_Store":
+            continue
+
+        data = path.read_bytes()
+        for target_root in targets_to_process:
+            dst_path = target_root / skill_name / rel_path
+            dst_path.parent.mkdir(parents=True, exist_ok=True)
+            compare_or_write_bytes(dst_path, data)
+
 
 def reconcile():
     """Delete skills in target dirs that were not produced by this renderer."""
@@ -219,6 +266,7 @@ def main():
             compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
 
         copy_references(skill_name, body)
+        copy_folder_skill_contents(skill_name)
 
     reconcile()
 

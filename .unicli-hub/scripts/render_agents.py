@@ -16,17 +16,17 @@ AGENTS_SRC = HUB / "agents"
 TARGETS = {
     "claude": ROOT / ".claude" / "agents",
     "cursor": ROOT / ".cursor" / "agents",
-    "gemini": ROOT / ".gemini" / "agents",
     "codex": ROOT / ".codex" / "prompts",
     "antigravity": ROOT / ".agents" / "agents",
     "antigravity_global": pathlib.Path.home() / ".gemini" / "antigravity-cli" / "agents",
 }
 
-SHARED_AGENTS = ["researcher", "codegen", "reviewer"]
-
 MODELS = {
-    "claude": {"researcher": "claude-opus-4-7", "codegen": "claude-sonnet-4-6", "reviewer": "claude-opus-4-7"},
-    "gemini": {"researcher": "gemini-3-pro-preview", "codegen": "gemini-3-pro-preview", "reviewer": "gemini-3-pro-preview"},
+    "claude": {
+        "researcher": "claude-3-5-sonnet-20241022",
+        "codegen": "claude-3-5-sonnet-20241022",
+        "reviewer": "claude-3-5-sonnet-20241022"
+    },
 }
 
 MODE = "fix"
@@ -62,11 +62,10 @@ def split_frontmatter(content: str):
         return fm, body
     return {}, content
 
-def render_shared():
-    for a in SHARED_AGENTS:
+def render_all_agents():
+    for src in sorted(AGENTS_SRC.glob("*.md")):
+        a = src.stem
         PRODUCED_AGENTS.add(a)
-        src = AGENTS_SRC / f"{a}.md"
-        if not src.exists(): continue
         raw_content = src.read_text(encoding="utf-8")
         
         fm, body = split_frontmatter(raw_content)
@@ -75,7 +74,10 @@ def render_shared():
         if TARGET_CLI in [None, "claude"]:
             fm_claude = fm.copy()
             fm_claude["name"] = a
-            fm_claude["model"] = MODELS["claude"].get(a, "claude-sonnet-4-6")
+            if a not in MODELS["claude"]:
+                 fm_claude["model"] = "claude-3-5-sonnet-20241022"
+            else:
+                 fm_claude["model"] = MODELS["claude"][a]
             
             fm_lines = ["---"]
             for k, v in fm_claude.items(): fm_lines.append(f"{k}: {v}")
@@ -85,7 +87,7 @@ def render_shared():
         # Cursor
         if TARGET_CLI in [None, "cursor"]:
             fm_cursor = fm.copy()
-            fm_cursor["description"] = fm.get("description", f"Shared {a} agent")
+            fm_cursor["description"] = fm.get("description", f"Agent {a}")
             fm_cursor["source"] = f"hub/agents/{a}.md"
             
             fm_lines = ["---"]
@@ -93,44 +95,43 @@ def render_shared():
             fm_lines.append("---\n")
             compare_or_write(TARGETS["cursor"] / f"{a}.md", "\n".join(fm_lines) + body)
         
-        # Gemini
-        if TARGET_CLI in [None, "gemini"]:
-            fm_gemini = fm.copy()
-            fm_gemini["name"] = a
-            fm_gemini["description"] = fm.get("description", f"Shared {a} agent")
-            fm_gemini["model"] = MODELS["gemini"].get(a, "gemini-3-pro-preview")
-            
-            fm_lines = ["---"]
-            # Ensure name and description are present for Gemini validation
-            for k, v in fm_gemini.items(): 
-                if k == "aliases": continue # Don't need aliases in final frontmatter
-                fm_lines.append(f"{k}: {v}")
-            fm_lines.append("---\n")
-            compare_or_write(TARGETS["gemini"] / f"{a}.md", "\n".join(fm_lines) + body)
-            
         # Codex
         if TARGET_CLI in [None, "codex"]:
             compare_or_write(TARGETS["codex"] / f"{a}.md", body)
 
         # Antigravity
         if TARGET_CLI in [None, "antigravity"]:
+            model_name = "gemini-3.1-pro"
+            if a in ["researcher", "adr-impact-scanner", "tmf-knowledge-ingest"]:
+                model_name = "gemini-3.5-flash"
+                
             antigravity_content = json.dumps({
                 "name": a,
-                "description": fm.get("description", f"Shared {a} agent"),
+                "description": fm.get("description", f"Agent {a}"),
                 "system_prompt": body,
                 "enable_mcp_tools": True,
-                "enable_write_tools": True
+                "enable_write_tools": True,
+                "model": model_name
             }, indent=2)
+            
+            # Write to agents/
             compare_or_write(TARGETS["antigravity"] / a / "agent.json", antigravity_content)
-            compare_or_write(TARGETS["antigravity_global"] / a / "agent.json", antigravity_content)
+            try:
+                compare_or_write(TARGETS["antigravity_global"] / a / "agent.json", antigravity_content)
+            except Exception:
+                pass # Ignore global write errors
+                
 
 def reconcile():
     """Delete agents in target dirs that were not produced by this renderer."""
     global DRIFT
     targets_to_check = {k: v for k, v in TARGETS.items()
-                        if TARGET_CLI is None or k == TARGET_CLI}
+                        if TARGET_CLI is None or k == TARGET_CLI or (TARGET_CLI == "antigravity" and "antigravity" in k)}
     for cli, target_dir in targets_to_check.items():
-        if not target_dir.exists():
+        try:
+            if not target_dir.exists():
+                continue
+        except Exception:
             continue
         if cli in ("antigravity", "antigravity_global"):
             for subdir in sorted(target_dir.iterdir()):
@@ -173,8 +174,7 @@ def main():
         elif arg.startswith("--target="):
             TARGET_CLI = arg.split("=")[1]
 
-    render_shared()
-    # Specialized agents could be handled here by looking for *.json in hub/agents/
+    render_all_agents()
     reconcile()
 
     if MODE == "check" and DRIFT:

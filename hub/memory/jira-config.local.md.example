@@ -23,7 +23,7 @@ assignee: 홍길동           # 본인 이름 (Jira display name 또는 account 
 ## 설정 방법
 
 ```bash
-cp .unicli-rules/memory/jira-config.local.md.example \
-   .unicli-rules/memory/jira-config.local.md
+cp hub/memory/jira-config.local.md.example \
+   hub/memory/jira-config.local.md
 # 편집 후 저장 — git add 하지 말 것
 ```

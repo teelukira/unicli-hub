@@ -16,7 +16,6 @@ ENV_LOCAL = ROOT / ".env.local"
 TARGETS = {
     "claude": ROOT / ".mcp.json",
     "cursor": ROOT / ".cursor" / "mcp.json",
-    "gemini": ROOT / ".gemini" / "settings.json",
 }
 
 MODE = "fix"
@@ -140,18 +139,6 @@ def main():
         cli_servers = filter_servers(raw_servers_subst, "cursor")
         clean = strip_meta(cli_servers)
         compare_or_write(TARGETS["cursor"], json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
-
-    # 3. Gemini (Merged JSON — preserves hooks/mcp.allowed)
-    if TARGET_CLI in [None, "gemini"]:
-        path = TARGETS["gemini"]
-        existing = read_json(path)
-        cli_servers = filter_servers(raw_servers_subst, "gemini")
-        clean = strip_meta(cli_servers)
-        existing["mcpServers"] = clean
-        if "mcp" not in existing:
-            existing["mcp"] = {}
-        existing["mcp"]["allowed"] = list(clean.keys())
-        compare_or_write(path, json.dumps(existing, indent=2, ensure_ascii=False) + "\n")
 
     # 4. Antigravity (mcp_config.json — ide-assistant context)
     if TARGET_CLI in [None, "antigravity"]:

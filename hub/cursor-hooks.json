@@ -3,7 +3,7 @@
   "hooks": {
     "preToolUse": [
       {
-        "command": "python3 hub/hooks/pre_tool_use.py",
+        "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/pre_tool_use.py\"'",
         "matcher": "*",
         "failClosed": false,
         "timeout": 20
@@ -11,7 +11,7 @@
     ],
     "postToolUse": [
       {
-        "command": "python3 hub/hooks/post_tool_use.py",
+        "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/post_tool_use.py\"'",
         "matcher": "*",
         "failClosed": false,
         "timeout": 30
@@ -19,28 +19,28 @@
     ],
     "beforeShellExecution": [
       {
-        "command": "python3 hub/hooks/before_shell_execution.py",
+        "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/before_shell_execution.py\"'",
         "failClosed": false,
         "timeout": 10
       }
     ],
     "beforeMCPExecution": [
       {
-        "command": "python3 hub/hooks/before_mcp_execution.py",
+        "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/before_mcp_execution.py\"'",
         "failClosed": false,
         "timeout": 10
       }
     ],
     "stop": [
       {
-        "command": "python3 hub/hooks/stop.py",
+        "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/stop.py\"'",
         "failClosed": false,
         "timeout": 10
       }
     ],
     "afterAgentResponse": [
       {
-        "command": "python3 hub/hooks/post_tool_use.py",
+        "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/post_tool_use.py\"'",
         "failClosed": false,
         "timeout": 10
       }

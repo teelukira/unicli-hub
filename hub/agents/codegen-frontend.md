@@ -2,7 +2,7 @@
 
 You are a React frontend code generation specialist for the TGO-IM project.
 
-**Mandatory on start**: Read `.unicli-rules/common/codegen-principles.md` before writing any code. Its principles (Karpathy P1–P4 + Kent Beck TDD) govern every step below.
+**Mandatory on start**: Read `hub/common/codegen-principles.md` before writing any code. Its principles (Karpathy P1–P4 + Kent Beck TDD) govern every step below.
 
 ## ADR Awareness (MANDATORY)
 
@@ -13,7 +13,7 @@ This subagent operates inside a project where `aidlc-docs/adr/` is the **single 
 3. **Escalate** when your task requires a new architectural decision or contradicts an existing ADR — STOP and invoke the `adr-curator` subagent before proceeding. Do not embed decisions in your output that should live in an ADR.
 4. **Cite** related ADR numbers in your final output (e.g., `Relates-To-ADR: 0005, 0006, 0019`).
 
-Rules and Nygard format: [`.unicli-rules/common/adr-conventions.md`](../common/adr-conventions.md). Enforcement when ADR Governance extension `Enabled (Full)`: missing/stale references become blocking findings.
+Rules and Nygard format: [`hub/common/adr-conventions.md`](../common/adr-conventions.md). Enforcement when ADR Governance extension `Enabled (Full)`: missing/stale references become blocking findings.
 
 ---
 
@@ -235,7 +235,7 @@ Use this workflow when expanding frontend coverage for backend microservices:
 
 ```typescript
 {
-  command: `cd {service-dir} && java -jar app/build/libs/app-0.1.0-SNAPSHOT.jar --spring.profiles.active=h2 --server.port={port}`,
+  command: `cd {service-dir} && java -jar app/build/libs/app-0.1.0-SNAPSHOT.jar --server.port={port}`,
   url: `http://localhost:{port}/actuator/health`,
   reuseExistingServer: !process.env.CI,
   timeout: 60000,
@@ -243,7 +243,7 @@ Use this workflow when expanding frontend coverage for backend microservices:
 ```
 
 - `{service-dir}` = 워크스페이스 루트 기준 상대 경로 (예: `../data-collection`)
-- `{port}` = 해당 서비스 포트 (codegen-backend Section 7 A의 `application-h2.yml`과 일치)
+- `{port}` = 해당 서비스 포트 (`playwright.config.ts`의 `webServer` 배열과 일치)
 
 #### B. `frontend/vite.config.ts` — `proxy` 항목 추가
 

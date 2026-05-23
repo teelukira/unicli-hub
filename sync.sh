@@ -14,11 +14,25 @@ MODE="fix"
 TARGET_FLAG=""
 for arg in "$@"; do
     if [[ "$arg" == "--check" ]]; then MODE="check"; fi
-    if [[ "$arg" == "--gemini" ]]; then TARGET_FLAG="--target=gemini"; fi
 done
 
 echo "--- UniCLI-Hub Sync ($MODE) ---"
-if [[ -n "$TARGET_FLAG" ]]; then echo "Target: Gemini Only"; fi
+
+# Clean up legacy Antigravity structures to avoid conflicts
+if [ "$MODE" = "fix" ]; then
+    if [ -d "$ROOT/.agents/plugins" ]; then
+        echo "Cleaning legacy plugins directory..."
+        rm -rf "$ROOT/.agents/plugins"
+    fi
+    if [ -d "$ROOT/.antigravitycli" ]; then
+        echo "Cleaning legacy .antigravitycli directory..."
+        rm -rf "$ROOT/.antigravitycli"
+    fi
+    if [ -d "$ROOT/.agy" ]; then
+        echo "Cleaning legacy .agy directory..."
+        rm -rf "$ROOT/.agy"
+    fi
+fi
 
 # 1. Ensure Python dependencies if any (usually built-in)
 # python3 -m pip install -q ...

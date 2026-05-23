@@ -1,100 +1,81 @@
----
-name: core-workflow
-description: AI-assisted software development workflow template. Customize stages and depth for your project.
-type: workflow
----
-
-# Core Workflow
+# PRIORITY: This workflow OVERRIDES all other built-in workflows
+# When user requests software development, ALWAYS follow this workflow FIRST
 
 ## Adaptive Workflow Principle
 
-The workflow adapts to the work, not the other way around.
-AI assesses which stages are needed based on user intent, codebase state, complexity, and risk.
-Stages marked `ALWAYS` run every time; `CONDITIONAL` stages run only when the assessment warrants.
+**The workflow adapts to the work, not the other way around.**
 
----
+The AI model intelligently assesses what stages are needed based on the user's stated intent, existing codebase state, complexity and scope of change, and risk/impact. Only execute stages that add value — skip those that don't.
 
-## 🔵 INCEPTION PHASE
+## Entry Point
 
-**Purpose**: Planning, requirements gathering, architectural decisions.
+All software development requests enter via the `/aidlc-workflow` skill.
+That skill reads `aidlc-docs/aidlc-state.md` and dispatches to the appropriate stage skill.
 
-**Focus**: Determine WHAT to build and WHY.
+## Phase → Skill Mapping
 
-### Workspace Detection (`ALWAYS`)
+Each stage delegates its full "Execute IF / Skip IF / Execution steps" to the corresponding skill. Do not inline procedure details here.
 
-Detect project state (greenfield vs. brownfield) and resume from prior session if applicable.
+| Phase | Stage | Skill | When |
+|-------|-------|-------|------|
+| INCEPTION | Workspace Detection | /aidlc-workspace-detection | ALWAYS |
+| INCEPTION | Reverse Engineering | /aidlc-reverse-engineering | brownfield only |
+| INCEPTION | Requirements Analysis | /aidlc-requirements-analysis | ALWAYS |
+| INCEPTION | User Stories | /aidlc-user-stories | UX-impacting changes |
+| INCEPTION | Workflow Planning | /aidlc-workflow-planning | ALWAYS |
+| INCEPTION | Application Design | /aidlc-application-design | new components |
+| INCEPTION | Units Generation | /aidlc-units-generation | multi-unit decomposition |
+| CONSTRUCTION | Functional Design | /aidlc-functional-design | new data/logic (per-unit) |
+| CONSTRUCTION | NFR Requirements | /aidlc-nfr-requirements | perf/sec/scale needs (per-unit) |
+| CONSTRUCTION | NFR Design | /aidlc-nfr-design | NFR Requirements executed (per-unit) |
+| CONSTRUCTION | Infrastructure Design | /aidlc-infrastructure-design | infra changes (per-unit) |
+| CONSTRUCTION | Code Generation | /aidlc-code-generation | ALWAYS — codegen-* agents dispatch (per-unit) |
+| CONSTRUCTION | Build and Test | /aidlc-build-and-test | ALWAYS — qa-tester/tmf-reviewer/web-integration-tester BLOCKING (per-unit) |
+| OPERATIONS | Operations | /aidlc-operations | placeholder |
 
-### Reverse Engineering (`CONDITIONAL` — brownfield only)
+Each unit in CONSTRUCTION is completed fully (design → code → build/test/QA) before moving to the next.
 
-Analyze existing codebase to produce architecture, API, and component documentation.
+## Cross-Stage Policies
 
-### Requirements Analysis (`ALWAYS`)
+Pointers only — full details live in the referenced files.
 
-Gather functional and non-functional requirements. Depth adapts: `minimal` / `standard` / `comprehensive`.
+- **ADR SSOT**: `aidlc-docs/adr/` is the single source of truth for architecture decisions. Before any architecturally significant decision, scan `aidlc-docs/index/adr-index.md`; invoke `adr-curator` subagent for new ADRs. Full rules: `hub/common/adr-conventions.md`.
+- **Jira Lifecycle**: Ticket per unit in `NWAE` project. Full config: `hub/memory/jira-config.md`.
+- **Extensions Opt-in**: Load only `hub/extensions/*/*.opt-in.md` at workflow start. Full rule files loaded on user opt-in. Active state: `aidlc-docs/aidlc-state.md` → `Extension Configuration`.
+- **Welcome Message**: `/aidlc-workflow` skill outputs once per new workflow from `hub/common/welcome-message.md`.
+- **Content / Question / ASCII rules**: each skill loads `hub/common/{content-validation,question-format-guide,ascii-diagram-standards}.md` at the relevant stage.
+- **Git Worktree / aidlc-docs conventions**: `hub/common/{git-worktree-conventions,aidlc-docs-unit-conventions}.md`.
 
-### User Stories (`CONDITIONAL`)
+## Hook-Enforced Policies
 
-Generate user stories and personas when new user-facing features are involved.
+These are enforced by `hub/hooks/` at PreToolUse/PostToolUse — no prose duplication needed here.
 
-### Workflow Planning (`ALWAYS`)
+| Hook file | What it enforces |
+|-----------|-----------------|
+| `code_location_guard.py` | App code stays out of `aidlc-docs/` |
+| `generated_file_guard.py` | Blocks direct edits to CLAUDE.md, .claude/agents/*, etc. |
+| `aidlc_unified_hook.py` + `state_audit.py` | Audit log auto-append and rotation |
+| `plan_checkbox_tracker.py` | Plan-level checkbox updates in same interaction |
+| `adr_backlink_check.py` + `adr_memory_sync_nudge.py` | ADR backlink validation and memory sync |
+| `jira_gate_guard.py` | Blocks Construction without Jira ticket key |
+| `gitlab_mr_gate_guard.py` | MR gate |
+| `shell_sensitive_file_guard.py` | Blocks secret/sensitive file writes |
 
-Produce a Mermaid workflow diagram. Determine which construction stages to execute per unit.
+Hook registration: `.claude/settings.json` (generated by `sync.sh` from `hub/claude-hooks.json`).
 
-### Application Design (`CONDITIONAL`)
+## SSOT Editing Rules
 
-Define new components, service layers, and dependencies when new services are required.
+**Never edit derived files directly**: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `AGY.md`,
+`.claude/agents/*.md`, `.cursor/{rules,agents,hooks}/*`, `.kiro/steering/*`, `.codex/prompts/*`, MCP configs.
 
-### Units Generation (`CONDITIONAL`)
+**Edit source in `hub/` instead**, then run `./sync.sh --fix` to regenerate all derived files.
 
-Decompose the system into ordered units of work when multi-service coordination is needed.
-
----
-
-## 🟢 CONSTRUCTION PHASE
-
-**Purpose**: Detailed design, NFR implementation, code generation.
-
-**Focus**: Determine HOW to build it.
-
-Per-unit loop (repeat for each unit):
-
-### Functional Design (`CONDITIONAL`)
-
-Data models, business logic, business rules.
-
-### NFR Requirements (`CONDITIONAL`)
-
-Performance, security, scalability.
-
-### NFR Design (`CONDITIONAL`)
-
-NFR patterns and cross-cutting concerns.
-
-### Infrastructure Design (`CONDITIONAL`)
-
-Cloud resources, deployment architecture.
-
-### Code Generation (`ALWAYS`)
-
-Two-part: plan (with checkboxes, get approval) → execute (generate code + tests).
-
-### Build and Test (`ALWAYS`)
-
-Run `qa-tester` (BLOCKING), `tmf-compliance-reviewer` (if TMF unit), `web-integration-tester` (if frontend).
-
----
-
-## 🟡 OPERATIONS PHASE
-
-**Purpose**: Deployment, monitoring, incident response.
-
-**Status**: Placeholder — expand for your project's operational runbooks.
-
----
+CI drift check: `./sync.sh --check` (exits 1 if any derived file is stale).
 
 ## Key Principles
 
-- Only execute stages that add value
-- Log every user input and AI response in `aidlc-docs/audit.md` (append-only)
-- Validate Mermaid and ASCII diagrams before writing
-- Never edit derived files (`.claude/`, `.cursor/`, `.gemini/`, etc.) — edit `hub/` instead
+- **Adaptive execution** — only run stages that add value for the request
+- **Transparent planning** — show execution plan to user before starting
+- **User control** — user can override any stage inclusion/exclusion recommendation
+- **Audit trail** — hooks auto-capture every interaction; never summarize user input
+- **Quality focus** — complex changes get full treatment, simple changes stay efficient

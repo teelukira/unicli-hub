@@ -58,15 +58,18 @@ def main():
     # mapping of: output_filename -> (template_path, cli_name)
     targets = {
         "CLAUDE.md": (TEMPLATES / "CLAUDE.md.tmpl", "claude"),
-        "GEMINI.md": (TEMPLATES / "GEMINI.md.tmpl", "gemini"),
         "AGENTS.md": (TEMPLATES / "AGENTS.md.tmpl", "agents"),
+        "GEMINI.md": (TEMPLATES / "GEMINI.md.tmpl", "gemini"),
+        "AGY.md": (TEMPLATES / "AGY.md.tmpl", "agy"),
     }
 
     for name, (tmpl, cli_name) in targets.items():
         if TARGET_CLI is not None:
-            if cli_name == "agents" and TARGET_CLI != "antigravity":
+            if TARGET_CLI == "antigravity" and cli_name in ["agents", "gemini", "agy"]:
+                pass
+            elif cli_name == "agents" and TARGET_CLI != "antigravity":
                 continue
-            if cli_name != "agents" and cli_name != TARGET_CLI:
+            elif cli_name != "agents" and cli_name != TARGET_CLI:
                 continue
 
         content = assemble(tmpl, cli_name)

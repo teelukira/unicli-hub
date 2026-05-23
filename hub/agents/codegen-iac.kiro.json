@@ -26,7 +26,7 @@
     "file://../aidlc-docs/inception/application-design/component-dependency.md",
     "file://../../aidlc-docs/adr/README.md",
     "file://../../aidlc-docs/index/adr-index.md",
-    "file://../../.unicli-rules/common/adr-conventions.md"
+    "file://../../hub/common/adr-conventions.md"
   ],
   "mcpServers": {
     "aws-docs": {
