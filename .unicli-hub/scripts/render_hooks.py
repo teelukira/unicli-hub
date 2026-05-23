@@ -18,7 +18,6 @@ CURSOR_HOOKS_SRC = HUB / "cursor-hooks.json"
 CLAUDE_SETTINGS = ROOT / ".claude" / "settings.json"
 CURSOR_HOOKS = ROOT / ".cursor" / "hooks.json"
 ANTIGRAVITY_SETTINGS = ROOT / ".agents" / "settings.json"
-GEMINI_SETTINGS = ROOT / ".gemini" / "settings.json"
 
 MODE = "fix"
 TARGET_CLI = None
@@ -80,10 +79,6 @@ def render_antigravity():
     compare_or_write(ANTIGRAVITY_SETTINGS, render_agy_hooks())
 
 
-def render_gemini():
-    compare_or_write(GEMINI_SETTINGS, render_agy_hooks())
-
-
 def main():
     global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
@@ -98,8 +93,6 @@ def main():
         render_cursor()
     if TARGET_CLI in [None, "antigravity", "agy"]:
         render_antigravity()
-    if TARGET_CLI in [None, "gemini"]:
-        render_gemini()
 
     if MODE == "check" and DRIFT:
         sys.exit(1)

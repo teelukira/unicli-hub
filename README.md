@@ -13,7 +13,7 @@ AI tools are amazing, but paying $20/month for *every single one* is unsustainab
 **UniCLI-Hub** centralizes your **Agents, Skills, Hooks, and MCP Servers** in a single directory. It automatically fans out these assets to all supported CLI tools, ensuring that no matter which tool you are using *right now*, it has the same context and capabilities.
 
 **With UniCLI-Hub, you can:**
-- **Switch Seamlessly:** Run out of Claude tokens? Switch to Gemini or Antigravity (agy) without re-explaining your architecture.
+- **Switch Seamlessly:** Run out of Claude tokens? Switch to Antigravity (agy) without re-explaining your architecture.
 - **Unified Memory:** Share project facts, conventions, and glossaries across all tools.
 - **Automated Tooling:** Centralize MCP server definitions and hook logic.
 - **Save Money:** Maximize the value of free tiers by treating multiple tools as a single "Pro" experience.
@@ -26,9 +26,8 @@ AI tools are amazing, but paying $20/month for *every single one* is unsustainab
 
 | CLI | Derived location | Entry point |
 |-----|------------------|-------------|
-| **Antigravity (agy)** | `.agy/` | `AGY.md` |
+| **Antigravity (agy)** | `.agents/` | `AGENTS.md` |
 | **Claude Code** | `.claude/` | `CLAUDE.md` |
-| **Gemini CLI** | `.gemini/` | `GEMINI.md` |
 | **Cursor** | `.cursor/` | `.cursor/rules/*.mdc` |
 | **Kiro** | `.kiro/` | `.kiro/steering/*.md` |
 | **OpenAI Codex** | `.codex/` | `AGENTS.md` |
@@ -52,7 +51,6 @@ git clone <this-repo> my-project && cd my-project
 # 4) Launch your favorite tool
 agy                   # Antigravity CLI
 claude                # Claude Code
-gemini                # Gemini CLI
 cursor .              # Cursor
 ```
 
@@ -78,8 +76,8 @@ Internal logic for fanning out assets. You rarely need to touch this.
 
 ### 3. Derived Targets (Generated)
 **Never edit these directly.** They are managed by `./sync.sh`.
-- Root: `CLAUDE.md`, `GEMINI.md`, `AGY.md`, `AGENTS.md`.
-- Tool Dirs: `.claude/`, `.gemini/`, `.cursor/`, `.kiro/`, `.codex/`, `.agy/`.
+- Root: `CLAUDE.md`, `AGENTS.md`.
+- Tool Dirs: `.claude/`, `.agents/`, `.cursor/`, `.kiro/`, `.codex/`.
 
 ---
 
@@ -94,7 +92,7 @@ Internal logic for fanning out assets. You rarely need to touch this.
 ## Advanced Features
 
 ### Unified MCP Configuration
-Edit `hub/mcp-servers.json` to define your tools (Tavily, JIRA, GitLab, etc.). Running `./sync.sh` will automatically configure them for all supported CLIs, including updating the `allowed` list for Gemini and Antigravity.
+Edit `hub/mcp-servers.json` to define your tools (Tavily, JIRA, GitLab, etc.). Running `./sync.sh` will automatically configure them for all supported CLIs, including updating the `allowed` list for Antigravity.
 
 ### Specialized Agents
 Drop a markdown prompt into `hub/agents/` and a `.kiro.json` metadata file. The framework will generate the corresponding agent for all five platforms.

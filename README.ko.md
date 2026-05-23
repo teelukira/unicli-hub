@@ -13,7 +13,7 @@ AI 도구들은 훌륭하지만, 모든 도구에 매달 $20씩 지불하는 것
 **UniCLI-Hub**는 **에이전트, 스킬, 훅, MCP 서버** 설정을 단일 디렉토리에 중앙 집중화합니다. 이 자산들은 지원되는 모든 CLI 도구로 자동 배포(Fan-out)되어, 현재 어떤 도구를 사용하든 동일한 컨텍스트와 기능을 유지할 수 있게 합니다.
 
 **UniCLI-Hub와 함께라면:**
-- **끊김 없는 전환:** Claude 토큰이 다 떨어졌나요? 아키텍처를 다시 설명할 필요 없이 Gemini나 Antigravity(agy)로 즉시 전환하세요.
+- **끊김 없는 전환:** Claude 토큰이 다 떨어졌나요? 아키텍처를 다시 설명할 필요 없이 Antigravity(agy)로 즉시 전환하세요.
 - **통합 메모리:** 프로젝트 사실 관계, 컨벤션, 용어집을 모든 도구가 공유합니다.
 - **자동화된 도구 연동:** MCP 서버 정의와 훅 로직을 한 곳에서 관리합니다.
 - **비용 절감:** 여러 무료 티어를 하나의 "Pro" 경험처럼 활용하여 생산성을 극대화하세요.
@@ -24,9 +24,8 @@ AI 도구들은 훌륭하지만, 모든 도구에 매달 $20씩 지불하는 것
 
 | CLI | 파생 경로 | 진입점 (Entry Point) |
 |-----|------------------|-------------|
-| **Antigravity (agy)** | `.agy/` | `AGY.md` |
+| **Antigravity (agy)** | `.agents/` | `AGENTS.md` |
 | **Claude Code** | `.claude/` | `CLAUDE.md` |
-| **Gemini CLI** | `.gemini/` | `GEMINI.md` |
 | **Cursor** | `.cursor/` | `.cursor/rules/*.mdc` |
 | **Kiro** | `.kiro/` | `.kiro/steering/*.md` |
 | **OpenAI Codex** | `.codex/` | `AGENTS.md` |
@@ -50,7 +49,6 @@ git clone <this-repo> my-project && cd my-project
 # 4) 원하는 도구 실행
 agy                   # Antigravity CLI
 claude                # Claude Code
-gemini                # Gemini CLI
 cursor .              # Cursor
 ```
 
@@ -76,8 +74,8 @@ UniCLI-Hub는 **프레임워크 코어**와 **프로젝트 데이터**를 분리
 
 ### 3. 파생 타겟 (자동 생성)
 **직접 수정하지 마세요.** `./sync.sh`에 의해 관리됩니다.
-- 루트: `CLAUDE.md`, `GEMINI.md`, `AGY.md`, `AGENTS.md`.
-- 도구 디렉토리: `.claude/`, `.gemini/`, `.cursor/`, `.kiro/`, `.codex/`, `.agy/`.
+- 루트: `CLAUDE.md`, `AGENTS.md`.
+- 도구 디렉토리: `.claude/`, `.agents/`, `.cursor/`, `.kiro/`, `.codex/`.
 
 ---
 
@@ -92,7 +90,7 @@ UniCLI-Hub는 **프레임워크 코어**와 **프로젝트 데이터**를 분리
 ## 주요 기능
 
 ### 통합 MCP 설정
-`hub/mcp-servers.json`에서 도구(Tavily, JIRA, GitLab 등)를 정의하세요. `./sync.sh`를 실행하면 모든 CLI에 설정이 배포되며, Gemini와 Antigravity의 `allowed` 리스트도 자동으로 업데이트됩니다.
+`hub/mcp-servers.json`에서 도구(Tavily, JIRA, GitLab 등)를 정의하세요. `./sync.sh`를 실행하면 모든 CLI에 설정이 배포되며, Antigravity의 `allowed` 리스트도 자동으로 업데이트됩니다.
 
 ### 특화 에이전트 추가
 `hub/agents/`에 마크다운 프롬프트와 `.kiro.json` 메타데이터를 추가하면, 프레임워크가 모든 플랫폼에 맞는 에이전트를 자동으로 생성합니다.

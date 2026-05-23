@@ -59,14 +59,11 @@ def main():
     targets = {
         "CLAUDE.md": (TEMPLATES / "CLAUDE.md.tmpl", "claude"),
         "AGENTS.md": (TEMPLATES / "AGENTS.md.tmpl", "agents"),
-        "GEMINI.md": (TEMPLATES / "GEMINI.md.tmpl", "gemini"),
-        "AGY.md": (TEMPLATES / "AGY.md.tmpl", "agy"),
     }
 
     target_aliases = {
-        "antigravity": {"agents", "agy"},
-        "agy": {"agents", "agy"},
-        "gemini": {"gemini"},
+        "antigravity": {"agents"},
+        "agy": {"agents"},
         "codex": {"agents"},
         "claude": {"claude"},
     }

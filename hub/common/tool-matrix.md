@@ -6,12 +6,12 @@ How each AI CLI's features map to this template.
 
 | Feature | Antigravity CLI | Claude Code | Cursor | Kiro | Codex |
 |---------|-----------------|-------------|--------|------|-------|
-| Agent definitions | `.antigravity/agents/*.md` | `.claude/agents/*.md` | `.cursor/agents/*.md` | `.kiro/agents/*.json` + prompt symlink | `.codex/prompts/*.md` (slash command) |
+| Agent definitions | `.agents/agents/<name>/agent.json` | `.claude/agents/*.md` | `.cursor/agents/*.md` | `.kiro/agents/*.json` + prompt symlink | `.codex/prompts/*.md` (slash command) |
 | Entry document | `ANTIGRAVITY.md` | `CLAUDE.md` | `AGENTS.md` / slim `.cursor/rules/workflow.mdc` + `project-context` / `memory` | `.kiro/steering/*.md` | `AGENTS.md` |
-| Skill / prompt | `.antigravity/skills/` | MCP skills | `.cursor/skills/` (incl. `aidlc-*` + agent mirrors) | `.kiro/prompts/*.md` | `~/.codex/prompts/` |
-| Hook | `.antigravity/settings.json` | `settings.local.json` (PreToolUse / PostToolUse) | `.cursor/hooks.json` + regular files copied to `.cursor/hooks/` from `hub/hooks/` (`*.py`, `ralph*.sh`, `java-lint-on-commit.sh`; last is Cursor-only per `sync.sh`) | `.kiro/hooks/*.kiro.hook` | (none) |
-| Memory | `ANTIGRAVITY.md` | `CLAUDE.md` + `@import` | `.cursor/rules/memory.mdc` | `.kiro/steering/03-memory.md` | `AGENTS.md` prepend |
-| MCP | `.antigravity/settings.json` | `.mcp.json` | `.cursor/mcp.json` | `.kiro/settings/mcp.json` | `.codex/config.toml` (`mcp_servers`) |
+| Skill / prompt | `.agents/skills/` | MCP skills | `.cursor/skills/` (incl. `aidlc-*` + agent mirrors) | `.kiro/prompts/*.md` | `~/.codex/prompts/` |
+| Hook | `.agents/settings.json` | `settings.local.json` (PreToolUse / PostToolUse) | `.cursor/hooks.json` + regular files copied to `.cursor/hooks/` from `hub/hooks/` (`*.py`, `ralph*.sh`, `java-lint-on-commit.sh`; last is Cursor-only per `sync.sh`) | `.kiro/hooks/*.kiro.hook` | (none) |
+| Memory | `AGENTS.md` | `CLAUDE.md` + `@import` | `.cursor/rules/memory.mdc` | `.kiro/steering/03-memory.md` | `AGENTS.md` prepend |
+| MCP | `.agents/mcp_config.json` | `.mcp.json` | `.cursor/mcp.json` | `.kiro/settings/mcp.json` | `.codex/config.toml` (`mcp_servers`) |
 
 ## Regeneration owner
 

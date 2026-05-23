@@ -34,6 +34,18 @@ if [ "$MODE" = "fix" ] && [ -z "$TARGET_FLAG" ]; then
         echo "Cleaning legacy .agy directory..."
         rm -rf "$ROOT/.agy"
     fi
+    if [ -d "$ROOT/.gemini" ]; then
+        echo "Cleaning legacy .gemini directory..."
+        rm -rf "$ROOT/.gemini"
+    fi
+    if [ -f "$ROOT/GEMINI.md" ]; then
+        echo "Removing legacy GEMINI.md..."
+        rm -f "$ROOT/GEMINI.md"
+    fi
+    if [ -f "$ROOT/AGY.md" ]; then
+        echo "Removing legacy AGY.md..."
+        rm -f "$ROOT/AGY.md"
+    fi
 fi
 
 # 1. Ensure Python dependencies if any (usually built-in)
@@ -51,7 +63,7 @@ python3 "$CORE_SCRIPTS/render_hooks.py" --$MODE $TARGET_FLAG
 # 5. Render MCP
 python3 "$CORE_SCRIPTS/render_mcp.py" --$MODE $TARGET_FLAG
 
-# 6. Render Entry Point Templates (CLAUDE.md, GEMINI.md, AGY.md, AGENTS.md)
+# 6. Render Entry Point Templates (CLAUDE.md, AGENTS.md)
 python3 "$CORE_SCRIPTS/render_templates.py" --$MODE $TARGET_FLAG
 
 echo "--- Sync Complete ---"

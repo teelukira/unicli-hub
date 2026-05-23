@@ -7,7 +7,6 @@
 | CLI | Mechanism |
 |-----|-----------|
 | Claude Code | Imported into `CLAUDE.md` via `@./.unicli-rules/memory/*.md` |
-| Gemini CLI | Appended as a memory block at the end of `GEMINI.md` |
 | Cursor | Exposed as `.cursor/rules/memory.mdc` with `alwaysApply: true` |
 | Kiro | Accessible via the `.kiro/unicli-rules` symlink and copied to `.kiro/steering/03-memory.md` |
 | Codex | Prepended to root `AGENTS.md` (Codex reads up to `project_doc_max_bytes`, so important facts are placed first) |
