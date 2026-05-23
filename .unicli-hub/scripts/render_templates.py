@@ -63,14 +63,17 @@ def main():
         "AGY.md": (TEMPLATES / "AGY.md.tmpl", "agy"),
     }
 
+    target_aliases = {
+        "antigravity": {"agents", "agy"},
+        "agy": {"agents", "agy"},
+        "gemini": {"gemini"},
+        "codex": {"agents"},
+        "claude": {"claude"},
+    }
+
     for name, (tmpl, cli_name) in targets.items():
-        if TARGET_CLI is not None:
-            if TARGET_CLI == "antigravity" and cli_name in ["agents", "gemini", "agy"]:
-                pass
-            elif cli_name == "agents" and TARGET_CLI != "antigravity":
-                continue
-            elif cli_name != "agents" and cli_name != TARGET_CLI:
-                continue
+        if TARGET_CLI is not None and cli_name not in target_aliases.get(TARGET_CLI, {TARGET_CLI}):
+            continue
 
         content = assemble(tmpl, cli_name)
         if content: compare_or_write(ROOT / name, content)

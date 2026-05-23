@@ -132,7 +132,8 @@
       "_comment": "Project-specific TMF KB. Remove or update the --directory path for your project.",
       "_targets": [
         "claude",
-        "cursor"
+        "cursor",
+        "codex"
       ]
     },
     "serena": {

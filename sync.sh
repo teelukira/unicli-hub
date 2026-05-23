@@ -4,6 +4,7 @@
 # Usage:
 #   ./sync.sh --fix    [default] Sync all targets from hub/
 #   ./sync.sh --check   Verify sync (exit 1 on drift)
+#   ./sync.sh --fix --target=codex
 
 set -e
 
@@ -14,12 +15,13 @@ MODE="fix"
 TARGET_FLAG=""
 for arg in "$@"; do
     if [[ "$arg" == "--check" ]]; then MODE="check"; fi
+    if [[ "$arg" == --target=* ]]; then TARGET_FLAG="$arg"; fi
 done
 
-echo "--- UniCLI-Hub Sync ($MODE) ---"
+echo "--- UniCLI-Hub Sync ($MODE${TARGET_FLAG:+, $TARGET_FLAG}) ---"
 
 # Clean up legacy Antigravity structures to avoid conflicts
-if [ "$MODE" = "fix" ]; then
+if [ "$MODE" = "fix" ] && [ -z "$TARGET_FLAG" ]; then
     if [ -d "$ROOT/.agents/plugins" ]; then
         echo "Cleaning legacy plugins directory..."
         rm -rf "$ROOT/.agents/plugins"

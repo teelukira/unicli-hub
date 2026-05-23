@@ -17,6 +17,7 @@ CURSOR_HOOKS_SRC = HUB / "cursor-hooks.json"
 # Targets
 CLAUDE_SETTINGS = ROOT / ".claude" / "settings.json"
 CURSOR_HOOKS = ROOT / ".cursor" / "hooks.json"
+ANTIGRAVITY_SETTINGS = ROOT / ".agents" / "settings.json"
 GEMINI_SETTINGS = ROOT / ".gemini" / "settings.json"
 
 MODE = "fix"
@@ -36,16 +37,6 @@ def compare_or_write(target: pathlib.Path, content: str):
         print(f"wrote: {target.relative_to(ROOT)}")
 
 
-def read_json(path: pathlib.Path) -> dict:
-    if path.exists():
-        with path.open(encoding="utf-8") as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return {}
-    return {}
-
-
 def render_claude():
     if not CLAUDE_HOOKS_SRC.exists():
         return
@@ -60,11 +51,37 @@ def render_cursor():
     compare_or_write(CURSOR_HOOKS, content)
 
 
-def render_gemini():
+def render_agy_hooks() -> str:
     if not CLAUDE_HOOKS_SRC.exists():
-        return
-    content = CLAUDE_HOOKS_SRC.read_text(encoding="utf-8")
-    compare_or_write(GEMINI_SETTINGS, content)
+        return '{"hooks": {}}\n'
+    raw_content = CLAUDE_HOOKS_SRC.read_text(encoding="utf-8")
+    try:
+        data = json.loads(raw_content)
+        hooks = data.get("hooks", {})
+        agy_hooks = {}
+
+        event_map = {
+            "PreToolUse": "BeforeTool",
+            "PostToolUse": "AfterTool",
+            "SessionStart": "SessionStart",
+            # Stop is intentionally omitted: agy/gemini settings reject it.
+        }
+
+        for source_event, target_event in event_map.items():
+            if source_event in hooks:
+                agy_hooks[target_event] = hooks[source_event]
+
+        return json.dumps({"hooks": agy_hooks}, indent=2) + "\n"
+    except Exception:
+        return '{"hooks": {}}\n'
+
+
+def render_antigravity():
+    compare_or_write(ANTIGRAVITY_SETTINGS, render_agy_hooks())
+
+
+def render_gemini():
+    compare_or_write(GEMINI_SETTINGS, render_agy_hooks())
 
 
 def main():
@@ -79,7 +96,9 @@ def main():
         render_claude()
     if TARGET_CLI in [None, "cursor"]:
         render_cursor()
-    if TARGET_CLI in [None, "antigravity", "gemini"]:
+    if TARGET_CLI in [None, "antigravity", "agy"]:
+        render_antigravity()
+    if TARGET_CLI in [None, "gemini"]:
         render_gemini()
 
     if MODE == "check" and DRIFT:
