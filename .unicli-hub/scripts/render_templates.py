@@ -14,6 +14,9 @@ MODE = "fix"
 TARGET_CLI = None
 DRIFT = False
 
+CURSOR_RULES = ROOT / ".cursor" / "rules"
+KIRO_STEERING = ROOT / ".kiro" / "steering"
+
 def compare_or_write(target: pathlib.Path, content: str):
     global DRIFT
     if MODE == "check":
@@ -47,6 +50,24 @@ def assemble(tmpl_path: pathlib.Path, cli_name: str) -> str:
                 .replace("{{MEMORY}}", memory)
                 .replace("{{PLUGINS}}", plugins))
 
+
+def load_project_context() -> str:
+    path = HUB / "project-context.md"
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def load_memory() -> str:
+    memory = ""
+    for mf in ["project-facts.md", "conventions.md", "glossary.md"]:
+        p = HUB / "memory" / mf
+        if p.exists():
+            memory += p.read_text(encoding="utf-8") + "\n\n"
+    return memory
+
+
+def cursor_rule(frontmatter: str, body: str) -> str:
+    return frontmatter.rstrip() + "\n\n" + body.strip() + "\n"
+
 def main():
     global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
@@ -74,6 +95,34 @@ def main():
 
         content = assemble(tmpl, cli_name)
         if content: compare_or_write(ROOT / name, content)
+
+    if TARGET_CLI in [None, "cursor"]:
+        ctx = load_project_context()
+        if ctx:
+            compare_or_write(
+                CURSOR_RULES / "project-context.mdc",
+                cursor_rule(
+                    "---\nalwaysApply: true\ndescription: Project context generated from hub/project-context.md\n---",
+                    ctx,
+                ),
+            )
+        memory = load_memory()
+        if memory:
+            compare_or_write(
+                CURSOR_RULES / "memory.mdc",
+                cursor_rule(
+                    "---\nalwaysApply: true\ndescription: Shared memory generated from hub/memory/*.md\n---",
+                    memory,
+                ),
+            )
+
+    if TARGET_CLI in [None, "kiro"]:
+        ctx = load_project_context()
+        if ctx:
+            compare_or_write(KIRO_STEERING / "01-project-context.md", ctx.rstrip() + "\n")
+        memory = load_memory()
+        if memory:
+            compare_or_write(KIRO_STEERING / "03-memory.md", memory.rstrip() + "\n")
 
     if MODE == "check" and DRIFT:
         sys.exit(1)

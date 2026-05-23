@@ -117,24 +117,6 @@
       ],
       "env": {}
     },
-    "atom-tmf-kb-mcp": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "/Users/1111207/atom-tmf-kb-mcp",
-        "python",
-        "-m",
-        "tmf_kb_mcp"
-      ],
-      "env": {},
-      "_comment": "Project-specific TMF KB. Remove or update the --directory path for your project.",
-      "_targets": [
-        "claude",
-        "cursor",
-        "codex"
-      ]
-    },
     "serena": {
       "command": "serena",
       "args": [

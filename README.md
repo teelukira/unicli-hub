@@ -1,112 +1,92 @@
-# UniCLI-Hub: The Frugal AI Nomad's Workspace
+# UniCLI-Hub
 
-> *(Company won't sponsor your tools? We got you.)*
+UniCLI-Hub is a mock/reference framework for keeping AI CLI configuration in one canonical place and fanning it out to multiple tools.
 
-**UniCLI-Hub** is a centralized **SSOT (Single Source of Truth) Framework** for developers who are tired of AI subscription fatigue and context fragmentation.
+It is not an application project and should not contain customer, product, or delivery-workstream context. Its purpose is to demonstrate and maintain the mechanics for shared agents, skills, hooks, MCP servers, memory, and generated entry documents across AI CLIs.
 
-## The Problem: Subscription Fatigue & Context Fragmentation
+For Korean documentation, see [README.ko.md](./README.ko.md).
 
-AI tools are amazing, but paying $20/month for *every single one* is unsustainable. When you jump between free tiers of different AI CLIs (Claude, Gemini, Cursor, etc.) to bypass rate limits, your AI's "brain" becomes fragmented. You lose your custom skills, agents, and project memory.
+## What This Framework Does
 
-## The Solution: One Hub to Rule Them All
+UniCLI-Hub treats `hub/` as the single source of truth and renders generated files into tool-specific locations:
 
-**UniCLI-Hub** centralizes your **Agents, Skills, Hooks, and MCP Servers** in a single directory. It automatically fans out these assets to all supported CLI tools, ensuring that no matter which tool you are using *right now*, it has the same context and capabilities.
-
-**With UniCLI-Hub, you can:**
-- **Switch Seamlessly:** Run out of Claude tokens? Switch to Antigravity (agy) without re-explaining your architecture.
-- **Unified Memory:** Share project facts, conventions, and glossaries across all tools.
-- **Automated Tooling:** Centralize MCP server definitions and hook logic.
-- **Save Money:** Maximize the value of free tiers by treating multiple tools as a single "Pro" experience.
-
-> Prefer 한국어? See [README.ko.md](./README.ko.md).
-
----
+| Asset | Canonical source | Generated targets |
+|---|---|---|
+| Entry docs | `.unicli-hub/templates/*.tmpl`, `hub/memory/`, `hub/project-context.md` | `AGENTS.md`, `CLAUDE.md` |
+| Agents | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/prompts/` |
+| Skills | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/prompts/skill-*.md` |
+| Hooks | `hub/hooks/`, `hub/*-hooks.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
+| MCP servers | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.codex/config.toml` |
+| Memory | `hub/memory/*.md` | embedded in generated entry docs |
 
 ## Supported CLIs
 
 | CLI | Derived location | Entry point |
-|-----|------------------|-------------|
-| **Antigravity (agy)** | `.agents/` | `AGENTS.md` |
-| **Claude Code** | `.claude/` | `CLAUDE.md` |
-| **Cursor** | `.cursor/` | `.cursor/rules/*.mdc` |
-| **Kiro** | `.kiro/` | `.kiro/steering/*.md` |
-| **OpenAI Codex** | `.codex/` | `AGENTS.md` |
+|---|---|---|
+| Antigravity / agy | `.agents/` | `AGENTS.md` |
+| Claude Code | `.claude/` | `CLAUDE.md` |
+| Cursor | `.cursor/` | `AGENTS.md` plus Cursor files |
+| Kiro | `.kiro/` | generated steering and agent files |
+| OpenAI Codex | `.codex/` | `AGENTS.md` plus prompt files |
 
----
+## Repository Layout
 
-## Quick Start
+```text
+.
+├── hub/                    # canonical framework content
+│   ├── agents/             # optional source agent prompts
+│   ├── skills/             # optional source skills
+│   ├── hooks/              # hook scripts shared across CLIs
+│   ├── memory/             # generated entry-doc memory snippets
+│   ├── common/             # framework reference docs
+│   ├── mcp-servers.json    # MCP server registry
+│   └── project-context.md  # framework context for future agents
+├── .unicli-hub/            # renderer implementation and templates
+│   ├── scripts/            # render_agents/render_skills/render_hooks/render_mcp/render_templates
+│   └── templates/          # AGENTS.md and CLAUDE.md templates
+├── sync.sh                 # one command to regenerate all targets
+├── AGENTS.md               # generated
+└── CLAUDE.md               # generated
+```
+
+## Working Rules
+
+Edit canonical files under `hub/` or `.unicli-hub/templates/`.
+
+Do not edit generated targets directly: `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.cursor/`, `.agents/`, `.kiro/`, `.codex/`, `.mcp.json`, and generated MCP/config files. The generated-file hook points edits back to the canonical source.
+
+After changing canonical content, run:
 
 ```bash
-# 1) Clone the framework
-git clone <this-repo> my-project && cd my-project
-
-# 2) Edit the SSOT sources in hub/
-#    - hub/project-context.md
-#    - hub/memory/project-facts.md
-#    - hub/mcp-servers.json
-
-# 3) Synchronize all CLI targets
 ./sync.sh --fix
-
-# 4) Launch your favorite tool
-agy                   # Antigravity CLI
-claude                # Claude Code
-cursor .              # Cursor
+./sync.sh --check
 ```
 
----
+`--fix` regenerates derived files and removes stale generated agents/skills. `--check` fails if any generated output has drifted.
 
-## Framework Structure
+## Current Baseline
 
-UniCLI-Hub separates the **Framework Core** from your **Project Data**.
+This framework is intentionally generic. The current baseline keeps:
 
-### 1. The Hub (`hub/`) — YOUR DATA
-This is where you define the **Single Source of Truth**. **Edit these files.**
-- `hub/agents/`: Canonical prompts for shared and specialized agents.
-- `hub/skills/`: Custom skills (markdown + references).
-- `hub/hooks/`: Shared Python hook logic.
-- `hub/memory/`: Project facts, conventions, and glossary.
-- `hub/mcp-servers.json`: Unified MCP configuration.
-- `hub/project-context.md`: The "big picture" of your project.
+- fanout renderers for agents, skills, hooks, MCP, and entry templates
+- generated-file protection hooks
+- MCP propagation structure
+- one generic example skill: `html-report`
+- memory placeholders for project facts, conventions, and glossary
 
-### 2. The Core (`.unicli-hub/`) — FRAMEWORK LOGIC
-Internal logic for fanning out assets. You rarely need to touch this.
-- `scripts/`: Python renderers for Agents, Skills, Hooks, MCP, and Templates.
-- `templates/`: Base templates for CLI entry points (`CLAUDE.md.tmpl`, etc.).
+This baseline intentionally excludes:
 
-### 3. Derived Targets (Generated)
-**Never edit these directly.** They are managed by `./sync.sh`.
-- Root: `CLAUDE.md`, `AGENTS.md`.
-- Tool Dirs: `.claude/`, `.agents/`, `.cursor/`, `.kiro/`, `.codex/`.
+- methodology-specific lifecycle workflow content
+- customer or product-specific agents and skills
+- delivery gate policy tied to a specific issue tracker or forge
+- domain-specific context
 
----
+## Adding Content
 
-## The Rule: Edit Once, Sync Everywhere
+To add an agent, place source files in `hub/agents/` and run `./sync.sh --fix`.
 
-1.  Modify your canonical source under `hub/`.
-2.  Run `./sync.sh --fix`.
-3.  The framework uses **Python-based guards** (`generated_file_guard.py`) to block accidental edits to derived files, redirecting you back to the `hub/`.
+To add a skill, create `hub/skills/<skill-name>/SKILL.md`; optional support files can live beside it. The skill renderer copies folder contents and reference files to supported targets.
 
----
+To add or remove MCP servers, edit `hub/mcp-servers.json`. Keep secrets out of the file; use inherited environment variables or wrapper scripts where a CLI cannot expand environment variables in JSON args.
 
-## Advanced Features
-
-### Unified MCP Configuration
-Edit `hub/mcp-servers.json` to define your tools (Tavily, JIRA, GitLab, etc.). Running `./sync.sh` will automatically configure them for all supported CLIs, including updating the `allowed` list for Antigravity.
-
-### Specialized Agents
-Drop a markdown prompt into `hub/agents/` and a `.kiro.json` metadata file. The framework will generate the corresponding agent for all five platforms.
-
----
-
-## CI Integration
-
-A `.pre-commit-config.yaml` is included. Install it to ensure no derived files drift in your commits:
-```bash
-pre-commit install
-```
-This runs `./sync.sh --check` before every commit.
-
----
-
-*UniCLI-Hub: One Hub to rule them all.*
+To change generated entry document wording, edit `.unicli-hub/templates/AGENTS.md.tmpl` or `.unicli-hub/templates/CLAUDE.md.tmpl`.

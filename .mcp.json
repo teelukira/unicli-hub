@@ -85,18 +85,6 @@
       ],
       "env": {}
     },
-    "atom-tmf-kb-mcp": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "/Users/1111207/atom-tmf-kb-mcp",
-        "python",
-        "-m",
-        "tmf_kb_mcp"
-      ],
-      "env": {}
-    },
     "serena": {
       "command": "serena",
       "args": [

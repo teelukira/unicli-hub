@@ -16,6 +16,7 @@ ENV_LOCAL = ROOT / ".env.local"
 TARGETS = {
     "claude": ROOT / ".mcp.json",
     "cursor": ROOT / ".cursor" / "mcp.json",
+    "kiro": ROOT / ".kiro" / "settings" / "mcp.json",
     "codex": ROOT / ".codex" / "config.toml",
 }
 
@@ -197,7 +198,13 @@ def main():
         clean = strip_meta(ag_servers)
         compare_or_write(ROOT / ".agents" / "mcp_config.json", json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
 
-    # 5. Codex (TOML — project-local config)
+    # 5. Kiro / VS Code style JSON
+    if TARGET_CLI in [None, "kiro"]:
+        cli_servers = filter_servers(raw_servers_subst, "kiro")
+        clean = strip_meta(cli_servers)
+        compare_or_write(TARGETS["kiro"], json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
+
+    # 6. Codex (TOML — project-local config)
     if TARGET_CLI in [None, "codex"]:
         cli_servers = filter_servers(raw_servers_subst, "codex")
         compare_or_write(TARGETS["codex"], render_codex_toml(cli_servers))
