@@ -1,4 +1,5 @@
 ---
+name: html-report
 description: "JSON 스펙으로 자체 완결형 HTML 리포트를 생성합니다. QA 리포트, 데이터 매핑 리포트, 감사 요약, 대시보드 등 독립 HTML 문서를 만들 때 사용합니다."
 ---
 

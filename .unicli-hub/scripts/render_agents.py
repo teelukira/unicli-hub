@@ -62,6 +62,23 @@ def split_frontmatter(content: str):
         return fm, body
     return {}, content
 
+
+def derive_description(agent_name: str, body: str, fm: dict) -> str:
+    if fm.get("description"):
+        return fm["description"]
+
+    for line in body.splitlines():
+        line = line.strip()
+        if line.startswith("# "):
+            return line[2:].strip()
+
+    for line in body.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            return line[:160]
+
+    return f"Agent {agent_name}"
+
 def render_all_agents():
     for src in sorted(AGENTS_SRC.glob("*.md")):
         a = src.stem
@@ -69,11 +86,13 @@ def render_all_agents():
         raw_content = src.read_text(encoding="utf-8")
         
         fm, body = split_frontmatter(raw_content)
+        description = derive_description(a, body, fm)
         
         # Claude
         if TARGET_CLI in [None, "claude"]:
             fm_claude = fm.copy()
             fm_claude["name"] = a
+            fm_claude["description"] = description
             if a not in MODELS["claude"]:
                  fm_claude["model"] = "claude-3-5-sonnet-20241022"
             else:
@@ -87,7 +106,7 @@ def render_all_agents():
         # Cursor
         if TARGET_CLI in [None, "cursor"]:
             fm_cursor = fm.copy()
-            fm_cursor["description"] = fm.get("description", f"Agent {a}")
+            fm_cursor["description"] = description
             fm_cursor["source"] = f"hub/agents/{a}.md"
             
             fm_lines = ["---"]
@@ -107,7 +126,7 @@ def render_all_agents():
                 
             antigravity_content = json.dumps({
                 "name": a,
-                "description": fm.get("description", f"Agent {a}"),
+                "description": description,
                 "system_prompt": body,
                 "enable_mcp_tools": True,
                 "enable_write_tools": True,

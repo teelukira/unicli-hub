@@ -1,4 +1,5 @@
 ---
+name: tgoim-doc-pipeline
 description: >-
   TGO-IM 데이터 모델 문서 파이프라인 — DB 스키마 정의서, IMOWN↔SID 매핑, PG↔SID 매핑을 생성하거나
   갱신할 때 사용합니다. 새 서비스나 IMOWN 테이블 추가, 스크립트 재실행, TMF 속성 감사 노트 작성 시 반드시 이 스킬을 사용합니다.

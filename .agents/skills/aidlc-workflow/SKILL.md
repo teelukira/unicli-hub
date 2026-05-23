@@ -151,7 +151,7 @@ The coordinator only reads ext_config — it NEVER writes it. Only `aidlc-requir
 Task({
   description: "Run aidlc-<stage> skill for [active_unit / context]",
   prompt: "You are the aidlc-<stage> skill. [Stage-specific context from state]. [relevant ext_config flags]. Proceed.",
-  subagent_type: "claude"
+  subagent_type: "aidlc-<stage>"
 })
 ```
 

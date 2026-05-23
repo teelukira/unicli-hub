@@ -1,4 +1,5 @@
 ---
+name: imown-sid-pg-lineage-report
 description: >-
   IMOWN MySQL → TMF SID ABE → PostgreSQL 3계층 데이터 리니지 리포트를 생성하거나 갱신할 때 사용합니다.
   IMOWN/SID/PG 어느 한 쪽이 변경됐거나 단위 종료 시점에 리포트 갱신이 필요할 때 호출합니다.
