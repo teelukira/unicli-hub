@@ -11,14 +11,36 @@ import shutil
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 HUB = ROOT / "hub"
-AGENTS_SRC = HUB / "agents"
+REGISTRY_DIR = HUB / "registry"
+FANOUT_REGISTRY = REGISTRY_DIR / "fanout.json"
+AGENT_PROFILES_REGISTRY = REGISTRY_DIR / "agent-profiles.json"
 
+
+def resolve_path(path_value: str) -> pathlib.Path:
+    path = pathlib.Path(path_value).expanduser()
+    if path.is_absolute():
+        return path
+    return ROOT / path
+
+
+def read_json(path: pathlib.Path) -> dict:
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+FANOUT = read_json(FANOUT_REGISTRY).get("agents", {})
+AGENTS_SRC = resolve_path(FANOUT.get("source", "hub/agents"))
 TARGETS = {
-    "claude": ROOT / ".claude" / "agents",
-    "cursor": ROOT / ".cursor" / "agents",
-    "codex": ROOT / ".codex" / "prompts",
-    "antigravity": ROOT / ".agents" / "agents",
-    "antigravity_global": pathlib.Path.home() / ".gemini" / "antigravity-cli" / "agents",
+    name: resolve_path(path)
+    for name, path in FANOUT.get("targets", {
+        "claude": ".claude/agents",
+        "cursor": ".cursor/agents",
+        "codex": ".codex/prompts",
+        "antigravity": ".agents/agents",
+        "antigravity_global": "~/.gemini/antigravity-cli/agents",
+    }).items()
 }
 
 MODELS = {
@@ -28,6 +50,14 @@ MODELS = {
         "reviewer": "claude-3-5-sonnet-20241022"
     },
 }
+
+AGENT_PROFILES = read_json(AGENT_PROFILES_REGISTRY)
+CODEX_AGENT_PROFILES = AGENT_PROFILES.get("codex", {})
+DEFAULT_CODEX_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("codex", {
+    "model": "gpt-5.4-mini",
+    "reasoning_effort": "medium",
+    "role": "general",
+})
 
 MODE = "fix"
 TARGET_CLI = None
@@ -62,10 +92,9 @@ def split_frontmatter(content: str):
         return fm, body
     return {}, content
 
-
 def derive_description(agent_name: str, body: str, fm: dict) -> str:
     if fm.get("description"):
-        return fm["description"]
+        return fm["description"].strip().strip('"')
 
     for line in body.splitlines():
         line = line.strip()
@@ -78,6 +107,28 @@ def derive_description(agent_name: str, body: str, fm: dict) -> str:
             return line[:160]
 
     return f"Agent {agent_name}"
+
+def render_codex_agent(agent_name: str, body: str, description: str) -> str:
+    profile = CODEX_AGENT_PROFILES.get(agent_name, DEFAULT_CODEX_AGENT_PROFILE)
+    fm = {
+        "name": agent_name,
+        "description": description,
+        "codex_model": profile["model"],
+        "codex_reasoning_effort": profile["reasoning_effort"],
+        "codex_role": profile["role"],
+    }
+    fm_lines = ["---"]
+    for key, value in fm.items():
+        fm_lines.append(f"{key}: {value}")
+    fm_lines.append("---")
+    guidance = (
+        "\n## Codex Subagent Execution Profile\n\n"
+        f"- Spawn with `model=\"{profile['model']}\"` and "
+        f"`reasoning_effort=\"{profile['reasoning_effort']}\"` when this prompt is delegated via "
+        "`multi_agent_v1.spawn_agent`.\n"
+        "- Keep task scope narrow and load only the referenced project files before editing or reviewing.\n\n"
+    )
+    return "\n".join(fm_lines) + "\n" + guidance + body
 
 def render_all_agents():
     for src in sorted(AGENTS_SRC.glob("*.md")):
@@ -92,7 +143,6 @@ def render_all_agents():
         if TARGET_CLI in [None, "claude"]:
             fm_claude = fm.copy()
             fm_claude["name"] = a
-            fm_claude["description"] = description
             if a not in MODELS["claude"]:
                  fm_claude["model"] = "claude-3-5-sonnet-20241022"
             else:
@@ -106,7 +156,7 @@ def render_all_agents():
         # Cursor
         if TARGET_CLI in [None, "cursor"]:
             fm_cursor = fm.copy()
-            fm_cursor["description"] = description
+            fm_cursor["description"] = fm.get("description", f"Agent {a}")
             fm_cursor["source"] = f"hub/agents/{a}.md"
             
             fm_lines = ["---"]
@@ -116,7 +166,7 @@ def render_all_agents():
         
         # Codex
         if TARGET_CLI in [None, "codex"]:
-            compare_or_write(TARGETS["codex"] / f"{a}.md", body)
+            compare_or_write(TARGETS["codex"] / f"{a}.md", render_codex_agent(a, body, description))
 
         # Antigravity
         if TARGET_CLI in [None, "antigravity"]:
@@ -126,7 +176,7 @@ def render_all_agents():
                 
             antigravity_content = json.dumps({
                 "name": a,
-                "description": description,
+                "description": fm.get("description", f"Agent {a}"),
                 "system_prompt": body,
                 "enable_mcp_tools": True,
                 "enable_write_tools": True,

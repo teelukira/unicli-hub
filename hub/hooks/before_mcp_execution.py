@@ -1,30 +1,18 @@
 #!/usr/bin/env python3
 """
-before_mcp_execution.py — Minimal reference stub for MCP tool gate.
+before_mcp_execution.py - MCP hook skeleton.
 
-Per-CLI event names that map to this hook:
-  Claude Code : PreToolUse with matcher "mcp__*"  (.claude/settings.json)
-  Cursor      : beforeMCPExecution                (.cursor/hooks.json)
-  Gemini CLI  : BeforeTool (MCP calls are regular tool calls in Gemini)
-  Antigravity : (no hook system as of 2026-05)
-
-Stdin : JSON event payload.
-  server_name : str  — MCP server (e.g. "mcp-atlassian")
-  tool_name   : str  — MCP tool   (e.g. "jira_create_issue")
-  tool_input  : dict — arguments
-  session_id  : str
-
-Stdout: JSON {"permission":"allow"|"deny", "reason"?:str}.
+Keep MCP gate policy here or in imported guard modules. The default framework
+allows all MCP tools; projects can add gated tool names below.
 """
 
 import json
 import sys
 
-# MCP tools that require explicit user confirmation before running
 GATED_TOOLS = [
     # "jira_create_issue",
     # "jira_transition_issue",
-    # "gitlab__create_merge_request",
+    # "gitlab_create_merge_request",
 ]
 
 
@@ -34,12 +22,10 @@ def main() -> None:
     except (json.JSONDecodeError, ValueError):
         payload = {}
 
-    tool_name = payload.get("tool_name", "")
-
-    # --- Add your MCP gate logic here ---
-    # if tool_name in GATED_TOOLS:
-    #     print(json.dumps({"permission": "deny", "reason": f"{tool_name} requires human review first"}))
-    #     return
+    tool_name = payload.get("tool_name") or payload.get("toolName") or payload.get("name") or ""
+    if tool_name in GATED_TOOLS:
+        print(json.dumps({"permission": "deny", "reason": f"{tool_name} requires explicit project approval"}))
+        return
 
     print(json.dumps({"permission": "allow"}))
 

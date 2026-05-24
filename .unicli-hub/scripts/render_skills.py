@@ -8,19 +8,43 @@ import sys
 import pathlib
 import re
 import shutil
+import json
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
-CANONICAL = ROOT / "hub" / "skills"
+FANOUT_REGISTRY = ROOT / "hub" / "registry" / "fanout.json"
+
+
+def resolve_path(path_value: str) -> pathlib.Path:
+    path = pathlib.Path(path_value).expanduser()
+    if path.is_absolute():
+        return path
+    return ROOT / path
+
+
+def read_json(path: pathlib.Path) -> dict:
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+FANOUT = read_json(FANOUT_REGISTRY).get("skills", {})
+CANONICAL = resolve_path(FANOUT.get("source", "hub/skills"))
 
 TARGETS = {
-    "claude": ROOT / ".claude" / "skills",
-    "cursor": ROOT / ".cursor" / "skills",
-    "antigravity": ROOT / ".agents" / "skills",
+    name: resolve_path(path)
+    for name, path in FANOUT.get("targets", {
+        "claude": ".claude/skills",
+        "cursor": ".cursor/skills",
+        "antigravity": ".agents/skills",
+    }).items()
+    if name in {"claude", "cursor", "antigravity"}
 }
 
 # Flat targets
-KIRO_STEERING = ROOT / ".kiro" / "steering"
-CODEX_PROMPTS = ROOT / ".codex" / "prompts"
+_SKILL_TARGETS = FANOUT.get("targets", {})
+KIRO_STEERING = resolve_path(_SKILL_TARGETS.get("kiro", ".kiro/steering"))
+CODEX_PROMPTS = resolve_path(_SKILL_TARGETS.get("codex", ".codex/prompts"))
 
 MODE = "fix"
 TARGET_CLI = None

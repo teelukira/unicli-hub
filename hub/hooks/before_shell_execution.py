@@ -1,24 +1,14 @@
 #!/usr/bin/env python3
 """
-before_shell_execution.py — Minimal reference stub for shell command gate.
+before_shell_execution.py - shell hook skeleton.
 
-Per-CLI event names that map to this hook:
-  Claude Code : (no built-in shell gate — use PreToolUse with matcher "Bash")
-  Cursor      : beforeShellExecution  (.cursor/hooks.json → hooks.beforeShellExecution)
-  Gemini CLI  : (no shell-specific event — use BeforeTool)
-  Antigravity : (no hook system as of 2026-05)
-
-Stdin : JSON event payload.
-  command    : str  — the shell command about to run
-  session_id : str
-
-Stdout: JSON {"permission":"allow"|"deny", "reason"?:str}.
+This framework keeps shell policy in code, not prose. Add project-specific
+checks here or delegate to additional guard modules under hub/hooks/.
 """
 
 import json
 import sys
 
-# Patterns that should prompt a deny (customize for your project)
 SENSITIVE_PATTERNS = [
     ".env",
     "id_rsa",
@@ -33,14 +23,11 @@ def main() -> None:
     except (json.JSONDecodeError, ValueError):
         payload = {}
 
-    command = payload.get("command", "")
-
-    # --- Add your shell gate logic here ---
-    # Example: block commands that touch sensitive files
-    # for pattern in SENSITIVE_PATTERNS:
-    #     if pattern in command:
-    #         print(json.dumps({"permission": "deny", "reason": f"Command touches sensitive path: {pattern}"}))
-    #         return
+    command = payload.get("command", "") or payload.get("shellCommand", "")
+    for pattern in SENSITIVE_PATTERNS:
+        if pattern in command:
+            print(json.dumps({"permission": "deny", "reason": f"Command touches sensitive path: {pattern}"}))
+            return
 
     print(json.dumps({"permission": "allow"}))
 

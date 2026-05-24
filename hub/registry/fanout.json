@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "agents": {
+    "source": "hub/agents",
+    "orphan_policy": "delete_unproduced",
+    "targets": {
+      "claude": ".claude/agents",
+      "cursor": ".cursor/agents",
+      "codex": ".codex/prompts",
+      "antigravity": ".agents/agents"
+    }
+  },
+  "skills": {
+    "source": "hub/skills",
+    "orphan_policy": "delete_unproduced",
+    "targets": {
+      "claude": ".claude/skills",
+      "cursor": ".cursor/skills",
+      "antigravity": ".agents/skills",
+      "kiro": ".kiro/steering",
+      "codex": ".codex/prompts"
+    }
+  },
+  "static_copies": {}
+}

@@ -46,6 +46,11 @@ if [ "$MODE" = "fix" ] && [ -z "$TARGET_FLAG" ]; then
         echo "Removing legacy AGY.md..."
         rm -f "$ROOT/AGY.md"
     fi
+    if [ -d "$ROOT/.cursor/hooks" ]; then
+        echo "Cleaning legacy Cursor hooks directory..."
+        rm -rf "$ROOT/.cursor/hooks"
+    fi
+    find "$ROOT/hub" "$ROOT/.cursor" "$ROOT/.agents" "$ROOT/.claude" -type d -name "__pycache__" -prune -exec rm -rf {} +
 fi
 
 # 1. Ensure Python dependencies if any (usually built-in)
@@ -56,6 +61,9 @@ python3 "$CORE_SCRIPTS/render_agents.py" --$MODE $TARGET_FLAG
 
 # 3. Render Skills
 python3 "$CORE_SCRIPTS/render_skills.py" --$MODE $TARGET_FLAG
+
+# 3.5 Render static declared fan-out copies
+python3 "$CORE_SCRIPTS/render_static.py" --$MODE $TARGET_FLAG
 
 # 4. Render Hooks and Settings
 python3 "$CORE_SCRIPTS/render_hooks.py" --$MODE $TARGET_FLAG

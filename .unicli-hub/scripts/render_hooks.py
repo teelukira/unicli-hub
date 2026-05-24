@@ -1,98 +1,108 @@
 #!/usr/bin/env python3
 """
-render_hooks.py — Fan-out hook configurations from hub/ to all AI CLI targets.
+render_hooks.py - render hook configurations from hub/registry/hook-events.json.
 """
 
 import json
-import sys
 import pathlib
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
-HUB = ROOT / "hub"
-
-# Canonical hook sources (SSOT)
-CLAUDE_HOOKS_SRC = HUB / "claude-hooks.json"
-CURSOR_HOOKS_SRC = HUB / "cursor-hooks.json"
-
-# Targets
-CLAUDE_SETTINGS = ROOT / ".claude" / "settings.json"
-CURSOR_HOOKS = ROOT / ".cursor" / "hooks.json"
-ANTIGRAVITY_SETTINGS = ROOT / ".agents" / "settings.json"
+REGISTRY = ROOT / "hub" / "registry" / "hook-events.json"
 
 MODE = "fix"
 TARGET_CLI = None
 DRIFT = False
 
 
-def compare_or_write(target: pathlib.Path, content: str):
+def display_path(path: pathlib.Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def compare_or_write(target: pathlib.Path, content: str) -> None:
     global DRIFT
     target.parent.mkdir(parents=True, exist_ok=True)
     if MODE == "check":
         if not target.exists() or target.read_text(encoding="utf-8") != content:
-            print(f"DRIFT: {target.relative_to(ROOT)}")
+            print(f"DRIFT: {display_path(target)}")
             DRIFT = True
     else:
         target.write_text(content, encoding="utf-8")
-        print(f"wrote: {target.relative_to(ROOT)}")
+        print(f"wrote: {display_path(target)}")
 
 
-def render_claude():
-    if not CLAUDE_HOOKS_SRC.exists():
-        return
-    content = CLAUDE_HOOKS_SRC.read_text(encoding="utf-8")
-    compare_or_write(CLAUDE_SETTINGS, content)
+def load_registry() -> dict:
+    if not REGISTRY.exists():
+        print(f"ERROR: missing hook registry: {display_path(REGISTRY)}", file=sys.stderr)
+        sys.exit(1)
+    with REGISTRY.open(encoding="utf-8") as f:
+        return json.load(f)
 
 
-def render_cursor():
-    if not CURSOR_HOOKS_SRC.exists():
-        return
-    content = CURSOR_HOOKS_SRC.read_text(encoding="utf-8")
-    compare_or_write(CURSOR_HOOKS, content)
+def render_claude_like(commands: dict, target: dict) -> str:
+    hooks = {}
+    for logical_event, target_event in target.get("events", {}).items():
+        command = commands[logical_event]
+        hooks[target_event] = [
+            {
+                "matcher": command.get("matcher", "*"),
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": command["command"],
+                        "timeout": command.get("timeout", 10),
+                    }
+                ],
+            }
+        ]
+    return json.dumps({"hooks": hooks}, indent=2, ensure_ascii=False) + "\n"
 
 
-def render_agy_hooks() -> str:
-    if not CLAUDE_HOOKS_SRC.exists():
-        return '{"hooks": {}}\n'
-    raw_content = CLAUDE_HOOKS_SRC.read_text(encoding="utf-8")
-    try:
-        data = json.loads(raw_content)
-        hooks = data.get("hooks", {})
-        agy_hooks = {}
-
-        event_map = {
-            "PreToolUse": "BeforeTool",
-            "PostToolUse": "AfterTool",
-            "SessionStart": "SessionStart",
-            # Stop is intentionally omitted: agy/gemini settings reject it.
+def render_cursor(commands: dict, target: dict) -> str:
+    hooks = {}
+    fail_closed = target.get("fail_closed", False)
+    for logical_event, target_event in target.get("events", {}).items():
+        command = commands[logical_event]
+        entry = {
+            "command": command["command"],
+            "failClosed": fail_closed,
+            "timeout": command.get("timeout", 10),
         }
-
-        for source_event, target_event in event_map.items():
-            if source_event in hooks:
-                agy_hooks[target_event] = hooks[source_event]
-
-        return json.dumps({"hooks": agy_hooks}, indent=2) + "\n"
-    except Exception:
-        return '{"hooks": {}}\n'
+        if "matcher" in command:
+            entry["matcher"] = command["matcher"]
+        hooks[target_event] = [entry]
+    return json.dumps({"version": target.get("version", 1), "hooks": hooks}, indent=2, ensure_ascii=False) + "\n"
 
 
-def render_antigravity():
-    compare_or_write(ANTIGRAVITY_SETTINGS, render_agy_hooks())
+def render_target(commands: dict, name: str, target: dict) -> None:
+    fmt = target.get("format")
+    if fmt == "claude":
+        content = render_claude_like(commands, target)
+    elif fmt == "cursor":
+        content = render_cursor(commands, target)
+    else:
+        print(f"ERROR: unsupported hook format for {name}: {fmt}", file=sys.stderr)
+        sys.exit(1)
+    compare_or_write(ROOT / target["path"], content)
 
 
-def main():
-    global MODE, DRIFT, TARGET_CLI
+def main() -> None:
+    global MODE, TARGET_CLI
     for arg in sys.argv[1:]:
         if arg in ["--fix", "--check"]:
             MODE = arg[2:]
         elif arg.startswith("--target="):
-            TARGET_CLI = arg.split("=")[1]
+            TARGET_CLI = arg.split("=", 1)[1]
 
-    if TARGET_CLI in [None, "claude"]:
-        render_claude()
-    if TARGET_CLI in [None, "cursor"]:
-        render_cursor()
-    if TARGET_CLI in [None, "antigravity", "agy"]:
-        render_antigravity()
+    registry = load_registry()
+    commands = registry.get("commands", {})
+    for name, target in registry.get("targets", {}).items():
+        if TARGET_CLI is not None and TARGET_CLI not in {name, "agy" if name == "antigravity" else name}:
+            continue
+        render_target(commands, name, target)
 
     if MODE == "check" and DRIFT:
         sys.exit(1)

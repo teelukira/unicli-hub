@@ -15,7 +15,7 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 | 진입 문서 | `.unicli-hub/templates/*.tmpl`, `hub/memory/`, `hub/project-context.md` | `AGENTS.md`, `CLAUDE.md` |
 | 에이전트 | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/prompts/` |
 | 스킬 | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/prompts/skill-*.md` |
-| 훅 | `hub/hooks/`, `hub/*-hooks.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
+| 훅 | `hub/hooks/`, `hub/registry/hook-events.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
 | MCP 서버 | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.codex/config.toml` |
 | 메모리 | `hub/memory/*.md` | 생성된 진입 문서에 포함 |
 
@@ -34,6 +34,7 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 ```text
 .
 ├── hub/                    # 프레임워크 원본
+│   ├── registry/           # fanout, hook-event, model-profile 원장
 │   ├── agents/             # 선택적 에이전트 프롬프트 원본
 │   ├── skills/             # 선택적 스킬 원본
 │   ├── hooks/              # CLI 공통 훅 스크립트
@@ -68,7 +69,7 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 
 이 프레임워크는 의도적으로 범용 상태를 유지합니다. 현재 남기는 항목은 다음과 같습니다.
 
-- agent, skill, hook, MCP, entry template fanout 렌더러
+- registry 기반 agent, skill, hook, static copy, MCP, entry template fanout 렌더러
 - 생성 파일 직접 수정 방지 훅
 - MCP 전파 구조
 - 범용 예시 스킬 1개: `html-report`
@@ -83,10 +84,16 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 
 ## 콘텐츠 추가 방법
 
-에이전트를 추가하려면 `hub/agents/`에 원본을 넣고 `./sync.sh --fix`를 실행합니다.
+에이전트를 추가하려면 `hub/agents/`에 원본을 넣고, 필요한 경우 `hub/registry/agent-profiles.json`에 모델 프로필을 추가한 뒤 `./sync.sh --fix`를 실행합니다.
 
 스킬을 추가하려면 `hub/skills/<skill-name>/SKILL.md`를 만듭니다. 필요한 보조 파일은 같은 폴더 아래에 둘 수 있습니다. 스킬 렌더러가 폴더 내용과 reference 파일을 지원 대상에 복사합니다.
 
 MCP 서버를 추가/삭제하려면 `hub/mcp-servers.json`을 수정합니다. 비밀값은 파일에 넣지 말고 상속 환경변수나 wrapper script를 사용합니다.
 
 생성되는 진입 문서 문구를 바꾸려면 `.unicli-hub/templates/AGENTS.md.tmpl` 또는 `.unicli-hub/templates/CLAUDE.md.tmpl`을 수정합니다.
+
+## Registry 파일
+
+- `hub/registry/hook-events.json`: 논리 훅 이벤트를 각 CLI의 이벤트명으로 매핑합니다.
+- `hub/registry/fanout.json`: agent, skill, static copy의 source/target 경로와 orphan 정책을 선언합니다.
+- `hub/registry/agent-profiles.json`: 생성되는 Codex subagent prompt의 모델 메타데이터를 저장합니다.

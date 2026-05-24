@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "codex": {},
+  "defaults": {
+    "codex": {
+      "model": "gpt-5.4-mini",
+      "reasoning_effort": "medium",
+      "role": "general"
+    }
+  }
+}

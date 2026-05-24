@@ -15,7 +15,7 @@ UniCLI-Hub treats `hub/` as the single source of truth and renders generated fil
 | Entry docs | `.unicli-hub/templates/*.tmpl`, `hub/memory/`, `hub/project-context.md` | `AGENTS.md`, `CLAUDE.md` |
 | Agents | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/prompts/` |
 | Skills | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/prompts/skill-*.md` |
-| Hooks | `hub/hooks/`, `hub/*-hooks.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
+| Hooks | `hub/hooks/`, `hub/registry/hook-events.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
 | MCP servers | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.codex/config.toml` |
 | Memory | `hub/memory/*.md` | embedded in generated entry docs |
 
@@ -34,6 +34,7 @@ UniCLI-Hub treats `hub/` as the single source of truth and renders generated fil
 ```text
 .
 ├── hub/                    # canonical framework content
+│   ├── registry/           # fanout, hook-event, and model-profile registries
 │   ├── agents/             # optional source agent prompts
 │   ├── skills/             # optional source skills
 │   ├── hooks/              # hook scripts shared across CLIs
@@ -68,7 +69,7 @@ After changing canonical content, run:
 
 This framework is intentionally generic. The current baseline keeps:
 
-- fanout renderers for agents, skills, hooks, MCP, and entry templates
+- registry-driven fanout renderers for agents, skills, hooks, static copies, MCP, and entry templates
 - generated-file protection hooks
 - MCP propagation structure
 - one generic example skill: `html-report`
@@ -83,10 +84,16 @@ This baseline intentionally excludes:
 
 ## Adding Content
 
-To add an agent, place source files in `hub/agents/` and run `./sync.sh --fix`.
+To add an agent, place source files in `hub/agents/`; add optional model profiles in `hub/registry/agent-profiles.json`; then run `./sync.sh --fix`.
 
 To add a skill, create `hub/skills/<skill-name>/SKILL.md`; optional support files can live beside it. The skill renderer copies folder contents and reference files to supported targets.
 
 To add or remove MCP servers, edit `hub/mcp-servers.json`. Keep secrets out of the file; use inherited environment variables or wrapper scripts where a CLI cannot expand environment variables in JSON args.
 
 To change generated entry document wording, edit `.unicli-hub/templates/AGENTS.md.tmpl` or `.unicli-hub/templates/CLAUDE.md.tmpl`.
+
+## Registry Files
+
+- `hub/registry/hook-events.json`: maps logical hook events to each CLI's event names.
+- `hub/registry/fanout.json`: declares source/target paths and orphan policy for agents, skills, and static copies.
+- `hub/registry/agent-profiles.json`: stores generated Codex prompt model metadata for subagents.

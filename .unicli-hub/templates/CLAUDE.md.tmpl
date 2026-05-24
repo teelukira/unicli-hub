@@ -15,15 +15,15 @@
 
 **Never edit derived files directly**:
 
-- `ANTIGRAVITY.md`, `CLAUDE.md`, `AGENTS.md` at the repository root
-- `.antigravitycli/agents/*.md`, `.antigravitycli/skills/*/SKILL.md`
-- `.claude/agents/*.md`, `.claude/skills/*/SKILL.md`
-- `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/skills/*/SKILL.md`
-- `.kiro/steering/*.md`, `.kiro/agents/prompts/*`
+- `CLAUDE.md`, `AGENTS.md` at the repository root
+- `.agents/agents/*/agent.json`, `.agents/skills/*/SKILL.md`, `.agents/settings.json`
+- `.claude/agents/*.md`, `.claude/skills/*/SKILL.md`, `.claude/settings.json`
+- `.cursor/rules/*.mdc`, `.cursor/agents/*.md`, `.cursor/skills/*/SKILL.md`, `.cursor/hooks.json`
+- `.kiro/steering/*.md`
 - `.codex/prompts/*.md`
-- MCP: `.mcp.json`, `.cursor/mcp.json`, `.kiro/mcp.json`, `.antigravitycli/mcp.json`, `.codex/config.toml` (MCP block)
+- MCP: `.mcp.json`, `.cursor/mcp.json`, `.kiro/settings/mcp.json`, `.agents/mcp_config.json`, `.codex/config.toml`
 
-**Edit here instead**: `hub/` (the canonical source).
+**Edit here instead**: `hub/`, `.unicli-hub/templates/`, and `hub/registry/`.
 After editing, run `./sync.sh --fix` to regenerate every derived file.
 
 ---
@@ -38,11 +38,11 @@ After editing, run `./sync.sh --fix` to regenerate every derived file.
 
 This repository is a **unicli-hub** template/framework workspace:
 
-- Canonical source: `hub/`
-- Derived directories: `.antigravitycli/`, `.claude/`, `.cursor/`, `.kiro/`, `.codex/`
+- Registry source: `hub/registry/`
 - Agent source: `hub/agents/`
 - Skill source: `hub/skills/`
 - Hook source: `hub/hooks/`
 - MCP source: `hub/mcp-servers.json`
 - Regeneration: `./sync.sh --fix`
+- Drift check: `./sync.sh --check`
 - Protection: generated-file hooks block direct edits to derived files.
