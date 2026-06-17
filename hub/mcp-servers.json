@@ -5,20 +5,19 @@
     "【비밀키 관리 원칙】",
     "  - env 블록에 비밀키를 직접 작성하지 않는다.",
     "  - MCP 서버 프로세스는 부모(AI CLI) 프로세스의 환경변수를 자동 상속한다.",
-    "  - 환경변수는 ~/.zshrc 또는 ~/.env.local 에만 설정한다.",
+    "  - 환경변수는 ~/.zshrc 또는 .env.local 에만 설정한다.",
     "",
-    "【예외: args 에 변수가 필요한 경우】",
-    "  - JSON args 배열은 쉘 확장이 없으므로 ${VAR} 치환이 불가하다.",
-    "  - 이 경우 ~/.gemini/scripts/ 아래 wrapper script 를 만들고",
-    "    command 를 /bin/zsh, args 를 [\"-l\",\"-c\",\"exec wrapper.sh\"] 로 설정한다.",
-    "  - wrapper script 는 zsh login shell 로 실행되어 ~/.zshrc 를 로드한다.",
+    "【Wrapper Script 패턴 (권장)】",
+    "  - 토큰이 필요한 MCP 서버는 ./scripts/mcp/*-wrapper.sh 로 감싼다.",
+    "  - wrapper는 .env/.env.local을 로드하고 필수 변수를 검증한 후 exec.",
+    "  - 이렇게 하면 생성된 MCP config에 시크릿이 노출되지 않는다.",
     "",
-    "【sync 대상 파일】 (hub/sync.sh 로 자동 생성)",
-    "  .agents/mcp_config.json               ← project-level Antigravity/agy",
-    "  .cursor/mcp.json                      ← Cursor",
-    "  .vscode/mcp.json                      ← VS Code / Kiro",
+    "【sync 대상 파일】 (sync.sh 로 자동 생성)",
     "  .mcp.json                             ← Claude Code (project root)",
-    "  .agents/mcp_config.json               ← legacy / other agents",
+    "  .cursor/mcp.json                      ← Cursor",
+    "  .kiro/settings/mcp.json               ← Kiro",
+    "  .agents/mcp_config.json               ← Antigravity/agy",
+    "  .codex/config.toml                    ← OpenAI Codex",
     "",
     "【per-CLI 분기】",
     "  - _overrides: { cli_name: { ...patch } }  — 특정 CLI 에만 다른 값 적용",
@@ -27,23 +26,14 @@
   ],
   "mcpServers": {
     "tavily": {
-      "_comment": "args에 Bearer 토큰이 필요 → wrapper script 사용. TAVILY_API_KEY는 ~/.zshrc 에서 로드. wrapper script 표준 위치: ~/.config/mcp/tavily-mcp.sh (현재 ~/.gemini/scripts/에 있으면 이동 권장)",
+      "_comment": "TAVILY_API_KEY는 ~/.zshrc 또는 .env.local에서 export로 로드. zsh login shell에서 직접 실행",
       "command": "/bin/zsh",
       "args": [
         "-l",
         "-c",
-        "exec /Users/1111207/.gemini/scripts/tavily-mcp.sh"
+        "exec npx -y tavily-mcp@latest"
       ],
       "env": {}
-    },
-    "aws-core": {
-      "command": "uvx",
-      "args": [
-        "awslabs.core-mcp-server@latest"
-      ],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      }
     },
     "aws-docs": {
       "command": "uvx",
@@ -55,33 +45,11 @@
         "FASTMCP_LOG_LEVEL": "ERROR"
       }
     },
-    "aws-iam": {
-      "_comment": "AWS_PROFILE, AWS_REGION 은 ~/.zshrc 에서 상속",
-      "command": "uvx",
-      "args": [
-        "awslabs.iam-mcp-server@latest"
-      ],
-      "env": {
-        "AWS_REGION": "ap-northeast-2",
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      }
-    },
     "aws-iac": {
       "_comment": "AWS_PROFILE 은 ~/.zshrc 에서 상속",
       "command": "uvx",
       "args": [
         "awslabs.aws-iac-mcp-server@latest"
-      ],
-      "env": {
-        "AWS_REGION": "ap-northeast-2",
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      }
-    },
-    "aws-eks": {
-      "_comment": "AWS_PROFILE 은 ~/.zshrc 에서 상속",
-      "command": "uvx",
-      "args": [
-        "awslabs.eks-mcp-server@latest"
       ],
       "env": {
         "AWS_REGION": "ap-northeast-2",
@@ -110,12 +78,17 @@
       }
     },
     "mcp-atlassian": {
-      "_comment": "JIRA_URL, JIRA_PERSONAL_TOKEN, CONFLUENCE_URL, CONFLUENCE_PERSONAL_TOKEN 은 ~/.zshrc 에서 상속",
-      "command": "uvx",
+      "_comment": "Wrapper loads .env/.env.local at runtime without rendering secrets into generated MCP config.",
+      "command": "/bin/bash",
       "args": [
-        "mcp-atlassian"
+        "./scripts/mcp/mcp-atlassian-wrapper.sh"
       ],
-      "env": {}
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "FASTMCP_SHOW_CLI_BANNER": "false",
+        "FASTMCP_CHECK_FOR_UPDATES": "off",
+        "TOOLSETS": "all"
+      }
     },
     "serena": {
       "command": "serena",
@@ -150,21 +123,20 @@
       }
     },
     "gitlab": {
-      "_comment": "GITLAB_PERSONAL_ACCESS_TOKEN, GITLAB_API_URL 은 ~/.zshrc 에서 상속",
-      "command": "npx",
+      "_comment": "Wrapper loads .env/.env.local at runtime without rendering GitLab secrets into generated MCP config.",
+      "command": "/bin/bash",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-gitlab"
+        "./scripts/mcp/gitlab-wrapper.sh"
       ],
       "env": {
         "NODE_TLS_REJECT_UNAUTHORIZED": "0"
       }
     },
     "context7": {
-      "command": "npx",
+      "_comment": "Wrapper loads optional CONTEXT7_API_KEY from .env/.env.local.",
+      "command": "/bin/bash",
       "args": [
-        "-y",
-        "@context7/mcp-server@latest"
+        "./scripts/mcp/context7-wrapper.sh"
       ],
       "env": {}
     }

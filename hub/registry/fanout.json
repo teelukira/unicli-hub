@@ -21,5 +21,12 @@
       "codex": ".codex/prompts"
     }
   },
-  "static_copies": {}
+  "static_copies": {
+    "kiro_steering": {
+      "source": "hub/kiro-steering",
+      "target": ".kiro/steering",
+      "orphan_policy": "delete_unproduced",
+      "ignore_stale_globs": ["skill-*.md", "01-project-context.md", "03-memory.md"]
+    }
+  }
 }

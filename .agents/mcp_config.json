@@ -5,18 +5,9 @@
       "args": [
         "-l",
         "-c",
-        "exec /Users/1111207/.gemini/scripts/tavily-mcp.sh"
+        "exec npx -y tavily-mcp@latest"
       ],
       "env": {}
-    },
-    "aws-core": {
-      "command": "uvx",
-      "args": [
-        "awslabs.core-mcp-server@latest"
-      ],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      }
     },
     "aws-docs": {
       "command": "uvx",
@@ -28,30 +19,10 @@
         "FASTMCP_LOG_LEVEL": "ERROR"
       }
     },
-    "aws-iam": {
-      "command": "uvx",
-      "args": [
-        "awslabs.iam-mcp-server@latest"
-      ],
-      "env": {
-        "AWS_REGION": "ap-northeast-2",
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      }
-    },
     "aws-iac": {
       "command": "uvx",
       "args": [
         "awslabs.aws-iac-mcp-server@latest"
-      ],
-      "env": {
-        "AWS_REGION": "ap-northeast-2",
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      }
-    },
-    "aws-eks": {
-      "command": "uvx",
-      "args": [
-        "awslabs.eks-mcp-server@latest"
       ],
       "env": {
         "AWS_REGION": "ap-northeast-2",
@@ -79,11 +50,16 @@
       }
     },
     "mcp-atlassian": {
-      "command": "uvx",
+      "command": "/bin/bash",
       "args": [
-        "mcp-atlassian"
+        "./scripts/mcp/mcp-atlassian-wrapper.sh"
       ],
-      "env": {}
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "FASTMCP_SHOW_CLI_BANNER": "false",
+        "FASTMCP_CHECK_FOR_UPDATES": "off",
+        "TOOLSETS": "all"
+      }
     },
     "serena": {
       "command": "serena",
@@ -95,20 +71,18 @@
       "env": {}
     },
     "gitlab": {
-      "command": "npx",
+      "command": "/bin/bash",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-gitlab"
+        "./scripts/mcp/gitlab-wrapper.sh"
       ],
       "env": {
         "NODE_TLS_REJECT_UNAUTHORIZED": "0"
       }
     },
     "context7": {
-      "command": "npx",
+      "command": "/bin/bash",
       "args": [
-        "-y",
-        "@context7/mcp-server@latest"
+        "./scripts/mcp/context7-wrapper.sh"
       ],
       "env": {}
     }
