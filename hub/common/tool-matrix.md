@@ -8,13 +8,13 @@ How each AI CLI's features map to this template.
 
 | Feature | Antigravity CLI | Claude Code | Cursor | Kiro | Codex |
 |---------|-----------------|-------------|--------|------|-------|
-| Agent definitions | `.agents/agents/<name>/agent.json` | `.claude/agents/*.md` | `.cursor/agents/*.md` | `.kiro/steering/*.md` references | `.codex/prompts/*.md` |
-| Entry document | `AGENTS.md` | `CLAUDE.md` | `AGENTS.md` / `.cursor/rules/*.mdc` | `.kiro/steering/*.md` | `AGENTS.md` |
+| Agent definitions | `define_subagent` tool | `.claude/agents/*.md` | `.cursor/agents/*.md` | `.kiro/steering/*.md` references | `.codex/prompts/*.md` |
+| Entry document | `AGENTS.md` (`.agents/AGENTS.md`) | `CLAUDE.md` | `AGENTS.md` / `.cursor/rules/*.mdc` | `.kiro/steering/*.md` | `AGENTS.md` |
 | Skill / prompt | `.agents/skills/` | `.claude/skills/` | `.cursor/skills/` | `.kiro/steering/skill-*.md` | `.codex/prompts/skill-*.md` |
 | Hook config | `.agents/settings.json` (`BeforeTool` / `AfterTool`) | `.claude/settings.json` (`PreToolUse` / `PostToolUse`) | `.cursor/hooks.json` (`preToolUse` / `postToolUse` / shell / MCP events) | Not rendered | Not rendered |
 | Hook implementation | `hub/hooks/*.py` via generated command entries | `hub/hooks/*.py` via generated command entries | `hub/hooks/*.py` via generated command entries | N/A | N/A |
-| Memory | `AGENTS.md` | `CLAUDE.md` | `.cursor/rules/memory.mdc` | `.kiro/steering/03-memory.md` | `AGENTS.md` prepend |
-| MCP | `.agents/mcp_config.json` | `.mcp.json` | `.cursor/mcp.json` | `.kiro/settings/mcp.json` | `.codex/config.toml` (`mcp_servers`) |
+| Memory | `.agents/AGENTS.md` (Rules) | `CLAUDE.md` | `.cursor/rules/memory.mdc` | `.kiro/steering/03-memory.md` | `AGENTS.md` prepend |
+| MCP | `mcp/` directory structure (Global/Workspace) | `.mcp.json` | `.cursor/mcp.json` | `.kiro/settings/mcp.json` | `.codex/config.toml` (`mcp_servers`) |
 
 ## Regeneration owner
 

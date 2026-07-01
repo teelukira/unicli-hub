@@ -29,6 +29,25 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 | Kiro | `.kiro/` | 생성된 steering 및 agent 파일 |
 | OpenAI Codex | `.codex/` | `AGENTS.md` 및 prompt 파일 |
 
+## 도구별 기능 지원 (스킬, 서브에이전트, MCP)
+
+AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워크가 이 차이를 추상화하여 배포하지만, 각 도구의 동작 방식을 이해하는 것이 좋습니다.
+
+### 1. 구글 안티그래비티 (Google Antigravity, agy)
+- **스킬 (Skills)**: 커스텀 폴더 구조(`.agents/skills/<skill_name>/SKILL.md`)를 통해 네이티브하게 스킬을 로드하고 스캔합니다.
+- **서브에이전트 (Subagents)**: 정적 파일로 커스텀 에이전트를 정의하는 대신, 내장 에이전트(예: `research`, `self`)를 제공하며 런타임에 `define_subagent` 도구를 호출하여 동적으로 에이전트를 생성하는 방식을 사용합니다.
+- **MCP**: 단일 `mcp_config.json` 설정 파일 대신 개별 폴더 구조(`mcp/<serverName>/<toolName>.json`)로 도구 스키마를 로드합니다.
+
+### 2. 커서 (Cursor)
+- **스킬 (Skills)**: `.cursor/rules/*.mdc` 형태의 룰 파일로 렌더링되어 IDE 내규로 동작합니다.
+- **서브에이전트 (Subagents)**: 정적 파일을 지원합니다. `.cursor/agents/*.md`에 정의된 마크다운을 읽어 IDE 서브에이전트로 구성합니다.
+- **MCP**: 프로젝트의 `.cursor/mcp.json` 통합 설정 파일을 통해 명시적으로 서버를 연결합니다.
+
+### 3. 클로드 코드 (Claude Code)
+- **스킬 (Skills)**: `.claude/skills/` 디렉토리에 배치된 스킬을 네이티브하게 지원합니다.
+- **서브에이전트 (Subagents)**: 정적 마크다운(`.claude/agents/*.md`) 정의를 통해 역할과 시스템 프롬프트가 설정된 에이전트를 지원합니다.
+- **MCP**: 프로젝트 최상단의 `.mcp.json` 파일 하나로 통합 구성합니다.
+
 ## 저장소 구조
 
 ```text

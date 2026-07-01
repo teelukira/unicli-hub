@@ -94,7 +94,10 @@ def main():
             continue
 
         content = assemble(tmpl, cli_name)
-        if content: compare_or_write(ROOT / name, content)
+        if content:
+            compare_or_write(ROOT / name, content)
+            if name == "AGENTS.md":
+                compare_or_write(ROOT / ".agents" / "AGENTS.md", content)
 
     if TARGET_CLI in [None, "cursor"]:
         ctx = load_project_context()

@@ -3,53 +3,90 @@
 render_mcp.py — Fan-out MCP configurations from hub/mcp-servers.json to all targets.
 """
 
+import copy
 import json
-import sys
-import pathlib
 import os
+import pathlib
 import re
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
-CANONICAL = ROOT / "hub" / "mcp-servers.json"
+FANOUT_REGISTRY = ROOT / "hub" / "registry" / "fanout.json"
 ENV_LOCAL = ROOT / ".env.local"
 
-TARGETS = {
-    "claude": ROOT / ".mcp.json",
-    "cursor": ROOT / ".cursor" / "mcp.json",
-    "kiro": ROOT / ".kiro" / "settings" / "mcp.json",
-    "codex": ROOT / ".codex" / "config.toml",
+DEFAULT_MCP_FANOUT = {
+    "source": "hub/mcp-servers.json",
+    "targets": {
+        "claude": {"path": ".mcp.json", "format": "json"},
+        "cursor": {"path": ".cursor/mcp.json", "format": "json"},
+        "antigravity": {"path": ".agents/mcp_config.json", "format": "antigravity_json"},
+        "kiro": {"path": ".kiro/settings/mcp.json", "format": "json"},
+        "codex": {"path": ".codex/config.toml", "format": "toml"},
+    },
 }
 
 MODE = "fix"
 TARGET_CLI = None
 DRIFT = False
 
+
+def resolve_path(path_value: str) -> pathlib.Path:
+    path = pathlib.Path(path_value).expanduser()
+    if path.is_absolute():
+        return path
+    return ROOT / path
+
+
+def read_json(path: pathlib.Path) -> dict:
+    if path.exists():
+        with path.open(encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {}
+    return {}
+
+
+def load_mcp_fanout() -> dict:
+    registry = read_json(FANOUT_REGISTRY).get("mcp", {})
+    return {
+        "source": registry.get("source", DEFAULT_MCP_FANOUT["source"]),
+        "targets": registry.get("targets", DEFAULT_MCP_FANOUT["targets"]),
+    }
+
+
 def load_env(path: pathlib.Path) -> dict:
     env = {}
     if path.exists():
         for line in path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
-            if not line or line.startswith("#"): continue
+            if not line or line.startswith("#"):
+                continue
             if "=" in line:
                 key, val = line.split("=", 1)
                 env[key.strip()] = val.strip()
     return env
 
+
 def substitute_env(data, env_vars: dict):
     if isinstance(data, dict):
         return {k: substitute_env(v, env_vars) for k, v in data.items()}
-    elif isinstance(data, list):
+    if isinstance(data, list):
         return [substitute_env(i, env_vars) for i in data]
-    elif isinstance(data, str):
+    if isinstance(data, str):
         def replacer(match):
             var_name = match.group(1)
             val = os.environ.get(var_name) or env_vars.get(var_name)
             if val is None:
-                print(f"ERROR: Missing environment variable '${var_name}' in .env.local or shell environment.")
+                print(
+                    f"ERROR: Missing environment variable '${var_name}' "
+                    "in .env.local or shell environment."
+                )
                 sys.exit(1)
             return val
         return re.sub(r"\${(\w+)}", replacer, data)
     return data
+
 
 def _display_path(path: pathlib.Path) -> str:
     try:
@@ -69,51 +106,39 @@ def compare_or_write(target: pathlib.Path, content: str):
         target.write_text(content, encoding="utf-8")
         print(f"wrote: {_display_path(target)}")
 
-def read_json(path: pathlib.Path) -> dict:
-    if path.exists():
-        with path.open(encoding="utf-8") as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return {}
-    return {}
 
 def strip_meta(data):
     """Recursively strip unicli-hub meta keys (_comment, _overrides, _targets, etc.)."""
     if isinstance(data, dict):
         return {k: strip_meta(v) for k, v in data.items() if not k.startswith("_")}
-    elif isinstance(data, list):
+    if isinstance(data, list):
         return [strip_meta(i) for i in data]
     return data
 
-# Keep strip_comments as an alias for backwards compatibility
+
 strip_comments = strip_meta
 
 
 def apply_overrides(server: dict, cli: str) -> dict:
-    """Merge target-specific _overrides into server config."""
     overrides = server.get("_overrides", {})
     if cli not in overrides:
         return server
-    import copy
     merged = copy.deepcopy(server)
     merged.update(overrides[cli])
     return merged
 
 
 def filter_servers(raw_servers: dict, cli: str) -> dict:
-    """Filter servers by _targets (if specified) and apply _overrides."""
     result = {}
     for name, cfg in raw_servers.items():
         targets = cfg.get("_targets")
         if targets is not None and cli not in targets:
-            continue  # excluded from this CLI
+            continue
         result[name] = apply_overrides(cfg, cli)
     return result
 
 
 def toml_string(value: str) -> str:
-    """Render a basic TOML string via JSON escaping, which is TOML-compatible."""
     return json.dumps(value, ensure_ascii=False)
 
 
@@ -154,63 +179,66 @@ def render_codex_toml(servers: dict) -> str:
 
     return "\n".join(lines).rstrip() + "\n"
 
+
+def render_antigravity_json(servers: dict) -> str:
+    ag_servers = {}
+    for name, cfg in servers.items():
+        ag_cfg = dict(cfg)
+        server_type = ag_cfg.pop("type", None)
+        if server_type == "http":
+            ag_cfg["serverUrl"] = ag_cfg.pop("url", ag_cfg.pop("httpUrl", ""))
+        ag_servers[name] = ag_cfg
+    clean = strip_meta(ag_servers)
+    return json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n"
+
+
+def render_mcp_json(servers: dict) -> str:
+    clean = strip_meta(servers)
+    return json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n"
+
+
+def render_mcp_target(cli: str, target_cfg: dict, raw_servers_subst: dict) -> str:
+    fmt = target_cfg.get("format", "json")
+    cli_servers = filter_servers(raw_servers_subst, cli)
+    if fmt == "json":
+        return render_mcp_json(cli_servers)
+    if fmt == "antigravity_json":
+        return render_antigravity_json(cli_servers)
+    if fmt == "toml":
+        return render_codex_toml(cli_servers)
+    print(f"ERROR: unsupported MCP target format '{fmt}' for cli '{cli}'", file=sys.stderr)
+    sys.exit(1)
+
+
 def main():
     global MODE, DRIFT, TARGET_CLI
     for arg in sys.argv[1:]:
-        if arg in ["--fix", "--check"]: 
+        if arg in ["--fix", "--check"]:
             MODE = arg[2:]
         elif arg.startswith("--target="):
-            TARGET_CLI = arg.split("=")[1]
+            TARGET_CLI = arg.split("=", 1)[1]
 
-    if not CANONICAL.exists():
-        print(f"ERROR: {CANONICAL} not found")
+    mcp_fanout = load_mcp_fanout()
+    canonical = resolve_path(mcp_fanout["source"])
+    if not canonical.exists():
+        print(f"ERROR: {canonical} not found")
         sys.exit(1)
 
     env_vars = load_env(ENV_LOCAL)
-    src = read_json(CANONICAL)
+    src = read_json(canonical)
     raw_servers = src.get("mcpServers", {})
-    
-    # Substitute env variables (before per-CLI filtering so overrides can also ref env vars)
     raw_servers_subst = substitute_env(raw_servers, env_vars)
 
-    # 1. Claude (Pure JSON — default args, no overrides)
-    if TARGET_CLI in [None, "claude"]:
-        cli_servers = filter_servers(raw_servers_subst, "claude")
-        clean = strip_meta(cli_servers)
-        compare_or_write(TARGETS["claude"], json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
-
-    # 2. Cursor (Pure JSON — ide-assistant context)
-    if TARGET_CLI in [None, "cursor"]:
-        cli_servers = filter_servers(raw_servers_subst, "cursor")
-        clean = strip_meta(cli_servers)
-        compare_or_write(TARGETS["cursor"], json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
-
-    # 4. Antigravity (mcp_config.json — ide-assistant context)
-    if TARGET_CLI in [None, "antigravity"]:
-        cli_servers = filter_servers(raw_servers_subst, "antigravity")
-        ag_servers = {}
-        for name, cfg in cli_servers.items():
-            ag_cfg = dict(cfg)
-            t = ag_cfg.pop("type", None)
-            if t == "http":
-                ag_cfg["serverUrl"] = ag_cfg.pop("url", ag_cfg.pop("httpUrl", ""))
-            ag_servers[name] = ag_cfg
-        clean = strip_meta(ag_servers)
-        compare_or_write(ROOT / ".agents" / "mcp_config.json", json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
-
-    # 5. Kiro / VS Code style JSON
-    if TARGET_CLI in [None, "kiro"]:
-        cli_servers = filter_servers(raw_servers_subst, "kiro")
-        clean = strip_meta(cli_servers)
-        compare_or_write(TARGETS["kiro"], json.dumps({"mcpServers": clean}, indent=2, ensure_ascii=False) + "\n")
-
-    # 6. Codex (TOML — project-local config)
-    if TARGET_CLI in [None, "codex"]:
-        cli_servers = filter_servers(raw_servers_subst, "codex")
-        compare_or_write(TARGETS["codex"], render_codex_toml(cli_servers))
+    for cli, target_cfg in sorted(mcp_fanout["targets"].items()):
+        if TARGET_CLI not in [None, cli]:
+            continue
+        target_path = resolve_path(target_cfg["path"])
+        content = render_mcp_target(cli, target_cfg, raw_servers_subst)
+        compare_or_write(target_path, content)
 
     if MODE == "check" and DRIFT:
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

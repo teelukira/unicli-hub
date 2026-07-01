@@ -29,6 +29,25 @@ UniCLI-Hub treats `hub/` as the single source of truth and renders generated fil
 | Kiro | `.kiro/` | generated steering and agent files |
 | OpenAI Codex | `.codex/` | `AGENTS.md` plus prompt files |
 
+## Tool Capabilities (Skills, Subagents, MCP)
+
+Different AI CLIs handle extended capabilities in their own distinct ways. This framework abstracts these differences, but it is helpful to understand how each tool implements them:
+
+### 1. Google Antigravity (agy)
+- **Skills**: Fully supported natively. Skills are loaded directly from the workspace customization root (`.agents/skills/<skill_name>/SKILL.md`).
+- **Subagents**: Supported dynamically. Instead of defining custom subagents via static files, Antigravity uses robust built-in subagents (e.g., `research`, `self`) and allows agents to spawn subagents dynamically via the `define_subagent` tool during runtime.
+- **MCP**: Supported via directory structure. Antigravity expects MCP tool schemas in specific folders (e.g., `mcp/<serverName>/<toolName>.json`) rather than a single unified configuration file.
+
+### 2. Cursor
+- **Skills**: Supported via IDE rules. Skills are implemented as `.cursor/rules/*.mdc` files.
+- **Subagents**: Supported statically. Cursor loads markdown definitions from `.cursor/agents/*.md` to configure IDE subagents.
+- **MCP**: Fully supported via a unified config file (`.cursor/mcp.json`) for straightforward server connections.
+
+### 3. Claude Code
+- **Skills**: Fully supported natively via `.claude/skills/`.
+- **Subagents**: Supported statically. Defines custom agent roles and system prompts through markdown files in `.claude/agents/*.md`.
+- **MCP**: Fully supported via the project-root `.mcp.json` unified configuration file.
+
 ## Repository Layout
 
 ```text

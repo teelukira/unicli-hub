@@ -1,11 +1,17 @@
 {
   "schema_version": 1,
   "codex": {},
+  "cursor": {},
   "defaults": {
     "codex": {
       "model": "gpt-5.4-mini",
       "reasoning_effort": "medium",
       "role": "general"
+    },
+    "cursor": {
+      "model": "inherit",
+      "readonly": false,
+      "is_background": false
     }
   }
 }

@@ -23,15 +23,17 @@ hub/
 | Registry | Purpose | Renderer |
 |----------|---------|----------|
 | `hook-events.json` | Logical hook events and per-CLI event names (`PreToolUse`, `preToolUse`, `BeforeTool`, etc.) | `.unicli-hub/scripts/render_hooks.py` |
-| `fanout.json` | Skill, subagent, and static-copy target paths plus orphan policy | `render_agents.py`, `render_skills.py`, `render_static.py` |
-| `agent-profiles.json` | Per-agent model/reasoning profiles for generated Codex prompts | `render_agents.py` |
+| `fanout.json` | Skill, subagent, static-copy, and MCP target paths plus orphan policy | `render_agents.py`, `render_skills.py`, `render_static.py`, `render_mcp.py` |
+| `agent-profiles.json` | Per-agent model/reasoning profiles for generated Codex and Cursor subagents | `render_agents.py` |
 
 Rules that can be checked mechanically should live in hook or verification scripts, with Markdown retaining only the contract and source paths.
 
 ## Adding an Agent
 
 1. Add `hub/agents/<agent-name>.md`.
-2. If a generated Codex prompt needs a non-default model profile, add it to `hub/registry/agent-profiles.json`.
+2. Optional CLI profiles in `hub/registry/agent-profiles.json`:
+   - `cursor.<agent-name>` for `model`, `readonly`, `is_background`
+   - `codex.<agent-name>` for generated Codex prompt model metadata
 3. Run `./sync.sh --fix`.
 
 ## Adding a Skill

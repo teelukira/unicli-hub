@@ -38,8 +38,6 @@ TARGETS = {
         "claude": ".claude/agents",
         "cursor": ".cursor/agents",
         "codex": ".codex/prompts",
-        "antigravity": ".agents/agents",
-        "antigravity_global": "~/.gemini/antigravity-cli/agents",
     }).items()
 }
 
@@ -58,6 +56,14 @@ DEFAULT_CODEX_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("codex", {
     "reasoning_effort": "medium",
     "role": "general",
 })
+CURSOR_AGENT_PROFILES = AGENT_PROFILES.get("cursor", {})
+DEFAULT_CURSOR_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("cursor", {
+    "model": "inherit",
+    "readonly": False,
+    "is_background": False,
+})
+
+CURSOR_FRONTMATTER_KEYS = ("name", "description", "model", "readonly", "is_background")
 
 MODE = "fix"
 TARGET_CLI = None
@@ -130,6 +136,38 @@ def render_codex_agent(agent_name: str, body: str, description: str) -> str:
     )
     return "\n".join(fm_lines) + "\n" + guidance + body
 
+def normalize_bool(value: str) -> str:
+    normalized = value.strip().strip('"').lower()
+    if normalized in ("true", "yes", "1"):
+        return "true"
+    if normalized in ("false", "no", "0"):
+        return "false"
+    return value.strip().strip('"')
+
+def format_profile_bool(value) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return normalize_bool(str(value))
+
+def resolve_cursor_profile(agent_name: str) -> dict:
+    return {**DEFAULT_CURSOR_AGENT_PROFILE, **CURSOR_AGENT_PROFILES.get(agent_name, {})}
+
+def render_cursor_agent(agent_name: str, body: str, fm: dict, description: str) -> str:
+    profile = resolve_cursor_profile(agent_name)
+    cursor_fm = {
+        "name": fm.get("name", agent_name).strip().strip('"'),
+        "description": description,
+        "model": fm.get("model", str(profile["model"])).strip().strip('"'),
+        "readonly": normalize_bool(fm["readonly"]) if "readonly" in fm else format_profile_bool(profile["readonly"]),
+        "is_background": normalize_bool(fm["is_background"]) if "is_background" in fm else format_profile_bool(profile["is_background"]),
+    }
+    fm_lines = ["---"]
+    for key in CURSOR_FRONTMATTER_KEYS:
+        fm_lines.append(f"{key}: {cursor_fm[key]}")
+    fm_lines.append("---")
+    source_footer = f"\n\n<!-- unicli-hub canonical source: hub/agents/{agent_name}.md -->\n"
+    return "\n".join(fm_lines) + "\n\n" + body.rstrip() + source_footer
+
 def render_all_agents():
     for src in sorted(AGENTS_SRC.glob("*.md")):
         a = src.stem
@@ -155,14 +193,10 @@ def render_all_agents():
         
         # Cursor
         if TARGET_CLI in [None, "cursor"]:
-            fm_cursor = fm.copy()
-            fm_cursor["description"] = fm.get("description", f"Agent {a}")
-            fm_cursor["source"] = f"hub/agents/{a}.md"
-            
-            fm_lines = ["---"]
-            for k, v in fm_cursor.items(): fm_lines.append(f"{k}: {v}")
-            fm_lines.append("---\n")
-            compare_or_write(TARGETS["cursor"] / f"{a}.md", "\n".join(fm_lines) + body)
+            compare_or_write(
+                TARGETS["cursor"] / f"{a}.md",
+                render_cursor_agent(a, body, fm, description),
+            )
         
         # Codex
         if TARGET_CLI in [None, "codex"]:
@@ -202,37 +236,21 @@ def reconcile():
                 continue
         except Exception:
             continue
-        if cli in ("antigravity", "antigravity_global"):
-            for subdir in sorted(target_dir.iterdir()):
-                if subdir.is_dir() and subdir.name not in PRODUCED_AGENTS:
+        for f in sorted(target_dir.iterdir()):
+            if f.is_file() and f.suffix == ".md" and not f.name.startswith("skill-"):
+                if f.stem not in PRODUCED_AGENTS:
                     if MODE == "fix":
-                        shutil.rmtree(subdir)
+                        f.unlink()
                         try:
-                            print(f"removed stale agent: {subdir.relative_to(ROOT)}")
+                            print(f"removed stale agent: {f.relative_to(ROOT)}")
                         except ValueError:
-                            print(f"removed stale agent: {subdir}")
+                            print(f"removed stale agent: {f}")
                     else:
                         try:
-                            print(f"DRIFT (stale agent): {subdir.relative_to(ROOT)}")
+                            print(f"DRIFT (stale agent): {f.relative_to(ROOT)}")
                         except ValueError:
-                            print(f"DRIFT (stale agent): {subdir}")
+                            print(f"DRIFT (stale agent): {f}")
                         DRIFT = True
-        else:
-            for f in sorted(target_dir.iterdir()):
-                if f.is_file() and f.suffix == ".md" and not f.name.startswith("skill-"):
-                    if f.stem not in PRODUCED_AGENTS:
-                        if MODE == "fix":
-                            f.unlink()
-                            try:
-                                print(f"removed stale agent: {f.relative_to(ROOT)}")
-                            except ValueError:
-                                print(f"removed stale agent: {f}")
-                        else:
-                            try:
-                                print(f"DRIFT (stale agent): {f.relative_to(ROOT)}")
-                            except ValueError:
-                                print(f"DRIFT (stale agent): {f}")
-                            DRIFT = True
 
 
 def main():

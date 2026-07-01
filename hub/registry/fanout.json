@@ -6,8 +6,7 @@
     "targets": {
       "claude": ".claude/agents",
       "cursor": ".cursor/agents",
-      "codex": ".codex/prompts",
-      "antigravity": ".agents/agents"
+      "codex": ".codex/prompts"
     }
   },
   "skills": {
@@ -27,6 +26,31 @@
       "target": ".kiro/steering",
       "orphan_policy": "delete_unproduced",
       "ignore_stale_globs": ["skill-*.md", "01-project-context.md", "03-memory.md"]
+    }
+  },
+  "mcp": {
+    "source": "hub/mcp-servers.json",
+    "targets": {
+      "claude": {
+        "path": ".mcp.json",
+        "format": "json"
+      },
+      "cursor": {
+        "path": ".cursor/mcp.json",
+        "format": "json"
+      },
+      "antigravity": {
+        "path": ".agents/mcp_config.json",
+        "format": "antigravity_json"
+      },
+      "kiro": {
+        "path": ".kiro/settings/mcp.json",
+        "format": "json"
+      },
+      "codex": {
+        "path": ".codex/config.toml",
+        "format": "toml"
+      }
     }
   }
 }
