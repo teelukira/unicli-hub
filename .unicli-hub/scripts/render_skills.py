@@ -37,14 +37,14 @@ TARGETS = {
         "claude": ".claude/skills",
         "cursor": ".cursor/skills",
         "antigravity": ".agents/skills",
+        "codex": ".codex/skills",
     }).items()
-    if name in {"claude", "cursor", "antigravity"}
+    if name in {"claude", "cursor", "antigravity", "codex"}
 }
 
 # Flat targets
 _SKILL_TARGETS = FANOUT.get("targets", {})
 KIRO_STEERING = resolve_path(_SKILL_TARGETS.get("kiro", ".kiro/steering"))
-CODEX_PROMPTS = resolve_path(_SKILL_TARGETS.get("codex", ".codex/prompts"))
 
 MODE = "fix"
 TARGET_CLI = None
@@ -221,22 +221,6 @@ def reconcile():
                         print(f"DRIFT (stale skill): {f}")
                     DRIFT = True
 
-    if TARGET_CLI in [None, "codex"] and CODEX_PROMPTS.exists():
-        for f in sorted(CODEX_PROMPTS.glob("skill-*.md")):
-            skill_name = f.stem[len("skill-"):]
-            if skill_name not in PRODUCED_SKILLS:
-                if MODE == "fix":
-                    f.unlink()
-                    try:
-                        print(f"removed stale skill: {f.relative_to(ROOT)}")
-                    except ValueError:
-                        print(f"removed stale skill: {f}")
-                else:
-                    try:
-                        print(f"DRIFT (stale skill): {f.relative_to(ROOT)}")
-                    except ValueError:
-                        print(f"DRIFT (stale skill): {f}")
-                    DRIFT = True
 
 
 def main():
@@ -268,8 +252,7 @@ def main():
 
         if TARGET_CLI in [None, "kiro"]:
             compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
-        if TARGET_CLI in [None, "codex"]:
-            compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
+
 
         copy_references(skill_name, body)
 
@@ -286,8 +269,7 @@ def main():
 
         if TARGET_CLI in [None, "kiro"]:
             compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
-        if TARGET_CLI in [None, "codex"]:
-            compare_or_write(CODEX_PROMPTS / f"skill-{skill_name}.md", body + "\n")
+
 
         copy_references(skill_name, body)
         copy_folder_skill_contents(skill_name)

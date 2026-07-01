@@ -6,7 +6,7 @@
     "targets": {
       "claude": ".claude/agents",
       "cursor": ".cursor/agents",
-      "codex": ".codex/prompts"
+      "codex": ".codex/agents"
     }
   },
   "skills": {
@@ -17,7 +17,7 @@
       "cursor": ".cursor/skills",
       "antigravity": ".agents/skills",
       "kiro": ".kiro/steering",
-      "codex": ".codex/prompts"
+      "codex": ".codex/skills"
     }
   },
   "static_copies": {

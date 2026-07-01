@@ -13,8 +13,8 @@ UniCLI-Hub treats `hub/` as the single source of truth and renders generated fil
 | Asset | Canonical source | Generated targets |
 |---|---|---|
 | Entry docs | `.unicli-hub/templates/*.tmpl`, `hub/memory/`, `hub/project-context.md` | `AGENTS.md`, `CLAUDE.md` |
-| Agents | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/prompts/` |
-| Skills | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/prompts/skill-*.md` |
+| Agents | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/agents/` |
+| Skills | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/skills/` |
 | Hooks | `hub/hooks/`, `hub/registry/hook-events.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
 | MCP servers | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.codex/config.toml` |
 | Memory | `hub/memory/*.md` | embedded in generated entry docs |
@@ -27,7 +27,7 @@ UniCLI-Hub treats `hub/` as the single source of truth and renders generated fil
 | Claude Code | `.claude/` | `CLAUDE.md` |
 | Cursor | `.cursor/` | `AGENTS.md` plus Cursor files |
 | Kiro | `.kiro/` | generated steering and agent files |
-| OpenAI Codex | `.codex/` | `AGENTS.md` plus prompt files |
+| OpenAI Codex | `.codex/` | `AGENTS.md` plus agent and skill files |
 
 ## Tool Capabilities (Skills, Subagents, MCP)
 

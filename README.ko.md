@@ -13,8 +13,8 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 | 자산 | 원본 | 생성 대상 |
 |---|---|---|
 | 진입 문서 | `.unicli-hub/templates/*.tmpl`, `hub/memory/`, `hub/project-context.md` | `AGENTS.md`, `CLAUDE.md` |
-| 에이전트 | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/prompts/` |
-| 스킬 | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/prompts/skill-*.md` |
+| 에이전트 | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/agents/` |
+| 스킬 | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/skills/` |
 | 훅 | `hub/hooks/`, `hub/registry/hook-events.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
 | MCP 서버 | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.codex/config.toml` |
 | 메모리 | `hub/memory/*.md` | 생성된 진입 문서에 포함 |
@@ -27,7 +27,7 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 | Claude Code | `.claude/` | `CLAUDE.md` |
 | Cursor | `.cursor/` | `AGENTS.md` 및 Cursor 파일 |
 | Kiro | `.kiro/` | 생성된 steering 및 agent 파일 |
-| OpenAI Codex | `.codex/` | `AGENTS.md` 및 prompt 파일 |
+| OpenAI Codex | `.codex/` | `AGENTS.md` 및 agent/skill 파일 |
 
 ## 도구별 기능 지원 (스킬, 서브에이전트, MCP)
 

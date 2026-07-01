@@ -8,9 +8,9 @@ How each AI CLI's features map to this template.
 
 | Feature | Antigravity CLI | Claude Code | Cursor | Kiro | Codex |
 |---------|-----------------|-------------|--------|------|-------|
-| Agent definitions | `define_subagent` tool | `.claude/agents/*.md` | `.cursor/agents/*.md` | `.kiro/steering/*.md` references | `.codex/prompts/*.md` |
+| Agent definitions | `define_subagent` tool | `.claude/agents/*.md` | `.cursor/agents/*.md` | `.kiro/steering/*.md` references | `.codex/agents/*.md` |
 | Entry document | `AGENTS.md` (`.agents/AGENTS.md`) | `CLAUDE.md` | `AGENTS.md` / `.cursor/rules/*.mdc` | `.kiro/steering/*.md` | `AGENTS.md` |
-| Skill / prompt | `.agents/skills/` | `.claude/skills/` | `.cursor/skills/` | `.kiro/steering/skill-*.md` | `.codex/prompts/skill-*.md` |
+| Skill / prompt | `.agents/skills/` | `.claude/skills/` | `.cursor/skills/` | `.kiro/steering/skill-*.md` | `.codex/skills/` |
 | Hook config | `.agents/settings.json` (`BeforeTool` / `AfterTool`) | `.claude/settings.json` (`PreToolUse` / `PostToolUse`) | `.cursor/hooks.json` (`preToolUse` / `postToolUse` / shell / MCP events) | Not rendered | Not rendered |
 | Hook implementation | `hub/hooks/*.py` via generated command entries | `hub/hooks/*.py` via generated command entries | `hub/hooks/*.py` via generated command entries | N/A | N/A |
 | Memory | `.agents/AGENTS.md` (Rules) | `CLAUDE.md` | `.cursor/rules/memory.mdc` | `.kiro/steering/03-memory.md` | `AGENTS.md` prepend |
