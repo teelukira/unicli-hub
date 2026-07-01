@@ -39,10 +39,6 @@
         "path": ".cursor/mcp.json",
         "format": "json"
       },
-      "antigravity": {
-        "path": ".agents/mcp_config.json",
-        "format": "antigravity_json"
-      },
       "kiro": {
         "path": ".kiro/settings/mcp.json",
         "format": "json"
