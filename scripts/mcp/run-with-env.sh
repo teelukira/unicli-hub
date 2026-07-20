@@ -8,9 +8,15 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${SCRIPT_DIR}/project-env.sh"
 load_project_env "${REPO_ROOT}"
 
-args=()
-if [[ -n "${CONTEXT7_API_KEY:-}" ]]; then
-  args+=(--api-key "${CONTEXT7_API_KEY}")
+if [[ "$#" -eq 0 ]]; then
+  echo "run-with-env: command is required" >&2
+  exit 2
 fi
 
-exec npx -y @upstash/context7-mcp@latest "${args[@]}" "$@"
+command="$1"
+shift
+if [[ "${command}" == */* && "${command}" != /* ]]; then
+  command="${REPO_ROOT}/${command#./}"
+fi
+
+exec "${command}" "$@"

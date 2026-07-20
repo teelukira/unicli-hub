@@ -2,15 +2,16 @@
   "_comment": [
     "unicli-hub MCP 서버 원장 (Single Source of Truth)",
     "",
-    "【비밀키 관리 원칙】",
+    "【비밀키 및 worktree 환경 원칙】",
     "  - env 블록에 비밀키를 직접 작성하지 않는다.",
-    "  - MCP 서버 프로세스는 부모(AI CLI) 프로세스의 환경변수를 자동 상속한다.",
-    "  - 환경변수는 ~/.zshrc 또는 .env.local 에만 설정한다.",
+    "  - stdio MCP는 생성 시 worktree-aware launcher로 자동 래핑된다.",
+    "  - 우선순위: 부모 프로세스 환경 > 현재 worktree .env.local/.env > primary worktree .env.local/.env.",
+    "  - primary worktree의 로컬 파일은 공유 기본값, linked worktree 파일은 작업별 override로 사용한다.",
     "",
-    "【Wrapper Script 패턴 (권장)】",
-    "  - 토큰이 필요한 MCP 서버는 ./scripts/mcp/*-wrapper.sh 로 감싼다.",
-    "  - wrapper는 .env/.env.local을 로드하고 필수 변수를 검증한 후 exec.",
-    "  - 이렇게 하면 생성된 MCP config에 시크릿이 노출되지 않는다.",
+    "【Wrapper Script 패턴】",
+    "  - 토큰 검증이 필요한 MCP 서버는 scripts/mcp/*-wrapper.sh를 command로 사용한다.",
+    "  - 공통 launcher가 환경을 로드하고 worktree 상대 command를 절대경로로 바꾼 뒤 exec한다.",
+    "  - 이 방식은 생성된 MCP config에 시크릿을 노출하지 않는다.",
     "",
     "【sync 대상 파일】 (sync.sh 로 자동 생성, 경로는 hub/registry/fanout.json mcp.targets)",
     "  .mcp.json                             ← Claude Code (project root)",
@@ -79,10 +80,8 @@
     },
     "mcp-atlassian": {
       "_comment": "Wrapper loads .env/.env.local at runtime without rendering secrets into generated MCP config.",
-      "command": "/bin/bash",
-      "args": [
-        "./scripts/mcp/mcp-atlassian-wrapper.sh"
-      ],
+      "command": "scripts/mcp/mcp-atlassian-wrapper.sh",
+      "args": [],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR",
         "FASTMCP_SHOW_CLI_BANNER": "false",
@@ -124,20 +123,16 @@
     },
     "gitlab": {
       "_comment": "Wrapper loads .env/.env.local at runtime without rendering GitLab secrets into generated MCP config.",
-      "command": "/bin/bash",
-      "args": [
-        "./scripts/mcp/gitlab-wrapper.sh"
-      ],
+      "command": "scripts/mcp/gitlab-wrapper.sh",
+      "args": [],
       "env": {
         "NODE_TLS_REJECT_UNAUTHORIZED": "0"
       }
     },
     "context7": {
       "_comment": "Wrapper loads optional CONTEXT7_API_KEY from .env/.env.local.",
-      "command": "/bin/bash",
-      "args": [
-        "./scripts/mcp/context7-wrapper.sh"
-      ],
+      "command": "scripts/mcp/context7-wrapper.sh",
+      "args": [],
       "env": {}
     }
   }

@@ -107,7 +107,9 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 
 스킬을 추가하려면 `hub/skills/<skill-name>/SKILL.md`를 만듭니다. 필요한 보조 파일은 같은 폴더 아래에 둘 수 있습니다. 스킬 렌더러가 폴더 내용과 reference 파일을 지원 대상에 복사합니다.
 
-MCP 서버를 추가/삭제하려면 `hub/mcp-servers.json`을 수정합니다. 비밀값은 파일에 넣지 말고 상속 환경변수나 wrapper script를 사용합니다.
+MCP 서버를 추가/삭제하려면 `hub/mcp-servers.json`을 수정합니다. 비밀값은 파일에 넣지 말고 상속 환경변수나 자격증명 검증용 wrapper script를 사용합니다.
+
+모든 stdio MCP 서버는 생성 시 `scripts/mcp/run-with-env.sh`를 거칩니다. 생성된 launcher는 worktree 내부 어느 디렉터리에서 시작해도 활성 Git worktree를 찾고, **부모 프로세스 > 현재 worktree `.env.local` > 현재 worktree `.env` > primary worktree `.env.local` > primary worktree `.env`** 순서로 환경을 적용합니다. 따라서 primary worktree에는 공유 로컬 기본값을 두고 linked worktree에서 작업별 값을 덮어쓸 수 있습니다. 이 동작을 우회해야 하는 서버만 `"_project_env": false`를 지정합니다.
 
 생성되는 진입 문서 문구를 바꾸려면 `.unicli-hub/templates/AGENTS.md.tmpl` 또는 `.unicli-hub/templates/CLAUDE.md.tmpl`을 수정합니다.
 

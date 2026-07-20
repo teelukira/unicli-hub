@@ -4,17 +4,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-load_env_file() {
-  local file="$1"
-  [[ -f "${file}" ]] || return 0
-  set -a
-  # shellcheck disable=SC1090
-  source "${file}"
-  set +a
-}
-
-load_env_file "${REPO_ROOT}/.env"
-load_env_file "${REPO_ROOT}/.env.local"
+# shellcheck source=project-env.sh
+source "${SCRIPT_DIR}/project-env.sh"
+load_project_env "${REPO_ROOT}"
 
 export FASTMCP_LOG_LEVEL="${FASTMCP_LOG_LEVEL:-ERROR}"
 export FASTMCP_SHOW_CLI_BANNER="${FASTMCP_SHOW_CLI_BANNER:-false}"

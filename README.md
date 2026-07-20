@@ -107,7 +107,9 @@ To add an agent, place source files in `hub/agents/`; add optional model profile
 
 To add a skill, create `hub/skills/<skill-name>/SKILL.md`; optional support files can live beside it. The skill renderer copies folder contents and reference files to supported targets.
 
-To add or remove MCP servers, edit `hub/mcp-servers.json`. Keep secrets out of the file; use inherited environment variables or wrapper scripts where a CLI cannot expand environment variables in JSON args.
+To add or remove MCP servers, edit `hub/mcp-servers.json`. Keep secrets out of the file; use inherited environment variables or credential-checking wrapper scripts.
+
+All stdio MCP servers are rendered through `scripts/mcp/run-with-env.sh`. The generated launcher resolves the active Git worktree from any directory below it, then loads environment files in this precedence order: parent process, current worktree `.env.local`, current worktree `.env`, primary worktree `.env.local`, primary worktree `.env`. This lets the primary worktree provide shared local defaults while linked worktrees override them. Set `"_project_env": false` on a server only when it must bypass this behavior.
 
 To change generated entry document wording, edit `.unicli-hub/templates/AGENTS.md.tmpl` or `.unicli-hub/templates/CLAUDE.md.tmpl`.
 

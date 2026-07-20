@@ -8,11 +8,15 @@ import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 FANOUT_REGISTRY = ROOT / "hub" / "registry" / "fanout.json"
-ENV_LOCAL = ROOT / ".env.local"
+PROJECT_ENV_LAUNCHER = (
+    'root="$(git rev-parse --show-toplevel)" || exit $?; '
+    'exec "$root/scripts/mcp/run-with-env.sh" "$@"'
+)
 
 DEFAULT_MCP_FANOUT = {
     "source": "hub/mcp-servers.json",
@@ -65,6 +69,36 @@ def load_env(path: pathlib.Path) -> dict:
             if "=" in line:
                 key, val = line.split("=", 1)
                 env[key.strip()] = val.strip()
+    return env
+
+
+def find_primary_worktree(repo_root: pathlib.Path):
+    completed = subprocess.run(
+        ["git", "-C", str(repo_root), "worktree", "list", "--porcelain"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        return None
+    for line in completed.stdout.splitlines():
+        if line.startswith("worktree "):
+            return pathlib.Path(line.removeprefix("worktree ")).resolve()
+    return None
+
+
+def load_project_env(repo_root: pathlib.Path) -> dict:
+    repo_root = repo_root.resolve()
+    primary_root = find_primary_worktree(repo_root)
+    roots = []
+    if primary_root is not None and primary_root != repo_root:
+        roots.append(primary_root)
+    roots.append(repo_root)
+
+    env = {}
+    for root in roots:
+        env.update(load_env(root / ".env"))
+        env.update(load_env(root / ".env.local"))
     return env
 
 
@@ -128,13 +162,35 @@ def apply_overrides(server: dict, cli: str) -> dict:
     return merged
 
 
+def wrap_project_env(server: dict) -> dict:
+    if (
+        server.get("_project_env", True) is False
+        or server.get("type") == "http"
+        or "command" not in server
+    ):
+        return server
+
+    wrapped = copy.deepcopy(server)
+    command = wrapped["command"]
+    args = wrapped.get("args", [])
+    wrapped["command"] = "/bin/bash"
+    wrapped["args"] = [
+        "-c",
+        PROJECT_ENV_LAUNCHER,
+        "unicli-hub-mcp",
+        command,
+        *args,
+    ]
+    return wrapped
+
+
 def filter_servers(raw_servers: dict, cli: str) -> dict:
     result = {}
     for name, cfg in raw_servers.items():
         targets = cfg.get("_targets")
         if targets is not None and cli not in targets:
             continue
-        result[name] = apply_overrides(cfg, cli)
+        result[name] = wrap_project_env(apply_overrides(cfg, cli))
     return result
 
 
@@ -224,7 +280,7 @@ def main():
         print(f"ERROR: {canonical} not found")
         sys.exit(1)
 
-    env_vars = load_env(ENV_LOCAL)
+    env_vars = load_project_env(ROOT)
     src = read_json(canonical)
     raw_servers = src.get("mcpServers", {})
     raw_servers_subst = substitute_env(raw_servers, env_vars)
