@@ -6,7 +6,9 @@
     "targets": {
       "claude": ".claude/agents",
       "cursor": ".cursor/agents",
-      "codex": ".codex/agents"
+      "codex": ".codex/agents",
+      "antigravity": ".agents/agents",
+      "kiro": ".kiro/agents"
     }
   },
   "skills": {

@@ -186,6 +186,9 @@ def render_all_agents():
             else:
                  fm_claude["model"] = MODELS["claude"][a]
             
+            if "tools" not in fm_claude:
+                fm_claude["tools"] = "Read, Write, Edit, Bash, Glob, Grep"
+
             fm_lines = ["---"]
             for k, v in fm_claude.items(): fm_lines.append(f"{k}: {v}")
             fm_lines.append("---\n")
@@ -202,6 +205,16 @@ def render_all_agents():
         if TARGET_CLI in [None, "codex"]:
             compare_or_write(TARGETS["codex"] / f"{a}.md", render_codex_agent(a, body, description))
 
+        # Kiro
+        if TARGET_CLI in [None, "kiro"]:
+            kiro_content = json.dumps({
+                "name": a,
+                "description": fm.get("description", f"Agent {a}"),
+                "system_prompt": body,
+                "tools": ["read", "write", "bash"]
+            }, indent=2)
+            compare_or_write(TARGETS["kiro"] / f"{a}.json", kiro_content)
+
         # Antigravity
         if TARGET_CLI in [None, "antigravity"]:
             model_name = "gemini-3.1-pro"
@@ -217,13 +230,7 @@ def render_all_agents():
                 "model": model_name
             }, indent=2)
             
-            # Write to agents/
-            compare_or_write(TARGETS["antigravity"] / a / "agent.json", antigravity_content)
-            try:
-                compare_or_write(TARGETS["antigravity_global"] / a / "agent.json", antigravity_content)
-            except Exception:
-                pass # Ignore global write errors
-                
+            compare_or_write(TARGETS["antigravity"] / f"{a}.json", antigravity_content)
 
 def reconcile():
     """Delete agents in target dirs that were not produced by this renderer."""
@@ -237,7 +244,7 @@ def reconcile():
         except Exception:
             continue
         for f in sorted(target_dir.iterdir()):
-            if f.is_file() and f.suffix == ".md" and not f.name.startswith("skill-"):
+            if f.is_file() and f.suffix in [".md", ".json", ".toml"] and not f.name.startswith("skill-"):
                 if f.stem not in PRODUCED_AGENTS:
                     if MODE == "fix":
                         f.unlink()

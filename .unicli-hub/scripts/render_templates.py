@@ -19,6 +19,7 @@ KIRO_STEERING = ROOT / ".kiro" / "steering"
 
 def compare_or_write(target: pathlib.Path, content: str):
     global DRIFT
+    target.parent.mkdir(parents=True, exist_ok=True)
     if MODE == "check":
         if not target.exists() or target.read_text(encoding="utf-8") != content:
             print(f"DRIFT: {target.relative_to(ROOT)}")
@@ -126,6 +127,15 @@ def main():
         memory = load_memory()
         if memory:
             compare_or_write(KIRO_STEERING / "03-memory.md", memory.rstrip() + "\n")
+
+    if TARGET_CLI in [None, "antigravity"]:
+        import json
+        plugin_manifest = json.dumps({
+            "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+            "name": "unicli-hub",
+            "description": "Generated plugin bundle"
+        }, indent=2)
+        compare_or_write(ROOT / ".agents" / "plugin.json", plugin_manifest)
 
     if MODE == "check" and DRIFT:
         sys.exit(1)
