@@ -51,3 +51,4 @@ env/
 .env
 .env.local
 .env.vcs
+.sync.lock

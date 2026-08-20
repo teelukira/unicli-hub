@@ -19,6 +19,8 @@ Use this hook to:
 """
 
 import json
+import pathlib
+import subprocess
 import sys
 
 
@@ -34,6 +36,15 @@ def main() -> None:
     # if memory_file.exists():
     #     print(memory_file.read_text())
     #     return
+
+    # Auto-sync directories
+    script_dir = pathlib.Path(__file__).resolve().parent
+    lock_sync = script_dir / "lock_sync.py"
+    if lock_sync.exists():
+        subprocess.run(
+            [sys.executable, str(lock_sync)],
+            stdout=subprocess.DEVNULL
+        )
 
     # Default: no additional context injected
     pass
