@@ -36,7 +36,7 @@ def assemble(tmpl_path: pathlib.Path, cli_name: str) -> str:
     wf = (HUB / "core-workflow.md").read_text(encoding="utf-8") if (HUB / "core-workflow.md").exists() else ""
     
     memory = ""
-    for mf in ["project-facts.md", "conventions.md", "jira-config.md", "glossary.md"]:
+    for mf in ["project-facts.md", "conventions.md", "jira-config.md", "ranked-decisions.md", "glossary.md"]:
         p = HUB / "memory" / mf
         if p.exists(): memory += p.read_text(encoding="utf-8") + "\n\n"
         
@@ -59,7 +59,7 @@ def load_project_context() -> str:
 
 def load_memory() -> str:
     memory = ""
-    for mf in ["project-facts.md", "conventions.md", "glossary.md"]:
+    for mf in ["project-facts.md", "conventions.md", "jira-config.md", "ranked-decisions.md", "glossary.md"]:
         p = HUB / "memory" / mf
         if p.exists():
             memory += p.read_text(encoding="utf-8") + "\n\n"
