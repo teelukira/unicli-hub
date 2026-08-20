@@ -36,9 +36,23 @@ def assemble(tmpl_path: pathlib.Path, cli_name: str) -> str:
     wf = (HUB / "core-workflow.md").read_text(encoding="utf-8") if (HUB / "core-workflow.md").exists() else ""
     
     memory = ""
-    for mf in ["project-facts.md", "conventions.md", "jira-config.md", "glossary.md"]:
+    core = ""
+    for mf in ["project-facts.md", "conventions.md"]:
         p = HUB / "memory" / mf
-        if p.exists(): memory += p.read_text(encoding="utf-8") + "\n\n"
+        if p.exists(): core += p.read_text(encoding="utf-8") + "\n\n"
+    if core: memory += "### Core\n\n" + core
+
+    recall = ""
+    for mf in ["jira-config.md"]:
+        p = HUB / "memory" / mf
+        if p.exists(): recall += p.read_text(encoding="utf-8") + "\n\n"
+    if recall: memory += "### Recall (Ranked Decisions Ledger)\n\n" + recall
+
+    archive = ""
+    for mf in ["glossary.md"]:
+        p = HUB / "memory" / mf
+        if p.exists(): archive += p.read_text(encoding="utf-8") + "\n\n"
+    if archive: memory += "### Archive\n\n" + archive
         
     plugins = ""
     plugin_dir = HUB / "plugins" / cli_name
@@ -59,10 +73,23 @@ def load_project_context() -> str:
 
 def load_memory() -> str:
     memory = ""
-    for mf in ["project-facts.md", "conventions.md", "glossary.md"]:
+    core = ""
+    for mf in ["project-facts.md", "conventions.md"]:
         p = HUB / "memory" / mf
-        if p.exists():
-            memory += p.read_text(encoding="utf-8") + "\n\n"
+        if p.exists(): core += p.read_text(encoding="utf-8") + "\n\n"
+    if core: memory += "### Core\n\n" + core
+
+    recall = ""
+    for mf in ["jira-config.md"]:
+        p = HUB / "memory" / mf
+        if p.exists(): recall += p.read_text(encoding="utf-8") + "\n\n"
+    if recall: memory += "### Recall (Ranked Decisions Ledger)\n\n" + recall
+
+    archive = ""
+    for mf in ["glossary.md"]:
+        p = HUB / "memory" / mf
+        if p.exists(): archive += p.read_text(encoding="utf-8") + "\n\n"
+    if archive: memory += "### Archive\n\n" + archive
     return memory
 
 
