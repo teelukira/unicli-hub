@@ -89,38 +89,6 @@
         "TOOLSETS": "all"
       }
     },
-    "serena": {
-      "command": "serena",
-      "args": [
-        "start-mcp-server",
-        "--context=claude-code",
-        "--project-from-cwd"
-      ],
-      "env": {},
-      "_overrides": {
-        "gemini": {
-          "args": [
-            "start-mcp-server",
-            "--context=ide-assistant",
-            "--project-from-cwd"
-          ]
-        },
-        "cursor": {
-          "args": [
-            "start-mcp-server",
-            "--context=ide-assistant",
-            "--project-from-cwd"
-          ]
-        },
-        "antigravity": {
-          "args": [
-            "start-mcp-server",
-            "--context=ide-assistant",
-            "--project-from-cwd"
-          ]
-        }
-      }
-    },
     "gitlab": {
       "_comment": "Wrapper loads .env/.env.local at runtime without rendering GitLab secrets into generated MCP config.",
       "command": "scripts/mcp/gitlab-wrapper.sh",

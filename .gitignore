@@ -13,8 +13,12 @@ Thumbs.db
 .idea/
 *.swp
 
-# Logs
+# Logs & Locks
 *.log
+.sync.lock
+.unicli-hub/.sync.lock
+.unicli-hub/.last_update_check
+.unicli-hub/.session_cache.json
 
 # Hook debounce stamp (pre_skill_sync.py)
 .unicli-rules/.pre_skill_sync_stamp

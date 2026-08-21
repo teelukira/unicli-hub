@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""
-before_shell_execution.py - shell hook skeleton.
+"""before_shell_execution.py — UniCLI-Hub shell execution hook.
 
-This framework keeps shell policy in code, not prose. Add project-specific
-checks here or delegate to additional guard modules under hub/hooks/.
+Checks for sensitive files/credentials before command execution.
 """
+
+from __future__ import annotations
 
 import json
 import sys
@@ -26,7 +26,14 @@ def main() -> None:
     command = payload.get("command", "") or payload.get("shellCommand", "")
     for pattern in SENSITIVE_PATTERNS:
         if pattern in command:
-            print(json.dumps({"permission": "deny", "reason": f"Command touches sensitive path: {pattern}"}))
+            print(
+                json.dumps(
+                    {
+                        "permission": "deny",
+                        "reason": f"Command touches sensitive path: {pattern}",
+                    }
+                )
+            )
             return
 
     print(json.dumps({"permission": "allow"}))

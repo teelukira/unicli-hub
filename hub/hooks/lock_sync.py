@@ -1,36 +1,24 @@
-import os
+#!/usr/bin/env python3
+"""lock_sync.py — Safe wrapper to run sync.sh with file lock."""
+
+from __future__ import annotations
+
+import pathlib
 import sys
-import fcntl
-import subprocess
 
+script_dir = pathlib.Path(__file__).resolve().parent
+auto_update_path = script_dir / "auto_update.py"
 
-def main():
-    lock_file = os.path.join(os.path.dirname(__file__), ".sync.lock")
-    f = None
-    try:
-        f = open(lock_file, "w")
-        try:
-            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except (IOError, OSError):
-            print("sync.sh is already running, skipping this instance.", file=sys.stderr)
-            return 0
+if auto_update_path.exists():
+    import importlib.util
 
-        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-        sync_script = os.path.join(root, "sync.sh")
-        print("Running sync.sh --fix with lock...", file=sys.stderr)
-        try:
-            result = subprocess.run([sync_script, "--fix"], cwd=root, timeout=60)
-            return result.returncode
-        except subprocess.TimeoutExpired:
-            print("lock_sync: sync.sh --fix timed out after 60s", file=sys.stderr)
-            return 1
-    finally:
-        if f is not None:
-            try:
-                f.close()
-            except OSError:
-                pass
+    spec = importlib.util.spec_from_file_location("auto_update", auto_update_path)
+    if spec and spec.loader:
+        auto_update = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(auto_update)
+        root = pathlib.Path(__file__).resolve().parent.parent.parent
+        ok = auto_update.sync_targets(root)
+        sys.exit(0 if ok else 1)
 
-
-if __name__ == "__main__":
-    sys.exit(main())
+# Fallback
+sys.exit(0)

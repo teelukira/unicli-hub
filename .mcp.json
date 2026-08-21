@@ -84,19 +84,6 @@
         "TOOLSETS": "all"
       }
     },
-    "serena": {
-      "command": "/bin/bash",
-      "args": [
-        "-c",
-        "root=\"$(git rev-parse --show-toplevel)\" || exit $?; exec \"$root/scripts/mcp/run-with-env.sh\" \"$@\"",
-        "unicli-hub-mcp",
-        "serena",
-        "start-mcp-server",
-        "--context=claude-code",
-        "--project-from-cwd"
-      ],
-      "env": {}
-    },
     "gitlab": {
       "command": "/bin/bash",
       "args": [
