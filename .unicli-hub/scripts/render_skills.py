@@ -80,9 +80,11 @@ def compare_or_write_bytes(target: pathlib.Path, content: bytes):
         except ValueError:
             print(f"wrote: {target}")
 
+DEPENDS_ON_REGEX = re.compile(r"depends_on:\s*\[?(.*?)\]?\s*$", re.MULTILINE)
+
 def get_dependencies(content: str) -> list:
     # Look for depends_on: [skill1, skill2] or depends_on: skill1
-    match = re.search(r"depends_on:\s*\[?(.*?)\]?\s*$", content, re.MULTILINE)
+    match = DEPENDS_ON_REGEX.search(content)
     if match:
         deps = [d.strip() for d in match.group(1).split(",") if d.strip()]
         return deps
