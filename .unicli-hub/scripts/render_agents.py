@@ -70,6 +70,8 @@ TARGET_CLI = None
 DRIFT = False
 PRODUCED_AGENTS: set = set()
 
+FRONTMATTER_REGEX = re.compile(r"^---\s*\n(.*?)\n---\s*\n(.*)$", re.DOTALL)
+
 def compare_or_write(target: pathlib.Path, content: str):
     global DRIFT
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -86,7 +88,7 @@ def compare_or_write(target: pathlib.Path, content: str):
 
 def split_frontmatter(content: str):
     """Split markdown into frontmatter (dict) and body."""
-    match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", content, re.DOTALL)
+    match = FRONTMATTER_REGEX.match(content)
     if match:
         fm_text = match.group(1)
         body = match.group(2)
