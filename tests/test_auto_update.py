@@ -6,7 +6,6 @@ import os
 import pathlib
 import sys
 import tempfile
-import time
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
