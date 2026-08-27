@@ -1,0 +1,13 @@
+🧪 Add tests for normalize in generated_file_guard.py
+
+🎯 **What:** The testing gap addressed
+The `normalize` function in `hub/hooks/generated_file_guard.py` lacked unit tests.
+
+📊 **Coverage:** What scenarios are now tested
+Tests have been added for the following scenarios:
+- Empty paths and `None`
+- Paths without the `"/unicli-hub/"` marker
+- Paths containing the `"/unicli-hub/"` marker
+
+✨ **Result:** The improvement in test coverage
+The `normalize` function is now fully tested.
