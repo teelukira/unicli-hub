@@ -79,7 +79,6 @@ python hub/skills/html-report/utils/report_engine.py spec.json -o out.html --emb
 | `mermaid` | `diagram`: Mermaid 소스 (이스케이프 안 함, `<script>` 금지) |
 | `details` | `summary`, `open`(bool), `components`: `[...]` |
 | `image_grid` | `images`: `[{src, caption}]` |
-| `raw_html` | `html`: 그대로 출력 (스키마로 표현 불가한 일회성 탈출구) |
 
 ### 테이블 행
 

@@ -30,7 +30,7 @@ except ImportError:  # script import (python hub/skills/html-report/utils/report
 COMPONENT_TYPES = {
     "text", "stat_grid", "table", "progress_list", "badge", "legend",
     "status_grid", "callout", "code_block", "mermaid", "details",
-    "image_grid", "raw_html",
+    "image_grid",
 }
 STAT_COLORS = {"green", "red", "yellow", "blue", "gray", "purple"}
 FILL_COLORS = {"green", "red", "yellow", "blue"}
@@ -102,8 +102,7 @@ class ReportRenderer:
             "mermaid": self._render_mermaid,
             "details": self._render_details,
             "image_grid": self._render_image_grid,
-            "raw_html": self._render_raw_html,
-        }
+                    }
 
     # -- public ------------------------------------------------------------
     def render(self) -> str:
@@ -413,9 +412,6 @@ class ReportRenderer:
                          % (inline.plain(src),
                             inline.plain(caption or img.get("src", "")), cap_html))
         return '<div class="image-grid">%s</div>' % "".join(cards)
-
-    def _render_raw_html(self, c: dict) -> str:
-        return str(c.get("html", ""))
 
     # -- helpers -----------------------------------------------------------
     def _asset_src(self, src: str) -> str:

@@ -1,0 +1,114 @@
+diff --git a/.agents/skills/html-report/SKILL.md b/.agents/skills/html-report/SKILL.md
+index abea02d..461d274 100644
+--- a/.agents/skills/html-report/SKILL.md
++++ b/.agents/skills/html-report/SKILL.md
+@@ -50,7 +50,6 @@ JSON 스펙 하나로 폴리시된 자체 완결형 HTML 리포트를 만든다.
+ | `mermaid` | `diagram` |
+ | `details` | `summary`, `open?`, `components[]` |
+ | `image_grid` | `images:[{src,caption}]` |
+-| `raw_html` | `html` (스키마 표현 불가 시 탈출구) |
+
+ 테이블 행: 데이터 행 `{cells:{key:값}}` 또는 그룹 행 `{kind:"group",label:...}`.
+ 셀 값은 문자열 또는 `{text,color,align}`.
+diff --git a/.agents/skills/html-report/utils/README.md b/.agents/skills/html-report/utils/README.md
+index 7c15667..6997d45 100644
+--- a/.agents/skills/html-report/utils/README.md
++++ b/.agents/skills/html-report/utils/README.md
+@@ -79,7 +79,6 @@ python hub/skills/html-report/utils/report_engine.py spec.json -o out.html --emb
+ | `mermaid` | `diagram`: Mermaid 소스 (이스케이프 안 함, `<script>` 금지) |
+ | `details` | `summary`, `open`(bool), `components`: `[...]` |
+ | `image_grid` | `images`: `[{src, caption}]` |
+-| `raw_html` | `html`: 그대로 출력 (스키마로 표현 불가한 일회성 탈출구) |
+
+ ### 테이블 행
+
+diff --git a/.agents/skills/html-report/utils/report_engine.py b/.agents/skills/html-report/utils/report_engine.py
+index 565948c..4c70977 100644
+--- a/.agents/skills/html-report/utils/report_engine.py
++++ b/.agents/skills/html-report/utils/report_engine.py
+@@ -30,7 +30,7 @@ except ImportError:  # script import (python hub/skills/html-report/utils/report
+ COMPONENT_TYPES = {
+     "text", "stat_grid", "table", "progress_list", "badge", "legend",
+     "status_grid", "callout", "code_block", "mermaid", "details",
+-    "image_grid", "raw_html",
++    "image_grid",
+ }
+ STAT_COLORS = {"green", "red", "yellow", "blue", "gray", "purple"}
+ FILL_COLORS = {"green", "red", "yellow", "blue"}
+@@ -102,8 +102,7 @@ class ReportRenderer:
+             "mermaid": self._render_mermaid,
+             "details": self._render_details,
+             "image_grid": self._render_image_grid,
+-            "raw_html": self._render_raw_html,
+-        }
++                    }
+
+     # -- public ------------------------------------------------------------
+     def render(self) -> str:
+@@ -414,9 +413,6 @@ class ReportRenderer:
+                             inline.plain(caption or img.get("src", "")), cap_html))
+         return '<div class="image-grid">%s</div>' % "".join(cards)
+
+-    def _render_raw_html(self, c: dict) -> str:
+-        return str(c.get("html", ""))
+-
+     # -- helpers -----------------------------------------------------------
+     def _asset_src(self, src: str) -> str:
+         if not self.embed_assets or src.startswith(("http://", "https://", "data:")):
+diff --git a/hub/skills/html-report/SKILL.md b/hub/skills/html-report/SKILL.md
+index 1adf7fc..939c4fc 100644
+--- a/hub/skills/html-report/SKILL.md
++++ b/hub/skills/html-report/SKILL.md
+@@ -50,7 +50,6 @@ JSON 스펙 하나로 폴리시된 자체 완결형 HTML 리포트를 만든다.
+ | `mermaid` | `diagram` |
+ | `details` | `summary`, `open?`, `components[]` |
+ | `image_grid` | `images:[{src,caption}]` |
+-| `raw_html` | `html` (스키마 표현 불가 시 탈출구) |
+
+ 테이블 행: 데이터 행 `{cells:{key:값}}` 또는 그룹 행 `{kind:"group",label:...}`.
+ 셀 값은 문자열 또는 `{text,color,align}`.
+diff --git a/hub/skills/html-report/utils/README.md b/hub/skills/html-report/utils/README.md
+index 7c15667..6997d45 100644
+--- a/hub/skills/html-report/utils/README.md
++++ b/hub/skills/html-report/utils/README.md
+@@ -79,7 +79,6 @@ python hub/skills/html-report/utils/report_engine.py spec.json -o out.html --emb
+ | `mermaid` | `diagram`: Mermaid 소스 (이스케이프 안 함, `<script>` 금지) |
+ | `details` | `summary`, `open`(bool), `components`: `[...]` |
+ | `image_grid` | `images`: `[{src, caption}]` |
+-| `raw_html` | `html`: 그대로 출력 (스키마로 표현 불가한 일회성 탈출구) |
+
+ ### 테이블 행
+
+diff --git a/hub/skills/html-report/utils/report_engine.py b/hub/skills/html-report/utils/report_engine.py
+index 565948c..4c70977 100644
+--- a/hub/skills/html-report/utils/report_engine.py
++++ b/hub/skills/html-report/utils/report_engine.py
+@@ -30,7 +30,7 @@ except ImportError:  # script import (python hub/skills/html-report/utils/report
+ COMPONENT_TYPES = {
+     "text", "stat_grid", "table", "progress_list", "badge", "legend",
+     "status_grid", "callout", "code_block", "mermaid", "details",
+-    "image_grid", "raw_html",
++    "image_grid",
+ }
+ STAT_COLORS = {"green", "red", "yellow", "blue", "gray", "purple"}
+ FILL_COLORS = {"green", "red", "yellow", "blue"}
+@@ -102,8 +102,7 @@ class ReportRenderer:
+             "mermaid": self._render_mermaid,
+             "details": self._render_details,
+             "image_grid": self._render_image_grid,
+-            "raw_html": self._render_raw_html,
+-        }
++                    }
+
+     # -- public ------------------------------------------------------------
+     def render(self) -> str:
+@@ -414,9 +413,6 @@ class ReportRenderer:
+                             inline.plain(caption or img.get("src", "")), cap_html))
+         return '<div class="image-grid">%s</div>' % "".join(cards)
+
+-    def _render_raw_html(self, c: dict) -> str:
+-        return str(c.get("html", ""))
+-
+     # -- helpers -----------------------------------------------------------
+     def _asset_src(self, src: str) -> str:
+         if not self.embed_assets or src.startswith(("http://", "https://", "data:")):

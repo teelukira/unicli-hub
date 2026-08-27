@@ -50,7 +50,6 @@ JSON 스펙 하나로 폴리시된 자체 완결형 HTML 리포트를 만든다.
 | `mermaid` | `diagram` |
 | `details` | `summary`, `open?`, `components[]` |
 | `image_grid` | `images:[{src,caption}]` |
-| `raw_html` | `html` (스키마 표현 불가 시 탈출구) |
 
 테이블 행: 데이터 행 `{cells:{key:값}}` 또는 그룹 행 `{kind:"group",label:...}`.
 셀 값은 문자열 또는 `{text,color,align}`.
