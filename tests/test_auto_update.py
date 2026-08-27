@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Tests for auto_update.py once-per-session update logic."""
 
-import json
 import os
 import pathlib
 import sys
