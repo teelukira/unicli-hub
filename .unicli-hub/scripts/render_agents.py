@@ -7,7 +7,6 @@ import sys
 import pathlib
 import json
 import re
-import shutil
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 HUB = ROOT / "hub"
@@ -15,20 +14,17 @@ REGISTRY_DIR = HUB / "registry"
 FANOUT_REGISTRY = REGISTRY_DIR / "fanout.json"
 AGENT_PROFILES_REGISTRY = REGISTRY_DIR / "agent-profiles.json"
 
-
 def resolve_path(path_value: str) -> pathlib.Path:
     path = pathlib.Path(path_value).expanduser()
     if path.is_absolute():
         return path
     return ROOT / path
 
-
 def read_json(path: pathlib.Path) -> dict:
     if not path.exists():
         return {}
     with path.open(encoding="utf-8") as f:
         return json.load(f)
-
 
 FANOUT = read_json(FANOUT_REGISTRY).get("agents", {})
 AGENTS_SRC = resolve_path(FANOUT.get("source", "hub/agents"))
@@ -258,7 +254,6 @@ def reconcile():
                         except ValueError:
                             print(f"DRIFT (stale agent): {f}")
                         DRIFT = True
-
 
 def main():
     global MODE, DRIFT, TARGET_CLI
