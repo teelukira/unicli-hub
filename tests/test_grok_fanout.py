@@ -81,8 +81,8 @@ class GrokFanoutTest(unittest.TestCase):
             },
         )
         self.assertIn("[mcp_servers.docs]", content)
-        self.assertIn('command = "/bin/bash"', content)
-        self.assertIn("unicli-hub-mcp", content)
+        self.assertIn('command = "python"', content)
+        self.assertIn("scripts/mcp/run_with_env.py", content)
         self.assertIn('MODE = "test"', content)
 
     def test_generated_file_guard_blocks_grok_paths(self):

@@ -7,6 +7,11 @@ import json
 import pathlib
 import sys
 
+_SCRIPTS = pathlib.Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+from cli_names import canonical_cli
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 REGISTRY = ROOT / "hub" / "registry" / "hook-events.json"
 
@@ -61,6 +66,26 @@ def render_claude_like(commands: dict, target: dict) -> str:
     return json.dumps({"hooks": hooks}, indent=2, ensure_ascii=False) + "\n"
 
 
+def render_kiro(commands: dict, target: dict) -> str:
+    hooks = []
+    for logical_event, target_event in target.get("events", {}).items():
+        command = commands[logical_event]
+        entry = {
+            "name": f"unicli-{logical_event.replace('_', '-')}",
+            "trigger": target_event,
+            "action": {
+                "type": "command",
+                "command": command["command"],
+            },
+            "timeout": command.get("timeout", 10),
+        }
+        matcher = command.get("matcher")
+        if matcher and matcher != "*":
+            entry["matcher"] = matcher
+        hooks.append(entry)
+    return json.dumps({"version": "v1", "hooks": hooks}, indent=2, ensure_ascii=False) + "\n"
+
+
 def render_cursor(commands: dict, target: dict) -> str:
     hooks = {}
     fail_closed = target.get("fail_closed", False)
@@ -83,6 +108,8 @@ def render_target(commands: dict, name: str, target: dict) -> None:
         content = render_claude_like(commands, target)
     elif fmt == "cursor":
         content = render_cursor(commands, target)
+    elif fmt == "kiro":
+        content = render_kiro(commands, target)
     else:
         print(f"ERROR: unsupported hook format for {name}: {fmt}", file=sys.stderr)
         sys.exit(1)
@@ -95,12 +122,12 @@ def main() -> None:
         if arg in ["--fix", "--check"]:
             MODE = arg[2:]
         elif arg.startswith("--target="):
-            TARGET_CLI = arg.split("=", 1)[1]
+            TARGET_CLI = canonical_cli(arg.split("=", 1)[1])
 
     registry = load_registry()
     commands = registry.get("commands", {})
     for name, target in registry.get("targets", {}).items():
-        if TARGET_CLI is not None and TARGET_CLI not in {name, "agy" if name == "antigravity" else name}:
+        if TARGET_CLI is not None and TARGET_CLI != name:
             continue
         render_target(commands, name, target)
 
