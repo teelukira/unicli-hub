@@ -105,6 +105,9 @@ def main() -> None:
 
     registry = load_registry()
     for name, config in registry.get("static_copies", {}).items():
+        owner = name.split("_", 1)[0]
+        if TARGET_CLI is not None and TARGET_CLI not in {name, owner}:
+            continue
         render_static_copy(name, config)
 
     if MODE == "check" and DRIFT:

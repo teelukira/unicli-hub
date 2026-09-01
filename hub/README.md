@@ -33,7 +33,8 @@ Rules that can be checked mechanically should live in hook or verification scrip
 1. Add `hub/agents/<agent-name>.md`.
 2. Optional CLI profiles in `hub/registry/agent-profiles.json`:
    - `cursor.<agent-name>` for `model`, `readonly`, `is_background`
-   - `codex.<agent-name>` for generated Codex prompt model metadata
+   - `codex.<agent-name>` for generated Codex TOML `model` and `model_reasoning_effort`
+   - `grok.<agent-name>` for `model`, `prompt_mode`, `permission_mode`, `agents_md`
 3. Run `./sync.sh --fix`.
 
 ## Adding a Skill

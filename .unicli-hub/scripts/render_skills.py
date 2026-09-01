@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 render_skills.py — Fan-out skills from hub/skills/ to all AI CLI targets.
-Supports Claude, Gemini, Cursor, Antigravity, Kiro, and Codex.
+Supports Claude, Cursor, Antigravity, Kiro, Codex, and Grok.
 """
 
 import sys
@@ -37,14 +37,11 @@ TARGETS = {
         "claude": ".claude/skills",
         "cursor": ".cursor/skills",
         "antigravity": ".agents/skills",
-        "codex": ".codex/skills",
+        "codex": ".agents/skills",
+        "kiro": ".kiro/skills",
+        "grok": ".grok/skills",
     }).items()
-    if name in {"claude", "cursor", "antigravity", "codex"}
 }
-
-# Flat targets
-_SKILL_TARGETS = FANOUT.get("targets", {})
-KIRO_STEERING = resolve_path(_SKILL_TARGETS.get("kiro", ".kiro/steering"))
 
 MODE = "fix"
 TARGET_CLI = None
@@ -135,7 +132,7 @@ def copy_references(skill_name: str, current_skill_content: str):
 
     targets_to_process = []
     if TARGET_CLI is None:
-        targets_to_process = list(TARGETS.values())
+        targets_to_process = list(dict.fromkeys(TARGETS.values()))
     elif TARGET_CLI in TARGETS:
         targets_to_process = [TARGETS[TARGET_CLI]]
 
@@ -155,7 +152,7 @@ def copy_folder_skill_contents(skill_name: str):
 
     targets_to_process = []
     if TARGET_CLI is None:
-        targets_to_process = list(TARGETS.values())
+        targets_to_process = list(dict.fromkeys(TARGETS.values()))
     elif TARGET_CLI in TARGETS:
         targets_to_process = [TARGETS[TARGET_CLI]]
 
@@ -204,22 +201,21 @@ def reconcile():
                         print(f"DRIFT (stale skill): {item}")
                     DRIFT = True
 
-    if TARGET_CLI in [None, "kiro"] and KIRO_STEERING.exists():
-        for f in sorted(KIRO_STEERING.glob("skill-*.md")):
-            skill_name = f.stem[len("skill-"):]
-            if skill_name not in PRODUCED_SKILLS:
-                if MODE == "fix":
-                    f.unlink()
-                    try:
-                        print(f"removed stale skill: {f.relative_to(ROOT)}")
-                    except ValueError:
-                        print(f"removed stale skill: {f}")
-                else:
-                    try:
-                        print(f"DRIFT (stale skill): {f.relative_to(ROOT)}")
-                    except ValueError:
-                        print(f"DRIFT (stale skill): {f}")
-                    DRIFT = True
+    legacy_steering = ROOT / ".kiro" / "steering"
+    if TARGET_CLI in [None, "kiro"] and legacy_steering.exists():
+        for f in sorted(legacy_steering.glob("skill-*.md")):
+            if MODE == "fix":
+                f.unlink()
+                try:
+                    print(f"removed stale skill: {f.relative_to(ROOT)}")
+                except ValueError:
+                    print(f"removed stale skill: {f}")
+            else:
+                try:
+                    print(f"DRIFT (stale skill): {f.relative_to(ROOT)}")
+                except ValueError:
+                    print(f"DRIFT (stale skill): {f}")
+                DRIFT = True
 
 
 
@@ -238,7 +234,7 @@ def main():
     # Determine which targets to process
     target_roots = []
     if TARGET_CLI is None:
-        target_roots = list(TARGETS.values())
+        target_roots = list(dict.fromkeys(TARGETS.values()))
     elif TARGET_CLI in TARGETS:
         target_roots = [TARGETS[TARGET_CLI]]
 
@@ -249,10 +245,6 @@ def main():
         body = md_path.read_text(encoding="utf-8")
         for target_root in target_roots:
             compare_or_write(target_root / skill_name / "SKILL.md", body + "\n")
-
-        if TARGET_CLI in [None, "kiro"]:
-            compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
-
 
         copy_references(skill_name, body)
 
@@ -266,10 +258,6 @@ def main():
         body = skill_md.read_text(encoding="utf-8")
         for target_root in target_roots:
             compare_or_write(target_root / skill_name / "SKILL.md", body + "\n")
-
-        if TARGET_CLI in [None, "kiro"]:
-            compare_or_write(KIRO_STEERING / f"skill-{skill_name}.md", body + "\n")
-
 
         copy_references(skill_name, body)
         copy_folder_skill_contents(skill_name)

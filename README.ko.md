@@ -13,10 +13,10 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 | 자산 | 원본 | 생성 대상 |
 |---|---|---|
 | 진입 문서 | `.unicli-hub/templates/*.tmpl`, `hub/memory/`, `hub/project-context.md` | `AGENTS.md`, `CLAUDE.md` |
-| 에이전트 | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/agents/` |
-| 스킬 | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/skills/` |
-| 훅 | `hub/hooks/`, `hub/registry/hook-events.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
-| MCP 서버 | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.codex/config.toml` |
+| 에이전트 | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/agents/`, `.codex/agents/`, `.grok/agents/` |
+| 스킬 | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/skills/`, `.grok/skills/` |
+| 훅 | `hub/hooks/`, `hub/registry/hook-events.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json`, `.grok/hooks/unicli-hub.json` |
+| MCP 서버 | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.kiro/settings/mcp.json`, `.codex/config.toml`, `.grok/config.toml` |
 | 메모리 | `hub/memory/*.md` | 생성된 진입 문서에 포함 |
 
 ## 지원 CLI
@@ -28,6 +28,7 @@ UniCLI-Hub는 `hub/`를 단일 원본으로 보고 도구별 생성 파일을 �
 | Cursor | `.cursor/` | `AGENTS.md` 및 Cursor 파일 |
 | Kiro | `.kiro/` | 생성된 steering 및 agent 파일 |
 | OpenAI Codex | `.codex/` | `AGENTS.md` 및 agent/skill 파일 |
+| Grok Build | `.grok/` | `AGENTS.md` 및 `.grok/` agent, skill, hook, MCP 파일 |
 
 ## 도구별 기능 지원 (스킬, 서브에이전트, MCP)
 
@@ -36,17 +37,33 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 ### 1. 구글 안티그래비티 (Google Antigravity, agy)
 - **스킬 (Skills)**: 커스텀 폴더 구조(`.agents/skills/<skill_name>/SKILL.md`)를 통해 네이티브하게 스킬을 로드하고 스캔합니다.
 - **서브에이전트 (Subagents)**: 정적 파일로 커스텀 에이전트를 정의하는 대신, 내장 에이전트(예: `research`, `self`)를 제공하며 런타임에 `define_subagent` 도구를 호출하여 동적으로 에이전트를 생성하는 방식을 사용합니다.
-- **MCP**: 단일 `mcp_config.json` 설정 파일 대신 개별 폴더 구조(`mcp/<serverName>/<toolName>.json`)로 도구 스키마를 로드합니다.
+- **MCP**: 워크스페이스 MCP는 `.agents/mcp_config.json` (`mcpServers`)입니다. 전역 설정은 `~/.gemini/config/mcp_config.json`입니다.
 
 ### 2. 커서 (Cursor)
-- **스킬 (Skills)**: `.cursor/rules/*.mdc` 형태의 룰 파일로 렌더링되어 IDE 내규로 동작합니다.
-- **서브에이전트 (Subagents)**: 정적 파일을 지원합니다. `.cursor/agents/*.md`에 정의된 마크다운을 읽어 IDE 서브에이전트로 구성합니다.
-- **MCP**: 프로젝트의 `.cursor/mcp.json` 통합 설정 파일을 통해 명시적으로 서버를 연결합니다.
+- **스킬 (Skills)**: `.cursor/skills/<skill_name>/SKILL.md` 네이티브 Agent Skills입니다. 호환을 위해 `.agents/skills/`와 Claude/Codex 스킬 디렉터리도 읽습니다. 항상 적용되는 프로젝트 룰은 `.cursor/rules/*.mdc`입니다.
+- **서브에이전트 (Subagents)**: `.cursor/agents/*.md` 마크다운과 YAML 프론트매터(`name`, `description`, `model`, `readonly`, `is_background`).
+- **MCP**: 프로젝트 `.cursor/mcp.json`.
 
 ### 3. 클로드 코드 (Claude Code)
-- **스킬 (Skills)**: `.claude/skills/` 디렉토리에 배치된 스킬을 네이티브하게 지원합니다.
-- **서브에이전트 (Subagents)**: 정적 마크다운(`.claude/agents/*.md`) 정의를 통해 역할과 시스템 프롬프트가 설정된 에이전트를 지원합니다.
-- **MCP**: 프로젝트 최상단의 `.mcp.json` 파일 하나로 통합 구성합니다.
+- **스킬 (Skills)**: `.claude/skills/<skill_name>/SKILL.md`.
+- **서브에이전트 (Subagents)**: `.claude/agents/*.md` 마크다운과 YAML 프론트매터(`name`, `description`, 선택 `tools`, `sonnet` 같은 모델 alias).
+- **MCP**: 프로젝트 최상단 `.mcp.json`.
+
+### 4. 그록 빌드 (Grok Build)
+- **스킬 (Skills)**: `.grok/skills/<skill_name>/SKILL.md`에 네이티브 프로젝트 스킬을 둡니다. Grok은 호환 설정으로 Claude, Cursor, Antigravity 스킬 디렉터리도 스캔할 수 있지만, 이름이 겹치면 `.grok/skills/`가 이깁니다.
+- **서브에이전트 (Subagents)**: `.grok/agents/*.md` 마크다운과 YAML 프론트매터(`name`, `description`, `model`, `permission_mode`)로 정의합니다. 런타임에 `spawn_subagent`로 실행됩니다.
+- **MCP**: 프로젝트 범위 TOML인 `.grok/config.toml`의 `[mcp_servers.<name>]`으로 구성합니다. 네이티브 Grok 설정이 Claude, Cursor, `.mcp.json` 호환 소스보다 우선합니다.
+- **Trust**: 프로젝트 `.grok/hooks/`와 repo-local MCP는 폴더를 trust한 뒤에만 동작합니다 (`/hooks-trust` 또는 `grok --trust`).
+
+### 5. 오픈AI 코덱스 (OpenAI Codex)
+- **스킬 (Skills)**: 저장소 스킬은 `.agents/skills/<skill_name>/SKILL.md`입니다 (Antigravity와 공유하는 Agent Skills 위치). 사용자 스킬은 `$HOME/.agents/skills`입니다.
+- **서브에이전트 (Subagents)**: 프로젝트 커스텀 에이전트는 `.codex/agents/*.toml`이며 `name`, `description`, `developer_instructions`가 필요합니다.
+- **MCP**: 프로젝트 `.codex/config.toml`의 `[mcp_servers.<name>]`.
+
+### 6. 키로 (Kiro)
+- **스킬 (Skills)**: `.kiro/skills/<skill_name>/SKILL.md` 네이티브 Agent Skills입니다. `.kiro/steering/`은 항상 적용되는 프로젝트 컨텍스트이며 스킬이 아닙니다.
+- **서브에이전트 (Subagents)**: `.kiro/agents/*.json` (JSON은 계속 유효, `prompt`와 `read`/`write`/`shell` 태그형 `tools`).
+- **MCP**: `.kiro/settings/mcp.json`.
 
 ## 저장소 구조
 
@@ -73,7 +90,7 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 
 수정은 `hub/` 또는 `.unicli-hub/templates/`의 원본에 합니다.
 
-`AGENTS.md`, `CLAUDE.md`, `.claude/`, `.cursor/`, `.agents/`, `.kiro/`, `.codex/`, `.mcp.json` 및 생성된 MCP/config 파일은 직접 수정하지 않습니다. 생성 파일 가드가 직접 수정을 차단하고 원본 위치를 안내합니다.
+`AGENTS.md`, `CLAUDE.md`, `.claude/`, `.cursor/`, `.agents/`, `.kiro/`, `.codex/`, `.grok/`, `.mcp.json` 및 생성된 MCP/config 파일은 직접 수정하지 않습니다. 생성 파일 가드가 직접 수정을 차단하고 원본 위치를 안내합니다.
 
 원본을 바꾼 뒤에는 다음을 실행합니다.
 

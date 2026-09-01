@@ -10,6 +10,7 @@ agent should edit instead.
 Schema support:
   - Claude Code: {"tool_input": {"file_path": "..."}}
   - Cursor:      {"toolInput": {"file_path": "..."}}
+  - Grok:        {"toolInput": {"file_path": "..."}} (Windows paths accepted)
   - Gemini CLI:  {"tool_input": {"path": "..."}} / substituted via {{args}}
   - Kiro:        {"args": {"file_path": "..."}}
 """
@@ -68,6 +69,8 @@ EXACT_GUARDS: list[tuple[str, str]] = [
     (".cursor/mcp.json", "hub/mcp-servers.json"),
     (".kiro/settings/mcp.json", "hub/mcp-servers.json"),
     (".codex/config.toml", "hub/mcp-servers.json (mcpServers block)"),
+    (".grok/config.toml", "hub/mcp-servers.json"),
+    (".agents/mcp_config.json", "hub/mcp-servers.json"),
 ]
 
 # (glob pattern, hint template; placeholders: {name}, {skill}, {source})
@@ -77,6 +80,11 @@ GLOB_GUARDS: list[tuple[str, str]] = [
     (".agents/subagents/*/agent.json", "hub/agents/{name}.md"),
     (".cursor/agents/*.md",  "hub/agents/{name}"),
     (".codex/prompts/*.md",  "hub/agents/{name}"),
+    (".codex/agents/*.toml", "hub/agents/{name}"),
+    (".codex/agents/*.md", "hub/agents/{name}"),
+    (".kiro/agents/*", "hub/agents/{name}"),
+    (".kiro/skills/*/SKILL.md", "hub/skills/{skill}/"),
+    (".kiro/skills/*/*", "hub/skills/{skill}/"),
     (".kiro/steering/*.md",  "hub/{source}"),
     (".agents/skills/*/SKILL.md", "hub/skills/{skill}.md"),
     (".cursor/skills/*/SKILL.md", "__cursor_skill_hint__"),
@@ -84,10 +92,16 @@ GLOB_GUARDS: list[tuple[str, str]] = [
     (".agents/skills/*/*", "hub/skills/{skill}/"),
     (".claude/skills/*/*", "hub/skills/{skill}/"),
     (".cursor/skills/*/*", "hub/skills/{skill}/"),
+    (".grok/agents/*.md", "hub/agents/{name}"),
+    (".grok/skills/*/SKILL.md", "hub/skills/{skill}/"),
+    (".grok/skills/*/*", "hub/skills/{skill}/"),
+    (".grok/hooks/*.json", "hub/registry/hook-events.json (regenerate: sync.sh)"),
+    (".grok/rules/*.md", "hub/{source}"),
 ]
 
 STEERING_MAP = {
     "01-project-context.md": "project-context.md",
+    "02-memory.md": "memory/*.md",
     "03-memory.md": "memory/*.md",
 }
 
@@ -118,9 +132,11 @@ def extract_path(payload: dict) -> str:
 def normalize(path: str) -> str:
     if not path:
         return ""
+    path = path.replace("\\", "/")
     marker = "/unicli-hub/"
-    if marker in path:
-        path = path.split(marker, 1)[1]
+    idx = path.lower().rfind(marker)
+    if idx != -1:
+        path = path[idx + len(marker):]
     return path.lstrip("/")
 
 
@@ -130,13 +146,15 @@ def resolve_hint(pattern: str, rel: str, template: str) -> str:
     parts = rel.split("/")
     name = parts[-1]
     if "{skill}" in template:
-        if len(parts) >= 3 and parts[0] in {".agents", ".claude", ".cursor"} and parts[1] == "skills":
+        if len(parts) >= 3 and parts[0] in {".agents", ".claude", ".cursor", ".grok", ".kiro"} and parts[1] == "skills":
             skill = parts[2]
         else:
             skill = parts[-2] if len(parts) >= 2 else "<name>"
         return template.replace("{skill}", skill)
-    if "{source}" in template and pattern.startswith(".kiro/steering/"):
-        return template.replace("{source}", STEERING_MAP.get(name, ""))
+    if "{source}" in template and (
+        pattern.startswith(".kiro/steering/") or pattern.startswith(".grok/rules/")
+    ):
+        return template.replace("{source}", STEERING_MAP.get(name, "project-context.md or memory/*.md"))
     return template.replace("{name}", name)
 
 

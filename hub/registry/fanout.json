@@ -8,7 +8,8 @@
       "cursor": ".cursor/agents",
       "codex": ".codex/agents",
       "antigravity": ".agents/agents",
-      "kiro": ".kiro/agents"
+      "kiro": ".kiro/agents",
+      "grok": ".grok/agents"
     }
   },
   "skills": {
@@ -18,8 +19,9 @@
       "claude": ".claude/skills",
       "cursor": ".cursor/skills",
       "antigravity": ".agents/skills",
-      "kiro": ".kiro/steering",
-      "codex": ".codex/skills"
+      "codex": ".agents/skills",
+      "kiro": ".kiro/skills",
+      "grok": ".grok/skills"
     }
   },
   "static_copies": {
@@ -27,7 +29,7 @@
       "source": "hub/kiro-steering",
       "target": ".kiro/steering",
       "orphan_policy": "delete_unproduced",
-      "ignore_stale_globs": ["skill-*.md", "01-project-context.md", "03-memory.md"]
+      "ignore_stale_globs": ["01-project-context.md", "03-memory.md"]
     }
   },
   "mcp": {
@@ -41,12 +43,20 @@
         "path": ".cursor/mcp.json",
         "format": "json"
       },
+      "antigravity": {
+        "path": ".agents/mcp_config.json",
+        "format": "antigravity_json"
+      },
       "kiro": {
         "path": ".kiro/settings/mcp.json",
         "format": "json"
       },
       "codex": {
         "path": ".codex/config.toml",
+        "format": "toml"
+      },
+      "grok": {
+        "path": ".grok/config.toml",
         "format": "toml"
       }
     }

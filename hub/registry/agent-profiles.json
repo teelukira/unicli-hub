@@ -2,16 +2,22 @@
   "schema_version": 1,
   "codex": {},
   "cursor": {},
+  "grok": {},
   "defaults": {
     "codex": {
-      "model": "gpt-5.4-mini",
-      "reasoning_effort": "medium",
-      "role": "general"
+      "model": "gpt-5.6",
+      "reasoning_effort": "medium"
     },
     "cursor": {
       "model": "inherit",
       "readonly": false,
       "is_background": false
+    },
+    "grok": {
+      "model": "inherit",
+      "prompt_mode": "full",
+      "permission_mode": "default",
+      "agents_md": true
     }
   }
 }

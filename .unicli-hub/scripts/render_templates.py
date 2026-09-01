@@ -87,6 +87,7 @@ def main():
         "antigravity": {"agents"},
         "agy": {"agents"},
         "codex": {"agents"},
+        "grok": {"agents"},
         "claude": {"claude"},
     }
 
@@ -125,6 +126,15 @@ def main():
         memory = load_memory()
         if memory:
             compare_or_write(KIRO_STEERING / "03-memory.md", memory.rstrip() + "\n")
+
+    if TARGET_CLI in [None, "grok"]:
+        grok_rules = ROOT / ".grok" / "rules"
+        ctx = load_project_context()
+        if ctx:
+            compare_or_write(grok_rules / "01-project-context.md", ctx.rstrip() + "\n")
+        memory = load_memory()
+        if memory:
+            compare_or_write(grok_rules / "02-memory.md", memory.rstrip() + "\n")
 
     if TARGET_CLI in [None, "antigravity"]:
         import json

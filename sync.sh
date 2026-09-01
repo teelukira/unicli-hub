@@ -5,6 +5,7 @@
 #   ./sync.sh --fix    [default] Sync all targets from hub/
 #   ./sync.sh --check   Verify sync (exit 1 on drift)
 #   ./sync.sh --fix --target=codex
+#   ./sync.sh --fix --target=grok
 
 set -e
 
@@ -50,7 +51,7 @@ if [ "$MODE" = "fix" ] && [ -z "$TARGET_FLAG" ]; then
         echo "Cleaning legacy Cursor hooks directory..."
         rm -rf "$ROOT/.cursor/hooks"
     fi
-    find "$ROOT/hub" "$ROOT/.cursor" "$ROOT/.agents" "$ROOT/.claude" -type d -name "__pycache__" -prune -exec rm -rf {} +
+    find "$ROOT/hub" "$ROOT/.cursor" "$ROOT/.agents" "$ROOT/.claude" "$ROOT/.grok" -type d -name "__pycache__" -prune -exec rm -rf {} +
 fi
 
 # 1. Ensure Python dependencies if any (usually built-in)
