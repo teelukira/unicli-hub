@@ -2,35 +2,35 @@
   "schema_version": 1,
   "commands": {
     "before_tool": {
-      "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/pre_tool_use.py\"'",
+      "command": "python hub/hooks/pre_tool_use.py",
       "timeout": 20,
       "matcher": "*"
     },
     "after_tool": {
-      "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/post_tool_use.py\"'",
+      "command": "python hub/hooks/post_tool_use.py",
       "timeout": 30,
       "matcher": "*"
     },
     "session_start": {
-      "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/session_start.py\"'",
+      "command": "python hub/hooks/session_start.py",
       "timeout": 10,
       "matcher": "*"
     },
     "stop": {
-      "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/stop.py\"'",
+      "command": "python hub/hooks/stop.py",
       "timeout": 10,
       "matcher": "*"
     },
     "before_shell": {
-      "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/before_shell_execution.py\"'",
+      "command": "python hub/hooks/before_shell_execution.py",
       "timeout": 10
     },
     "before_mcp": {
-      "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/before_mcp_execution.py\"'",
+      "command": "python hub/hooks/before_mcp_execution.py",
       "timeout": 10
     },
     "after_agent_response": {
-      "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/hub/hooks/post_tool_use.py\"'",
+      "command": "python hub/hooks/post_tool_use.py",
       "timeout": 10
     }
   },
@@ -77,6 +77,21 @@
     "grok": {
       "path": ".grok/hooks/unicli-hub.json",
       "format": "claude",
+      "events": {
+        "before_tool": "PreToolUse",
+        "after_tool": "PostToolUse",
+        "session_start": "SessionStart",
+        "stop": "Stop"
+      },
+      "unsupported_events": [
+        "before_shell",
+        "before_mcp",
+        "after_agent_response"
+      ]
+    },
+    "kiro": {
+      "path": ".kiro/hooks/unicli-hub.json",
+      "format": "kiro",
       "events": {
         "before_tool": "PreToolUse",
         "after_tool": "PostToolUse",

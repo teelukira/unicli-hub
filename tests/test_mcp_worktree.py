@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -69,18 +70,25 @@ class McpWorktreeTest(unittest.TestCase):
     def test_launcher_resolves_nested_worktree_and_merges_environment(self):
         nested = self.linked_root / "nested" / "directory"
         nested.mkdir(parents=True)
-        command = (
-            'exec "$(git rev-parse --show-toplevel)/scripts/mcp/run-with-env.sh" "$@"'
+        probe = self.main_root / "scripts" / "mcp" / "probe.py"
+        probe.write_text(
+            "import os\n"
+            "print('|'.join(["
+            "os.environ.get('SHARED_VALUE',''),"
+            "os.environ.get('WORKTREE_VALUE',''),"
+            "os.environ.get('OVERRIDE_VALUE',''),"
+            "os.environ.get('INHERITED_VALUE',''),"
+            "]))\n",
+            encoding="utf-8",
         )
         env = os.environ.copy()
         env["INHERITED_VALUE"] = "process"
         completed = subprocess.run(
             [
-                "/bin/bash",
-                "-c",
-                command,
-                "unicli-hub-mcp",
-                "scripts/mcp/probe.sh",
+                sys.executable,
+                str(REPO_ROOT / "scripts" / "mcp" / "run_with_env.py"),
+                sys.executable,
+                str(probe),
             ],
             cwd=nested,
             env=env,
@@ -107,9 +115,9 @@ class McpWorktreeTest(unittest.TestCase):
         wrapped = render_mcp.wrap_project_env(
             {"command": "uvx", "args": ["example-server"], "env": {"MODE": "test"}}
         )
-        self.assertEqual(wrapped["command"], "/bin/bash")
-        self.assertEqual(wrapped["args"][0:3], ["-c", render_mcp.PROJECT_ENV_LAUNCHER, "unicli-hub-mcp"])
-        self.assertEqual(wrapped["args"][3:], ["uvx", "example-server"])
+        self.assertEqual(wrapped["command"], "python")
+        self.assertEqual(wrapped["args"][0:2], ["scripts/mcp/run_with_env.py", "uvx"])
+        self.assertEqual(wrapped["args"][2:], ["example-server"])
         self.assertEqual(wrapped["env"], {"MODE": "test"})
 
         original = {"command": "uvx", "_project_env": False}

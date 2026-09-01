@@ -24,6 +24,9 @@ class CliSpecTest(unittest.TestCase):
         fanout = json.loads((REPO_ROOT / "hub" / "registry" / "fanout.json").read_text(encoding="utf-8"))
         self.assertEqual(fanout["skills"]["targets"]["codex"], ".agents/skills")
         self.assertEqual(fanout["skills"]["targets"]["kiro"], ".kiro/skills")
+        hooks = json.loads((REPO_ROOT / "hub" / "registry" / "hook-events.json").read_text(encoding="utf-8"))
+        self.assertEqual(hooks["targets"]["kiro"]["path"], ".kiro/hooks/unicli-hub.json")
+        self.assertEqual(hooks["targets"]["kiro"]["format"], "kiro")
         self.assertEqual(fanout["skills"]["targets"]["antigravity"], ".agents/skills")
         self.assertEqual(fanout["agents"]["targets"]["codex"], ".codex/agents")
         self.assertEqual(

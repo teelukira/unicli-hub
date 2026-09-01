@@ -1,7 +1,7 @@
 # hub/ - unicli-hub SSOT
 
 This directory is the Single Source of Truth for the unicli-hub framework.
-`./sync.sh --fix` regenerates all derived files from here.
+`python sync.py --fix` regenerates all derived files from here.
 
 ## Architecture Overview
 
@@ -35,7 +35,7 @@ Rules that can be checked mechanically should live in hook or verification scrip
    - `cursor.<agent-name>` for `model`, `readonly`, `is_background`
    - `codex.<agent-name>` for generated Codex TOML `model` and `model_reasoning_effort`
    - `grok.<agent-name>` for `model`, `prompt_mode`, `permission_mode`, `agents_md`
-3. Run `./sync.sh --fix`.
+3. Run `python sync.py --fix`.
 
 ## Adding a Skill
 
@@ -52,7 +52,7 @@ Rules that can be checked mechanically should live in hook or verification scrip
    ```
 
 3. Add optional support files beside `SKILL.md`; the renderer copies them to supported skill targets.
-4. Run `./sync.sh --fix`.
+4. Run `python sync.py --fix`.
 
 ## Verification Checklist
 
@@ -60,5 +60,5 @@ Rules that can be checked mechanically should live in hook or verification scrip
 |------|---------------|----------------|
 | F.1 Fanout | Agents, skills, hooks, MCP render to derived targets | Expected files are generated |
 | F.2 Reconcile | Removed canonical agents/skills/static files are removed from derived targets | No stale generated files remain |
-| F.3 Idempotence | `./sync.sh --fix` then `./sync.sh --check` | `--check` exits 0 |
+| F.3 Idempotence | `python sync.py --fix` then `python sync.py --check` | `--check` exits 0 |
 | F.4 Hook event map | Hook event names differ by CLI but render from `hub/registry/hook-events.json` | Generated hook configs use the expected target event names |
