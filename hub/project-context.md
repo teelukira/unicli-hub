@@ -39,7 +39,7 @@ Do not add:
 
 ## Generated Targets
 
-Generated targets include `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.cursor/`, `.agents/`, `.kiro/`, `.codex/`, `.mcp.json`, and CLI-specific MCP/config files.
+Generated targets include `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.cursor/`, `.agents/`, `.kiro/`, `.codex/`, `.grok/`, `.mcp.json`, and CLI-specific MCP/config files.
 
 Do not edit generated targets directly. Change canonical sources and run `./sync.sh --fix`.
 

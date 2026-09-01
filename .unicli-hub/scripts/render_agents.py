@@ -34,23 +34,23 @@ TARGETS = {
         "claude": ".claude/agents",
         "cursor": ".cursor/agents",
         "codex": ".codex/prompts",
+        "grok": ".grok/agents",
     }).items()
 }
 
 MODELS = {
     "claude": {
-        "researcher": "claude-3-5-sonnet-20241022",
-        "codegen": "claude-3-5-sonnet-20241022",
-        "reviewer": "claude-3-5-sonnet-20241022"
+        "researcher": "sonnet",
+        "codegen": "sonnet",
+        "reviewer": "sonnet",
     },
 }
 
 AGENT_PROFILES = read_json(AGENT_PROFILES_REGISTRY)
 CODEX_AGENT_PROFILES = AGENT_PROFILES.get("codex", {})
 DEFAULT_CODEX_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("codex", {
-    "model": "gpt-5.4-mini",
+    "model": "gpt-5.6",
     "reasoning_effort": "medium",
-    "role": "general",
 })
 CURSOR_AGENT_PROFILES = AGENT_PROFILES.get("cursor", {})
 DEFAULT_CURSOR_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("cursor", {
@@ -58,8 +58,16 @@ DEFAULT_CURSOR_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("cursor", 
     "readonly": False,
     "is_background": False,
 })
+GROK_AGENT_PROFILES = AGENT_PROFILES.get("grok", {})
+DEFAULT_GROK_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("grok", {
+    "model": "inherit",
+    "prompt_mode": "full",
+    "permission_mode": "default",
+    "agents_md": True,
+})
 
 CURSOR_FRONTMATTER_KEYS = ("name", "description", "model", "readonly", "is_background")
+GROK_FRONTMATTER_KEYS = ("name", "description", "prompt_mode", "model", "permission_mode", "agents_md")
 
 MODE = "fix"
 TARGET_CLI = None
@@ -110,27 +118,28 @@ def derive_description(agent_name: str, body: str, fm: dict) -> str:
 
     return f"Agent {agent_name}"
 
+def toml_string(value: str) -> str:
+    return json.dumps(value, ensure_ascii=False)
+
+
+def toml_multiline(value: str) -> str:
+    text = value.replace("\r\n", "\n").strip("\n")
+    if '"""' in text:
+        text = text.replace('"""', "'''")
+    return '"""\n' + text + '\n"""'
+
+
 def render_codex_agent(agent_name: str, body: str, description: str) -> str:
-    profile = CODEX_AGENT_PROFILES.get(agent_name, DEFAULT_CODEX_AGENT_PROFILE)
-    fm = {
-        "name": agent_name,
-        "description": description,
-        "codex_model": profile["model"],
-        "codex_reasoning_effort": profile["reasoning_effort"],
-        "codex_role": profile["role"],
-    }
-    fm_lines = ["---"]
-    for key, value in fm.items():
-        fm_lines.append(f"{key}: {value}")
-    fm_lines.append("---")
-    guidance = (
-        "\n## Codex Subagent Execution Profile\n\n"
-        f"- Spawn with `model=\"{profile['model']}\"` and "
-        f"`reasoning_effort=\"{profile['reasoning_effort']}\"` when this prompt is delegated via "
-        "`multi_agent_v1.spawn_agent`.\n"
-        "- Keep task scope narrow and load only the referenced project files before editing or reviewing.\n\n"
-    )
-    return "\n".join(fm_lines) + "\n" + guidance + body
+    profile = {**DEFAULT_CODEX_AGENT_PROFILE, **CODEX_AGENT_PROFILES.get(agent_name, {})}
+    lines = [
+        f"name = {toml_string(agent_name)}",
+        f"description = {toml_string(description)}",
+        f"model = {toml_string(str(profile.get('model', 'gpt-5.6')))}",
+        f"model_reasoning_effort = {toml_string(str(profile.get('reasoning_effort', 'medium')))}",
+        f"developer_instructions = {toml_multiline(body)}",
+        "",
+    ]
+    return "\n".join(lines)
 
 def normalize_bool(value: str) -> str:
     normalized = value.strip().strip('"').lower()
@@ -164,6 +173,28 @@ def render_cursor_agent(agent_name: str, body: str, fm: dict, description: str) 
     source_footer = f"\n\n<!-- unicli-hub canonical source: hub/agents/{agent_name}.md -->\n"
     return "\n".join(fm_lines) + "\n\n" + body.rstrip() + source_footer
 
+def resolve_grok_profile(agent_name: str) -> dict:
+    return {**DEFAULT_GROK_AGENT_PROFILE, **GROK_AGENT_PROFILES.get(agent_name, {})}
+
+def render_grok_agent(agent_name: str, body: str, fm: dict, description: str) -> str:
+    profile = resolve_grok_profile(agent_name)
+    grok_fm = {
+        "name": fm.get("name", agent_name).strip().strip('"'),
+        "description": description,
+        "prompt_mode": fm.get("prompt_mode", str(profile.get("prompt_mode", "full"))).strip().strip('"'),
+        "model": fm.get("model", str(profile.get("model", "inherit"))).strip().strip('"'),
+        "permission_mode": fm.get("permission_mode", str(profile.get("permission_mode", "default"))).strip().strip('"'),
+        "agents_md": normalize_bool(fm["agents_md"]) if "agents_md" in fm else format_profile_bool(profile.get("agents_md", True)),
+    }
+    fm_lines = ["---"]
+    for key in GROK_FRONTMATTER_KEYS:
+        fm_lines.append(f"{key}: {grok_fm[key]}")
+    if "tools" in fm:
+        fm_lines.append(f"tools: {fm['tools']}")
+    fm_lines.append("---")
+    source_footer = f"\n\n<!-- unicli-hub canonical source: hub/agents/{agent_name}.md -->\n"
+    return "\n".join(fm_lines) + "\n\n" + body.rstrip() + source_footer
+
 def render_all_agents():
     for src in sorted(AGENTS_SRC.glob("*.md")):
         a = src.stem
@@ -178,7 +209,7 @@ def render_all_agents():
             fm_claude = fm.copy()
             fm_claude["name"] = a
             if a not in MODELS["claude"]:
-                 fm_claude["model"] = "claude-3-5-sonnet-20241022"
+                 fm_claude["model"] = "sonnet"
             else:
                  fm_claude["model"] = MODELS["claude"][a]
             
@@ -199,15 +230,23 @@ def render_all_agents():
         
         # Codex
         if TARGET_CLI in [None, "codex"]:
-            compare_or_write(TARGETS["codex"] / f"{a}.md", render_codex_agent(a, body, description))
+            compare_or_write(TARGETS["codex"] / f"{a}.toml", render_codex_agent(a, body, description))
+
+        # Grok
+        if TARGET_CLI in [None, "grok"] and "grok" in TARGETS:
+            compare_or_write(
+                TARGETS["grok"] / f"{a}.md",
+                render_grok_agent(a, body, fm, description),
+            )
 
         # Kiro
         if TARGET_CLI in [None, "kiro"]:
             kiro_content = json.dumps({
                 "name": a,
-                "description": fm.get("description", f"Agent {a}"),
-                "system_prompt": body,
-                "tools": ["read", "write", "bash"]
+                "description": fm.get("description", description),
+                "prompt": body.strip(),
+                "tools": ["read", "write", "shell"],
+                "includeMcpJson": True,
             }, indent=2)
             compare_or_write(TARGETS["kiro"] / f"{a}.json", kiro_content)
 

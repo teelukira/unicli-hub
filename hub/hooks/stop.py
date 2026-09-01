@@ -5,6 +5,7 @@ stop.py — Minimal reference stub for the session/agent stop hook.
 Per-CLI event names that map to this hook:
   Claude Code : Stop          (.claude/settings.json → hooks.Stop)
   Cursor      : stop          (.cursor/hooks.json    → hooks.stop)
+  Grok        : Stop          (.grok/hooks/unicli-hub.json → hooks.Stop)
   Gemini CLI  : (no stop event as of 2026-05)
   Antigravity : (no hook system as of 2026-05)
 

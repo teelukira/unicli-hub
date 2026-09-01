@@ -31,6 +31,7 @@ Stefania Druga의 발표 내용을 바탕으로, AI 에이전트의 장시간 �
 | Cursor | Exposed as `.cursor/rules/memory.mdc` with `alwaysApply: true` |
 | Kiro | Accessible via the `.kiro/unicli-rules` symlink and copied to `.kiro/steering/03-memory.md` |
 | Codex | Prepended to root `AGENTS.md` (Codex reads up to `project_doc_max_bytes`, so important facts are placed first) |
+| Grok | Embedded in root `AGENTS.md` and copied to `.grok/rules/02-memory.md` |
 
 ## How to edit
 

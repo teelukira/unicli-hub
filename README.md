@@ -13,10 +13,10 @@ UniCLI-Hub treats `hub/` as the single source of truth and renders generated fil
 | Asset | Canonical source | Generated targets |
 |---|---|---|
 | Entry docs | `.unicli-hub/templates/*.tmpl`, `hub/memory/`, `hub/project-context.md` | `AGENTS.md`, `CLAUDE.md` |
-| Agents | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/`, `.codex/agents/` |
-| Skills | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/steering/skill-*.md`, `.codex/skills/` |
-| Hooks | `hub/hooks/`, `hub/registry/hook-events.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json` |
-| MCP servers | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.codex/config.toml` |
+| Agents | `hub/agents/` | `.claude/agents/`, `.cursor/agents/`, `.agents/`, `.kiro/agents/`, `.codex/agents/`, `.grok/agents/` |
+| Skills | `hub/skills/` | `.claude/skills/`, `.cursor/skills/`, `.agents/skills/`, `.kiro/skills/`, `.grok/skills/` |
+| Hooks | `hub/hooks/`, `hub/registry/hook-events.json` | `.claude/settings.json`, `.cursor/hooks.json`, `.agents/settings.json`, `.grok/hooks/unicli-hub.json` |
+| MCP servers | `hub/mcp-servers.json` | `.mcp.json`, `.cursor/mcp.json`, `.agents/mcp_config.json`, `.kiro/settings/mcp.json`, `.codex/config.toml`, `.grok/config.toml` |
 | Memory | `hub/memory/*.md` | embedded in generated entry docs |
 
 ## Supported CLIs
@@ -28,6 +28,7 @@ UniCLI-Hub treats `hub/` as the single source of truth and renders generated fil
 | Cursor | `.cursor/` | `AGENTS.md` plus Cursor files |
 | Kiro | `.kiro/` | generated steering and agent files |
 | OpenAI Codex | `.codex/` | `AGENTS.md` plus agent and skill files |
+| Grok Build | `.grok/` | `AGENTS.md` plus `.grok/` agents, skills, hooks, and MCP |
 
 ## Tool Capabilities (Skills, Subagents, MCP)
 
@@ -36,17 +37,33 @@ Different AI CLIs handle extended capabilities in their own distinct ways. This 
 ### 1. Google Antigravity (agy)
 - **Skills**: Fully supported natively. Skills are loaded directly from the workspace customization root (`.agents/skills/<skill_name>/SKILL.md`).
 - **Subagents**: Supported dynamically. Instead of defining custom subagents via static files, Antigravity uses robust built-in subagents (e.g., `research`, `self`) and allows agents to spawn subagents dynamically via the `define_subagent` tool during runtime.
-- **MCP**: Supported via directory structure. Antigravity expects MCP tool schemas in specific folders (e.g., `mcp/<serverName>/<toolName>.json`) rather than a single unified configuration file.
+- **MCP**: Workspace MCP config at `.agents/mcp_config.json` (`mcpServers`). Global config lives at `~/.gemini/config/mcp_config.json`.
 
 ### 2. Cursor
-- **Skills**: Supported via IDE rules. Skills are implemented as `.cursor/rules/*.mdc` files.
-- **Subagents**: Supported statically. Cursor loads markdown definitions from `.cursor/agents/*.md` to configure IDE subagents.
-- **MCP**: Fully supported via a unified config file (`.cursor/mcp.json`) for straightforward server connections.
+- **Skills**: Native Agent Skills at `.cursor/skills/<skill_name>/SKILL.md`. Cursor also loads `.agents/skills/` and Claude/Codex skill directories for compatibility. Always-on project rules remain `.cursor/rules/*.mdc`.
+- **Subagents**: Static markdown at `.cursor/agents/*.md` with YAML frontmatter (`name`, `description`, `model`, `readonly`, `is_background`).
+- **MCP**: Project `.cursor/mcp.json`.
 
 ### 3. Claude Code
-- **Skills**: Fully supported natively via `.claude/skills/`.
-- **Subagents**: Supported statically. Defines custom agent roles and system prompts through markdown files in `.claude/agents/*.md`.
-- **MCP**: Fully supported via the project-root `.mcp.json` unified configuration file.
+- **Skills**: Native `.claude/skills/<skill_name>/SKILL.md`.
+- **Subagents**: Markdown plus YAML frontmatter in `.claude/agents/*.md` (`name`, `description`, optional `tools`, `model` alias such as `sonnet`).
+- **MCP**: Project-root `.mcp.json`.
+
+### 4. Grok Build
+- **Skills**: Native project skills at `.grok/skills/<skill_name>/SKILL.md`. Grok can also scan Claude, Cursor, and Antigravity skill directories via compatibility settings; native `.grok/skills/` wins on name collision.
+- **Subagents**: Native markdown agent definitions at `.grok/agents/*.md` with YAML frontmatter (`name`, `description`, `model`, `permission_mode`). Spawned at runtime via `spawn_subagent`.
+- **MCP**: Project-scoped TOML at `.grok/config.toml` under `[mcp_servers.<name>]`. Native Grok config takes priority over Claude, Cursor, and `.mcp.json` compatibility sources.
+- **Trust**: Project `.grok/hooks/` and repo-local MCP servers run only after the folder is trusted (`/hooks-trust` or `grok --trust`).
+
+### 5. OpenAI Codex
+- **Skills**: Repo skills are `.agents/skills/<skill_name>/SKILL.md` (shared Agent Skills location with Antigravity). User skills live in `$HOME/.agents/skills`.
+- **Subagents**: Project custom agents are TOML files at `.codex/agents/*.toml` with `name`, `description`, and `developer_instructions`.
+- **MCP**: Project `.codex/config.toml` under `[mcp_servers.<name>]`.
+
+### 6. Kiro
+- **Skills**: Native Agent Skills at `.kiro/skills/<skill_name>/SKILL.md`. Steering files under `.kiro/steering/` remain always-on project context, not skills.
+- **Subagents**: Custom agents at `.kiro/agents/*.json` (JSON remains valid; `prompt` and tag-based `tools` such as `read` / `write` / `shell`).
+- **MCP**: `.kiro/settings/mcp.json`.
 
 ## Repository Layout
 
@@ -73,7 +90,7 @@ Different AI CLIs handle extended capabilities in their own distinct ways. This 
 
 Edit canonical files under `hub/` or `.unicli-hub/templates/`.
 
-Do not edit generated targets directly: `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.cursor/`, `.agents/`, `.kiro/`, `.codex/`, `.mcp.json`, and generated MCP/config files. The generated-file hook points edits back to the canonical source.
+Do not edit generated targets directly: `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.cursor/`, `.agents/`, `.kiro/`, `.codex/`, `.grok/`, `.mcp.json`, and generated MCP/config files. The generated-file hook points edits back to the canonical source.
 
 After changing canonical content, run:
 

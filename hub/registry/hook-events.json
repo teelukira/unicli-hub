@@ -73,6 +73,21 @@
         "before_mcp",
         "after_agent_response"
       ]
+    },
+    "grok": {
+      "path": ".grok/hooks/unicli-hub.json",
+      "format": "claude",
+      "events": {
+        "before_tool": "PreToolUse",
+        "after_tool": "PostToolUse",
+        "session_start": "SessionStart",
+        "stop": "Stop"
+      },
+      "unsupported_events": [
+        "before_shell",
+        "before_mcp",
+        "after_agent_response"
+      ]
     }
   }
 }

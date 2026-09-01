@@ -4,6 +4,7 @@
 Per-CLI event names that map to this hook:
   Claude Code : SessionStart  (.claude/settings.json → hooks.SessionStart)
   Cursor      : (no direct equivalent; handled once on first tool use)
+  Grok        : SessionStart  (.grok/hooks/unicli-hub.json → hooks.SessionStart)
   Gemini CLI  : (no session-start event as of 2026-05)
   Antigravity : (no hook system as of 2026-05)
 

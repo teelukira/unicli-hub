@@ -36,6 +36,7 @@ Thumbs.db
 .cursor/
 .gemini/
 .kiro/
+.grok/
 .serena/
 
 # Generated root entry-point files (from .unicli-hub/templates/*.tmpl)

@@ -26,6 +26,7 @@ DEFAULT_MCP_FANOUT = {
         "antigravity": {"path": ".agents/mcp_config.json", "format": "antigravity_json"},
         "kiro": {"path": ".kiro/settings/mcp.json", "format": "json"},
         "codex": {"path": ".codex/config.toml", "format": "toml"},
+        "grok": {"path": ".grok/config.toml", "format": "toml"},
     },
 }
 
