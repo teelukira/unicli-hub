@@ -108,7 +108,7 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 - registry 기반 agent, skill, hook, static copy, MCP, entry template fanout 렌더러
 - 생성 파일 직접 수정 방지 훅
 - MCP 전파 구조
-- 범용 예시 스킬 1개: `html-report`
+- 범용 스킬: `html-report`, `confluence-page`, `email-html-report`
 - project facts, conventions, glossary 메모리 placeholder
 
 현재 기준선에서 제외하는 항목은 다음과 같습니다.
@@ -123,6 +123,8 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 에이전트를 추가하려면 `hub/agents/`에 원본을 넣고, 필요한 경우 `hub/registry/agent-profiles.json`에 모델 프로필을 추가한 뒤 `./sync.sh --fix`를 실행합니다.
 
 스킬을 추가하려면 `hub/skills/<skill-name>/SKILL.md`를 만듭니다. 필요한 보조 파일은 같은 폴더 아래에 둘 수 있습니다. 스킬 렌더러가 폴더 내용과 reference 파일을 지원 대상에 복사합니다.
+
+이 저장소를 제품 레포의 `origin`으로 두고 `git pull` 하지 마십시오. 컨슈머 동기화는 `hub/common/consumer-upgrade.md`와 `scripts/install-framework.sh`를 사용합니다.
 
 MCP 서버를 추가/삭제하려면 `hub/mcp-servers.json`을 수정합니다. 비밀값은 파일에 넣지 말고 상속 환경변수나 자격증명 검증용 wrapper script를 사용합니다.
 

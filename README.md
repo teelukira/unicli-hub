@@ -108,7 +108,7 @@ This framework is intentionally generic. The current baseline keeps:
 - registry-driven fanout renderers for agents, skills, hooks, static copies, MCP, and entry templates
 - generated-file protection hooks
 - MCP propagation structure
-- one generic example skill: `html-report`
+- generic skills: `html-report`, `confluence-page`, `email-html-report`
 - memory placeholders for project facts, conventions, and glossary
 
 This baseline intentionally excludes:
@@ -123,6 +123,8 @@ This baseline intentionally excludes:
 To add an agent, place source files in `hub/agents/`; add optional model profiles in `hub/registry/agent-profiles.json`; then run `./sync.sh --fix`.
 
 To add a skill, create `hub/skills/<skill-name>/SKILL.md`; optional support files can live beside it. The skill renderer copies folder contents and reference files to supported targets.
+
+Consuming product repos should not `git pull` this repository as `origin`. See `hub/common/consumer-upgrade.md` and `scripts/install-framework.sh`.
 
 To add or remove MCP servers, edit `hub/mcp-servers.json`. Keep secrets out of the file; use inherited environment variables or credential-checking wrapper scripts.
 

@@ -51,7 +51,13 @@ if [ "$MODE" = "fix" ] && [ -z "$TARGET_FLAG" ]; then
         echo "Cleaning legacy Cursor hooks directory..."
         rm -rf "$ROOT/.cursor/hooks"
     fi
-    find "$ROOT/hub" "$ROOT/.cursor" "$ROOT/.agents" "$ROOT/.claude" "$ROOT/.grok" -type d -name "__pycache__" -prune -exec rm -rf {} +
+    PYCACHE_ROOTS=()
+    for d in "$ROOT/hub" "$ROOT/.cursor" "$ROOT/.agents" "$ROOT/.claude" "$ROOT/.grok" "$ROOT/.codex" "$ROOT/.kiro"; do
+        [ -d "$d" ] && PYCACHE_ROOTS+=("$d")
+    done
+    if [ ${#PYCACHE_ROOTS[@]} -gt 0 ]; then
+        find "${PYCACHE_ROOTS[@]}" -type d -name "__pycache__" -prune -exec rm -rf {} +
+    fi
 fi
 
 # 1. Ensure Python dependencies if any (usually built-in)
