@@ -54,6 +54,9 @@ Rules that can be checked mechanically should live in hook or verification scrip
 3. Add optional support files beside `SKILL.md`; the renderer copies them to supported skill targets.
 4. Run `./sync.sh --fix`.
 
+Generic skills currently in this repo: `html-report`, `confluence-page`, `email-html-report`.
+Consumers update with `scripts/install-framework.sh` — see `hub/common/consumer-upgrade.md`.
+
 ## Verification Checklist
 
 | Test | What to verify | Pass condition |
