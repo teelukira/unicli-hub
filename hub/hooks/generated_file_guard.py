@@ -224,6 +224,8 @@ if __name__ == "__main__":
             "generated_file_guard.py crashed; refusing edit until fixed. "
             + traceback.format_exc(limit=5)
         )
+        # Exit code 2 makes Claude read stderr, not stdout — mirror block().
+        print(reason, file=sys.stderr)
         print(
             json.dumps(
                 {
