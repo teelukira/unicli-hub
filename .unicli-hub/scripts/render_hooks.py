@@ -5,6 +5,7 @@ render_hooks.py - render hook configurations from hub/registry/hook-events.json.
 
 import json
 import pathlib
+import shutil
 import sys
 
 _SCRIPTS = pathlib.Path(__file__).resolve().parent
@@ -47,6 +48,20 @@ def load_registry() -> dict:
         return json.load(f)
 
 
+def hook_command(command: dict) -> str:
+    """Absolute interpreter + absolute script path.
+
+    Hook targets are gitignored and re-rendered per machine, so the command
+    only has to run where it was rendered. That lets us skip a shell
+    entirely: no `python` vs `python3` guess, no cwd assumption, no
+    dependency on bash or git being on PATH when the CLI fires the hook.
+    """
+    if "command" in command:
+        return command["command"]
+    python = sys.executable or shutil.which("python3") or shutil.which("python") or "python3"
+    return '"{}" "{}"'.format(python, ROOT / command["script"])
+
+
 def render_claude_like(commands: dict, target: dict) -> str:
     hooks = {}
     for logical_event, target_event in target.get("events", {}).items():
@@ -55,7 +70,7 @@ def render_claude_like(commands: dict, target: dict) -> str:
             "hooks": [
                 {
                     "type": "command",
-                    "command": command["command"],
+                    "command": hook_command(command),
                     "timeout": command.get("timeout", 10),
                 }
             ],
@@ -78,7 +93,7 @@ def render_kiro(commands: dict, target: dict) -> str:
             "trigger": target_event,
             "action": {
                 "type": "command",
-                "command": command["command"],
+                "command": hook_command(command),
             },
             "timeout": command.get("timeout", 10),
         }
@@ -95,7 +110,7 @@ def render_cursor(commands: dict, target: dict) -> str:
     for logical_event, target_event in target.get("events", {}).items():
         command = commands[logical_event]
         entry = {
-            "command": command["command"],
+            "command": hook_command(command),
             "failClosed": fail_closed,
             "timeout": command.get("timeout", 10),
         }

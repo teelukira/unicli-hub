@@ -1,5 +1,7 @@
 """Canonical CLI names for --target flags."""
 
+from __future__ import annotations
+
 ALIASES = {
     "agy": "antigravity",
     "antigravity": "antigravity",
