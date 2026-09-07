@@ -15,6 +15,7 @@ _SCRIPTS = pathlib.Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 from cli_names import canonical_cli
+from interpreter import python_interpreter
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 FANOUT_REGISTRY = ROOT / "hub" / "registry" / "fanout.json"
@@ -176,9 +177,12 @@ def wrap_project_env(server: dict) -> dict:
     wrapped = copy.deepcopy(server)
     command = wrapped["command"]
     args = wrapped.get("args", [])
-    wrapped["command"] = "python"
+    # Bare `python` does not exist on macOS or most Linux, and a relative
+    # launcher path breaks whenever the CLI starts the server from another
+    # directory. Both must be absolute.
+    wrapped["command"] = python_interpreter()
     wrapped["args"] = [
-        PROJECT_ENV_LAUNCHER,
+        str(ROOT / PROJECT_ENV_LAUNCHER),
         command,
         *args,
     ]
