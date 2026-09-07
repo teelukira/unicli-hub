@@ -51,18 +51,21 @@ def render_claude_like(commands: dict, target: dict) -> str:
     hooks = {}
     for logical_event, target_event in target.get("events", {}).items():
         command = commands[logical_event]
-        hooks[target_event] = [
-            {
-                "matcher": command.get("matcher", "*"),
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": command["command"],
-                        "timeout": command.get("timeout", 10),
-                    }
-                ],
-            }
-        ]
+        group = {
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": command["command"],
+                    "timeout": command.get("timeout", 10),
+                }
+            ],
+        }
+        # Grok treats matcher as regex (`*` is invalid and Stop matcher warns
+        # every turn). Empty/omitted matcher = match all on Claude and Grok.
+        matcher = command.get("matcher")
+        if matcher and matcher != "*":
+            group["matcher"] = matcher
+        hooks[target_event] = [group]
     return json.dumps({"hooks": hooks}, indent=2, ensure_ascii=False) + "\n"
 
 

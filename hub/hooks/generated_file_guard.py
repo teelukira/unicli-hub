@@ -170,22 +170,24 @@ def block(rel: str, hint: str) -> int:
     print(
         json.dumps(
             {
+                "decision": "deny",
+                "reason": reason,
                 "permission": "deny",
                 "user_message": reason,
                 "agent_message": reason,
                 "hookSpecificOutput": {
-                    "hookType": "PreToolUse",
-                    "permissionDecision": "block",
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
                     "permissionDecisionReason": reason,
                 },
             }
         )
     )
-    return 1
+    return 2
 
 
 def allow() -> int:
-    print(json.dumps({"permission": "allow"}))
+    print(json.dumps({"decision": "allow", "permission": "allow"}))
     return 0
 
 
@@ -218,16 +220,19 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception:
+        reason = (
+            "generated_file_guard.py crashed; refusing edit until fixed. "
+            + traceback.format_exc(limit=5)
+        )
         print(
             json.dumps(
                 {
+                    "decision": "deny",
+                    "reason": reason,
                     "permission": "deny",
-                    "user_message": (
-                        "generated_file_guard.py crashed; refusing edit until fixed. "
-                        + traceback.format_exc(limit=5)
-                    ),
+                    "user_message": reason,
                     "agent_message": "generated_file_guard.py exception — see hook user_message",
                 }
             )
         )
-        raise SystemExit(1)
+        raise SystemExit(2)

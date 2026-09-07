@@ -112,7 +112,7 @@ class GrokFanoutTest(unittest.TestCase):
                     code = guard.main()
             finally:
                 sys.stdin = old_stdin
-            self.assertEqual(code, 1, msg=path)
+            self.assertEqual(code, 2, msg=path)
             self.assertIn("Generated file block", stderr.getvalue())
 
 

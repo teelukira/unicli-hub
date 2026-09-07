@@ -10,7 +10,7 @@ def main() -> None:
         json.loads(sys.stdin.read() or "{}")
     except Exception:
         pass
-    print(json.dumps({"permission": "allow"}))
+    print(json.dumps({"decision": "allow", "permission": "allow"}))
 
 
 if __name__ == "__main__":
