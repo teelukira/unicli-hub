@@ -115,8 +115,16 @@ class McpWorktreeTest(unittest.TestCase):
         wrapped = render_mcp.wrap_project_env(
             {"command": "uvx", "args": ["example-server"], "env": {"MODE": "test"}}
         )
-        self.assertEqual(wrapped["command"], "python")
-        self.assertEqual(wrapped["args"][0:2], ["scripts/mcp/run_with_env.py", "uvx"])
+        # A bare `python` is absent on macOS/most Linux and a relative launcher
+        # path breaks when the CLI starts the server from another directory.
+        interpreter = Path(wrapped["command"])
+        self.assertTrue(interpreter.is_absolute(), wrapped["command"])
+        self.assertTrue(interpreter.exists(), wrapped["command"])
+        launcher = Path(wrapped["args"][0])
+        self.assertTrue(launcher.is_absolute(), wrapped["args"][0])
+        self.assertTrue(launcher.is_file(), wrapped["args"][0])
+        self.assertEqual(launcher.name, "run_with_env.py")
+        self.assertEqual(wrapped["args"][1], "uvx")
         self.assertEqual(wrapped["args"][2:], ["example-server"])
         self.assertEqual(wrapped["env"], {"MODE": "test"})
 

@@ -81,8 +81,10 @@ class GrokFanoutTest(unittest.TestCase):
             },
         )
         self.assertIn("[mcp_servers.docs]", content)
-        self.assertIn('command = "python"', content)
-        self.assertIn("scripts/mcp/run_with_env.py", content)
+        # Absolute interpreter, never a bare `python`/`python3` name.
+        self.assertNotIn('command = "python"', content)
+        self.assertNotIn('command = "python3"', content)
+        self.assertIn(str(REPO_ROOT / "scripts" / "mcp" / "run_with_env.py"), content)
         self.assertIn('MODE = "test"', content)
 
     def test_generated_file_guard_blocks_grok_paths(self):

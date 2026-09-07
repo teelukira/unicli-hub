@@ -5,13 +5,13 @@ render_hooks.py - render hook configurations from hub/registry/hook-events.json.
 
 import json
 import pathlib
-import shutil
 import sys
 
 _SCRIPTS = pathlib.Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 from cli_names import canonical_cli
+from interpreter import python_interpreter
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 REGISTRY = ROOT / "hub" / "registry" / "hook-events.json"
@@ -58,8 +58,7 @@ def hook_command(command: dict) -> str:
     """
     if "command" in command:
         return command["command"]
-    python = sys.executable or shutil.which("python3") or shutil.which("python") or "python3"
-    return '"{}" "{}"'.format(python, ROOT / command["script"])
+    return '"{}" "{}"'.format(python_interpreter(), ROOT / command["script"])
 
 
 def render_claude_like(commands: dict, target: dict) -> str:

@@ -101,7 +101,9 @@ python sync.py --fix
 python sync.py --check
 ```
 
-On POSIX, `./sync.sh --fix` is equivalent. `--fix` regenerates derived files and removes stale generated agents/skills. `--check` fails if any generated output has drifted. `python` must be on PATH so generated hooks and MCP launchers can start.
+On POSIX, `./sync.sh --fix` is equivalent. `--fix` regenerates derived files and removes stale generated agents/skills. `--check` fails if any generated output has drifted.
+
+Generated hooks and MCP launchers embed the absolute path of the interpreter that ran the sync, so they do not depend on `python` or `python3` resolving on PATH. Re-run `--fix` after switching interpreters (for example, activating a different virtualenv). Because generated targets are gitignored, a fresh clone has no hooks or MCP config until `--fix` runs once.
 
 ## Current Baseline
 

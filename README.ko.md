@@ -101,7 +101,9 @@ python sync.py --fix
 python sync.py --check
 ```
 
-POSIX에서는 `./sync.sh --fix`가 동일합니다. `--fix`는 생성물을 갱신하고 더 이상 원본이 없는 stale agent/skill을 삭제합니다. `--check`는 생성물이 원본과 어긋나면 실패합니다. 생성된 훅과 MCP launcher가 시작하려면 `python`이 PATH에 있어야 합니다.
+POSIX에서는 `./sync.sh --fix`가 동일합니다. `--fix`는 생성물을 갱신하고 더 이상 원본이 없는 stale agent/skill을 삭제합니다. `--check`는 생성물이 원본과 어긋나면 실패합니다.
+
+생성된 훅과 MCP launcher는 sync를 실행한 인터프리터의 절대 경로를 그대로 박아 넣으므로, `python`이나 `python3`가 PATH에서 해석되는지에 의존하지 않습니다. 인터프리터를 바꾸면(예: 다른 virtualenv 활성화) `--fix`를 다시 실행하세요. 생성 대상은 gitignore 대상이라, 새로 clone한 저장소는 `--fix`를 한 번 돌리기 전까지 훅과 MCP 설정이 없습니다.
 
 ## 현재 기준선
 
