@@ -49,7 +49,7 @@ def main() -> None:
     # 2. Run generated_file_guard
     guard = script_dir / "generated_file_guard.py"
     if not guard.exists():
-        print(json.dumps({"permission": "allow"}))
+        print(json.dumps({"decision": "allow", "permission": "allow"}))
         return
 
     proc = subprocess.Popen(
@@ -71,7 +71,7 @@ def main() -> None:
     if stdout.strip():
         sys.stdout.write(stdout)
     else:
-        print(json.dumps({"permission": "allow"}))
+        print(json.dumps({"decision": "allow", "permission": "allow"}))
 
     sys.exit(proc.returncode)
 
