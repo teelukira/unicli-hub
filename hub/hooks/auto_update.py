@@ -7,7 +7,6 @@ exactly once per AI CLI session.
 
 from __future__ import annotations
 
-import fcntl
 import json
 import os
 import pathlib
@@ -156,13 +155,63 @@ def fetch_upstream(root: pathlib.Path, timeout: float = 3.0) -> bool:
         return False
 
 
+class FileLock:
+    """Exclusive non-blocking lock that works on Windows and POSIX."""
+
+    def __init__(self, path: pathlib.Path) -> None:
+        self.path = path
+        self._fp = None
+
+    def acquire(self) -> bool:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._fp = open(self.path, "a+b")
+        try:
+            self._fp.seek(0)
+            if self._fp.read(1) == b"":
+                self._fp.write(b"0")
+                self._fp.flush()
+            self._fp.seek(0)
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(self._fp.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(self._fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except OSError:
+            self._fp.close()
+            self._fp = None
+            return False
+
+    def release(self) -> None:
+        if self._fp is None:
+            return
+        try:
+            self._fp.seek(0)
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(self._fp.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(self._fp, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        finally:
+            self._fp.close()
+            self._fp = None
+
+
 def sync_targets(root: pathlib.Path) -> bool:
-    sync_script = root / "sync.sh"
+    sync_script = root / "sync.py"
     if not sync_script.exists():
         return False
     try:
         res = subprocess.run(
-            [str(sync_script), "--fix"],
+            [sys.executable, str(sync_script), "--fix"],
             cwd=root,
             capture_output=True,
             text=True,
@@ -189,12 +238,9 @@ def check_and_update_session(session_id: str | None = None, force: bool = False)
         return {"status": "already_checked", "skipped": True}
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    lock_file_obj = None
+    lock = FileLock(LOCK_FILE)
     try:
-        lock_file_obj = open(LOCK_FILE, "w")
-        try:
-            fcntl.flock(lock_file_obj, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except (IOError, OSError):
+        if not lock.acquire():
             return {"status": "locked", "skipped": True}
 
         # Perform fetch (fail-open on network timeout / offline)
@@ -241,12 +287,7 @@ def check_and_update_session(session_id: str | None = None, force: bool = False)
         return {"status": "updated", "from": local_sha, "to": remote_sha, "synced": sync_ok}
 
     finally:
-        if lock_file_obj is not None:
-            try:
-                fcntl.flock(lock_file_obj, fcntl.LOCK_UN)
-                lock_file_obj.close()
-            except Exception:
-                pass
+        lock.release()
 
 
 def main() -> None:

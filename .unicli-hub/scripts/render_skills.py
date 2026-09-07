@@ -10,6 +10,11 @@ import re
 import shutil
 import json
 
+_SCRIPTS = pathlib.Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+from cli_names import canonical_cli
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 FANOUT_REGISTRY = ROOT / "hub" / "registry" / "fanout.json"
 
@@ -225,7 +230,7 @@ def main():
         if arg in ["--fix", "--check"]: 
             MODE = arg[2:]
         elif arg.startswith("--target="):
-            TARGET_CLI = arg.split("=")[1]
+            TARGET_CLI = canonical_cli(arg.split("=", 1)[1])
 
     if not CANONICAL.is_dir():
         print(f"ERROR: {CANONICAL} not found", file=sys.stderr)

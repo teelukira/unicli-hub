@@ -6,6 +6,11 @@ render_templates.py — Assemble CLI entry points from templates and hub/ data.
 import sys
 import pathlib
 
+_SCRIPTS = pathlib.Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+from cli_names import canonical_cli
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 HUB = ROOT / "hub"
 TEMPLATES = ROOT / ".unicli-hub" / "templates"
@@ -75,7 +80,7 @@ def main():
         if arg in ["--fix", "--check"]: 
             MODE = arg[2:]
         elif arg.startswith("--target="):
-            TARGET_CLI = arg.split("=")[1]
+            TARGET_CLI = canonical_cli(arg.split("=", 1)[1])
 
     # mapping of: output_filename -> (template_path, cli_name)
     targets = {
@@ -85,7 +90,6 @@ def main():
 
     target_aliases = {
         "antigravity": {"agents"},
-        "agy": {"agents"},
         "codex": {"agents"},
         "grok": {"agents"},
         "claude": {"claude"},

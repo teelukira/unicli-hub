@@ -41,7 +41,7 @@ Do not add:
 
 Generated targets include `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.cursor/`, `.agents/`, `.kiro/`, `.codex/`, `.grok/`, `.mcp.json`, and CLI-specific MCP/config files.
 
-Do not edit generated targets directly. Change canonical sources and run `./sync.sh --fix`.
+Do not edit generated targets directly. Change canonical sources and run `python sync.py --fix`.
 
 ## Current Baseline
 
@@ -56,8 +56,8 @@ If future work needs example agents or skills, keep them obviously generic and a
 After changes:
 
 ```bash
-./sync.sh --fix
-./sync.sh --check
+python sync.py --fix
+python sync.py --check
 ```
 
 Then search for leaked project context before finishing:

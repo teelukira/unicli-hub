@@ -8,6 +8,11 @@ import pathlib
 import json
 import re
 
+_SCRIPTS = pathlib.Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+from cli_names import canonical_cli
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 HUB = ROOT / "hub"
 REGISTRY_DIR = HUB / "registry"
@@ -38,15 +43,11 @@ TARGETS = {
     }).items()
 }
 
-MODELS = {
-    "claude": {
-        "researcher": "sonnet",
-        "codegen": "sonnet",
-        "reviewer": "sonnet",
-    },
-}
-
 AGENT_PROFILES = read_json(AGENT_PROFILES_REGISTRY)
+CLAUDE_AGENT_PROFILES = AGENT_PROFILES.get("claude", {})
+DEFAULT_CLAUDE_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("claude", {
+    "model": "sonnet",
+})
 CODEX_AGENT_PROFILES = AGENT_PROFILES.get("codex", {})
 DEFAULT_CODEX_AGENT_PROFILE = AGENT_PROFILES.get("defaults", {}).get("codex", {
     "model": "gpt-5.6",
@@ -88,18 +89,39 @@ def compare_or_write(target: pathlib.Path, content: str):
         except ValueError:
             print(f"wrote: {target}")
 
+def parse_frontmatter_fields(fm_text: str) -> dict:
+    """Parse simple YAML frontmatter, including folded (`>`) and literal (`|`) scalars."""
+    fm = {}
+    lines = fm_text.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if not line.strip() or line.lstrip().startswith("#") or ":" not in line:
+            i += 1
+            continue
+        key, val = line.split(":", 1)
+        key = key.strip()
+        val = val.strip()
+        if val in (">", ">-", "|", "|-"):
+            folded = val in (">", ">-")
+            block = []
+            i += 1
+            while i < len(lines) and (not lines[i].strip() or lines[i][:1] in " \t"):
+                block.append(lines[i].strip())
+                i += 1
+            text = " ".join(part for part in block if part) if folded else "\n".join(block)
+            fm[key] = text.strip()
+            continue
+        fm[key] = val.strip().strip('"').strip("'")
+        i += 1
+    return fm
+
+
 def split_frontmatter(content: str):
     """Split markdown into frontmatter (dict) and body."""
     match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", content, re.DOTALL)
     if match:
-        fm_text = match.group(1)
-        body = match.group(2)
-        fm = {}
-        for line in fm_text.splitlines():
-            if ":" in line:
-                key, val = line.split(":", 1)
-                fm[key.strip()] = val.strip()
-        return fm, body
+        return parse_frontmatter_fields(match.group(1)), match.group(2)
     return {}, content
 
 def derive_description(agent_name: str, body: str, fm: dict) -> str:
@@ -208,10 +230,9 @@ def render_all_agents():
         if TARGET_CLI in [None, "claude"]:
             fm_claude = fm.copy()
             fm_claude["name"] = a
-            if a not in MODELS["claude"]:
-                 fm_claude["model"] = "sonnet"
-            else:
-                 fm_claude["model"] = MODELS["claude"][a]
+            if "model" not in fm_claude:
+                profile = {**DEFAULT_CLAUDE_AGENT_PROFILE, **CLAUDE_AGENT_PROFILES.get(a, {})}
+                fm_claude["model"] = profile.get("model", "sonnet")
             
             if "tools" not in fm_claude:
                 fm_claude["tools"] = "Read, Write, Edit, Bash, Glob, Grep"
@@ -300,7 +321,7 @@ def main():
         if arg in ["--fix", "--check"]: 
             MODE = arg[2:]
         elif arg.startswith("--target="):
-            TARGET_CLI = arg.split("=")[1]
+            TARGET_CLI = canonical_cli(arg.split("=", 1)[1])
 
     render_all_agents()
     reconcile()

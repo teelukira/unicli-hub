@@ -11,12 +11,14 @@ import re
 import subprocess
 import sys
 
+_SCRIPTS = pathlib.Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+from cli_names import canonical_cli
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 FANOUT_REGISTRY = ROOT / "hub" / "registry" / "fanout.json"
-PROJECT_ENV_LAUNCHER = (
-    'root="$(git rev-parse --show-toplevel)" || exit $?; '
-    'exec "$root/scripts/mcp/run-with-env.sh" "$@"'
-)
+PROJECT_ENV_LAUNCHER = "scripts/mcp/run_with_env.py"
 
 DEFAULT_MCP_FANOUT = {
     "source": "hub/mcp-servers.json",
@@ -174,11 +176,9 @@ def wrap_project_env(server: dict) -> dict:
     wrapped = copy.deepcopy(server)
     command = wrapped["command"]
     args = wrapped.get("args", [])
-    wrapped["command"] = "/bin/bash"
+    wrapped["command"] = "python"
     wrapped["args"] = [
-        "-c",
         PROJECT_ENV_LAUNCHER,
-        "unicli-hub-mcp",
         command,
         *args,
     ]
@@ -189,8 +189,10 @@ def filter_servers(raw_servers: dict, cli: str) -> dict:
     result = {}
     for name, cfg in raw_servers.items():
         targets = cfg.get("_targets")
-        if targets is not None and cli not in targets:
-            continue
+        if targets is not None:
+            allowed = {canonical_cli(item) or item for item in targets}
+            if cli not in allowed:
+                continue
         result[name] = wrap_project_env(apply_overrides(cfg, cli))
     return result
 
@@ -226,10 +228,23 @@ def render_codex_toml(servers: dict) -> str:
             if "args" in clean:
                 lines.append(f"args = {toml_array(clean['args'])}")
 
+        if "enabled" in clean:
+            lines.append(f"enabled = {'true' if clean['enabled'] else 'false'}")
+        if "startup_timeout_sec" in clean:
+            lines.append(f"startup_timeout_sec = {int(clean['startup_timeout_sec'])}")
+        if "tool_timeout_sec" in clean:
+            lines.append(f"tool_timeout_sec = {int(clean['tool_timeout_sec'])}")
+
         env = clean.get("env") or {}
         if env:
             lines.append(f"[mcp_servers.{name}.env]")
             for key, value in env.items():
+                lines.append(f"{key} = {toml_string(str(value))}")
+
+        headers = clean.get("headers") or {}
+        if headers:
+            lines.append(f"[mcp_servers.{name}.headers]")
+            for key, value in headers.items():
                 lines.append(f"{key} = {toml_string(str(value))}")
 
         lines.append("")
@@ -273,7 +288,7 @@ def main():
         if arg in ["--fix", "--check"]:
             MODE = arg[2:]
         elif arg.startswith("--target="):
-            TARGET_CLI = arg.split("=", 1)[1]
+            TARGET_CLI = canonical_cli(arg.split("=", 1)[1])
 
     mcp_fanout = load_mcp_fanout()
     canonical = resolve_path(mcp_fanout["source"])

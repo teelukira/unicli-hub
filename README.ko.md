@@ -63,6 +63,7 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 ### 6. 키로 (Kiro)
 - **스킬 (Skills)**: `.kiro/skills/<skill_name>/SKILL.md` 네이티브 Agent Skills입니다. `.kiro/steering/`은 항상 적용되는 프로젝트 컨텍스트이며 스킬이 아닙니다.
 - **서브에이전트 (Subagents)**: `.kiro/agents/*.json` (JSON은 계속 유효, `prompt`와 `read`/`write`/`shell` 태그형 `tools`).
+- **훅 (Hooks)**: `.kiro/hooks/unicli-hub.json` (`version: v1`, PascalCase 트리거).
 - **MCP**: `.kiro/settings/mcp.json`.
 
 ## 저장소 구조
@@ -81,7 +82,8 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 ├── .unicli-hub/            # 렌더러 구현 및 템플릿
 │   ├── scripts/            # render_agents/render_skills/render_hooks/render_mcp/render_templates
 │   └── templates/          # AGENTS.md 및 CLAUDE.md 템플릿
-├── sync.sh                 # 전체 재생성 명령
+├── sync.py                 # 전체 재생성 명령 (Windows/POSIX)
+├── sync.sh                 # sync.py POSIX 래퍼
 ├── AGENTS.md               # 생성물
 └── CLAUDE.md               # 생성물
 ```
@@ -95,11 +97,11 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 원본을 바꾼 뒤에는 다음을 실행합니다.
 
 ```bash
-./sync.sh --fix
-./sync.sh --check
+python sync.py --fix
+python sync.py --check
 ```
 
-`--fix`는 생성물을 갱신하고 더 이상 원본이 없는 stale agent/skill을 삭제합니다. `--check`는 생성물이 원본과 어긋나면 실패합니다.
+POSIX에서는 `./sync.sh --fix`가 동일합니다. `--fix`는 생성물을 갱신하고 더 이상 원본이 없는 stale agent/skill을 삭제합니다. `--check`는 생성물이 원본과 어긋나면 실패합니다. 생성된 훅과 MCP launcher가 시작하려면 `python`이 PATH에 있어야 합니다.
 
 ## 현재 기준선
 
@@ -120,7 +122,7 @@ AI CLI마다 확장 기능을 지원하는 방식이 다릅니다. 프레임워�
 
 ## 콘텐츠 추가 방법
 
-에이전트를 추가하려면 `hub/agents/`에 원본을 넣고, 필요한 경우 `hub/registry/agent-profiles.json`에 모델 프로필을 추가한 뒤 `./sync.sh --fix`를 실행합니다.
+에이전트를 추가하려면 `hub/agents/`에 원본을 넣고, 필요한 경우 `hub/registry/agent-profiles.json`에 모델 프로필을 추가한 뒤 `python sync.py --fix`를 실행합니다.
 
 스킬을 추가하려면 `hub/skills/<skill-name>/SKILL.md`를 만듭니다. 필요한 보조 파일은 같은 폴더 아래에 둘 수 있습니다. 스킬 렌더러가 폴더 내용과 reference 파일을 지원 대상에 복사합니다.
 

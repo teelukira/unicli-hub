@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""lock_sync.py — Safe wrapper to run sync.sh with file lock."""
+"""lock_sync.py — Safe wrapper to run sync.py with file lock."""
 
 from __future__ import annotations
 

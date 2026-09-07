@@ -63,6 +63,7 @@ Different AI CLIs handle extended capabilities in their own distinct ways. This 
 ### 6. Kiro
 - **Skills**: Native Agent Skills at `.kiro/skills/<skill_name>/SKILL.md`. Steering files under `.kiro/steering/` remain always-on project context, not skills.
 - **Subagents**: Custom agents at `.kiro/agents/*.json` (JSON remains valid; `prompt` and tag-based `tools` such as `read` / `write` / `shell`).
+- **Hooks**: `.kiro/hooks/unicli-hub.json` (`version: v1`, PascalCase triggers).
 - **MCP**: `.kiro/settings/mcp.json`.
 
 ## Repository Layout
@@ -81,7 +82,8 @@ Different AI CLIs handle extended capabilities in their own distinct ways. This 
 ├── .unicli-hub/            # renderer implementation and templates
 │   ├── scripts/            # render_agents/render_skills/render_hooks/render_mcp/render_templates
 │   └── templates/          # AGENTS.md and CLAUDE.md templates
-├── sync.sh                 # one command to regenerate all targets
+├── sync.py                 # regenerate all targets (Windows and POSIX)
+├── sync.sh                 # POSIX wrapper around sync.py
 ├── AGENTS.md               # generated
 └── CLAUDE.md               # generated
 ```
@@ -95,11 +97,11 @@ Do not edit generated targets directly: `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.
 After changing canonical content, run:
 
 ```bash
-./sync.sh --fix
-./sync.sh --check
+python sync.py --fix
+python sync.py --check
 ```
 
-`--fix` regenerates derived files and removes stale generated agents/skills. `--check` fails if any generated output has drifted.
+On POSIX, `./sync.sh --fix` is equivalent. `--fix` regenerates derived files and removes stale generated agents/skills. `--check` fails if any generated output has drifted. `python` must be on PATH so generated hooks and MCP launchers can start.
 
 ## Current Baseline
 
@@ -120,7 +122,7 @@ This baseline intentionally excludes:
 
 ## Adding Content
 
-To add an agent, place source files in `hub/agents/`; add optional model profiles in `hub/registry/agent-profiles.json`; then run `./sync.sh --fix`.
+To add an agent, place source files in `hub/agents/`; add optional model profiles in `hub/registry/agent-profiles.json`; then run `python sync.py --fix`.
 
 To add a skill, create `hub/skills/<skill-name>/SKILL.md`; optional support files can live beside it. The skill renderer copies folder contents and reference files to supported targets.
 

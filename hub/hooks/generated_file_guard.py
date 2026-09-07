@@ -82,7 +82,9 @@ GLOB_GUARDS: list[tuple[str, str]] = [
     (".codex/prompts/*.md",  "hub/agents/{name}"),
     (".codex/agents/*.toml", "hub/agents/{name}"),
     (".codex/agents/*.md", "hub/agents/{name}"),
+    (".agents/agents/*.json", "hub/agents/{name}"),
     (".kiro/agents/*", "hub/agents/{name}"),
+    (".kiro/hooks/*.json", "hub/registry/hook-events.json (regenerate: python sync.py --fix)"),
     (".kiro/skills/*/SKILL.md", "hub/skills/{skill}/"),
     (".kiro/skills/*/*", "hub/skills/{skill}/"),
     (".kiro/steering/*.md",  "hub/{source}"),
@@ -162,7 +164,7 @@ def block(rel: str, hint: str) -> int:
     reason = (
         f"Generated file block: direct edit of `{rel}` is not allowed. "
         f"Edit the canonical source instead: {hint}. "
-        "Then run `./sync.sh --fix`."
+        "Then run `python sync.py --fix`."
     )
     print(reason, file=sys.stderr)
     print(
