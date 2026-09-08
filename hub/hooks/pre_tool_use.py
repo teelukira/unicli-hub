@@ -12,6 +12,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from hook_output import allow_doc, emit
+
 
 def ensure_session_updated(payload: dict, script_dir: Path) -> None:
     try:
@@ -49,7 +51,7 @@ def main() -> None:
     # 2. Run generated_file_guard
     guard = script_dir / "generated_file_guard.py"
     if not guard.exists():
-        print(json.dumps({"decision": "allow", "permission": "allow"}))
+        emit(allow_doc(payload))
         return
 
     proc = subprocess.Popen(
@@ -71,7 +73,7 @@ def main() -> None:
     if stdout.strip():
         sys.stdout.write(stdout)
     else:
-        print(json.dumps({"decision": "allow", "permission": "allow"}))
+        emit(allow_doc(payload))
 
     sys.exit(proc.returncode)
 
