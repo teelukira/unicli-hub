@@ -23,7 +23,12 @@ import sys
 import traceback
 from fnmatch import fnmatch
 
+from hook_output import allow_doc, deny_doc, emit
+
 RULES_ROOT = pathlib.Path(__file__).resolve().parent.parent
+# Kept module-level so the crash handler can still answer in the calling
+# CLI's schema after stdin has been consumed.
+PAYLOAD: dict = {}
 
 
 def resolve_cursor_skill_hint(rel: str) -> str:
@@ -160,38 +165,25 @@ def resolve_hint(pattern: str, rel: str, template: str) -> str:
     return template.replace("{name}", name)
 
 
-def block(rel: str, hint: str) -> int:
+def block(rel: str, hint: str, payload: dict | None = None) -> int:
     reason = (
         f"Generated file block: direct edit of `{rel}` is not allowed. "
         f"Edit the canonical source instead: {hint}. "
         "Then run `python sync.py --fix`."
     )
     print(reason, file=sys.stderr)
-    print(
-        json.dumps(
-            {
-                "decision": "deny",
-                "reason": reason,
-                "permission": "deny",
-                "user_message": reason,
-                "agent_message": reason,
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "deny",
-                    "permissionDecisionReason": reason,
-                },
-            }
-        )
-    )
+    emit(deny_doc(payload, reason))
     return 2
 
 
-def allow() -> int:
-    print(json.dumps({"decision": "allow", "permission": "allow"}))
+def allow(payload: dict | None = None) -> int:
+    emit(allow_doc(payload))
     return 0
 
 
 def main() -> int:
+    global PAYLOAD
+
     raw = sys.stdin.read()
     if not raw.strip():
         return allow()
@@ -200,20 +192,22 @@ def main() -> int:
     except json.JSONDecodeError:
         return allow()
 
+    PAYLOAD = payload if isinstance(payload, dict) else {}
+
     target = extract_path(payload)
     rel = normalize(target)
     if not rel:
-        return allow()
+        return allow(PAYLOAD)
 
     for exact, hint in EXACT_GUARDS:
         if rel == exact:
-            return block(rel, hint)
+            return block(rel, hint, PAYLOAD)
 
     for pattern, hint_tmpl in GLOB_GUARDS:
         if fnmatch(rel, pattern):
-            return block(rel, resolve_hint(pattern, rel, hint_tmpl))
+            return block(rel, resolve_hint(pattern, rel, hint_tmpl), PAYLOAD)
 
-    return allow()
+    return allow(PAYLOAD)
 
 
 if __name__ == "__main__":
@@ -226,15 +220,5 @@ if __name__ == "__main__":
         )
         # Exit code 2 makes Claude read stderr, not stdout — mirror block().
         print(reason, file=sys.stderr)
-        print(
-            json.dumps(
-                {
-                    "decision": "deny",
-                    "reason": reason,
-                    "permission": "deny",
-                    "user_message": reason,
-                    "agent_message": "generated_file_guard.py exception — see hook user_message",
-                }
-            )
-        )
+        emit(deny_doc(PAYLOAD, reason))
         raise SystemExit(2)

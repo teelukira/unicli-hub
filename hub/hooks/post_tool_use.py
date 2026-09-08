@@ -4,13 +4,17 @@
 import json
 import sys
 
+from hook_output import allow_doc, emit
+
 
 def main() -> None:
     try:
-        json.loads(sys.stdin.read() or "{}")
+        payload = json.loads(sys.stdin.read() or "{}")
     except Exception:
-        pass
-    print(json.dumps({"decision": "allow", "permission": "allow"}))
+        payload = {}
+    # PostToolUse cannot decide anything — the tool already ran. Claude Code
+    # accepts only hookEventName/additionalContext here, so it gets silence.
+    emit(allow_doc(payload))
 
 
 if __name__ == "__main__":
